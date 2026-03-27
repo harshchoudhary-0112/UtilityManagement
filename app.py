@@ -1,8 +1,10 @@
 from flask import Flask,render_template,request,redirect,url_for
+import uuid
+from datetime import datetime, timedelta
 import mysql.connector
 from flask import Flask, render_template, request, redirect, flash
 
-app = Flask(__name__)
+
 
 app = Flask(__name__)
 app.secret_key = "secret123"
@@ -11,7 +13,7 @@ db=mysql.connector.connect(
 host="localhost",
 user="root",
 password="Harsh@966933",
-database="utility_portal"
+database="utility_portall"
 )
 
 cursor=db.cursor()
@@ -24,7 +26,7 @@ def home():
         host="localhost",
         user="root",
         password="Harsh@966933",
-        database="utility_portal"
+        database="utility_portall"
     )
 
     cursor = conn.cursor()
@@ -110,7 +112,7 @@ def edit_announcement():
             host="localhost",
             user="root",
             password="Harsh@966933",
-            database="utility_portal"
+            database="utility_portall"
         )
 
         cursor = conn.cursor()
@@ -167,7 +169,68 @@ def adminlogin():
     else:
         return "Invalid Admin Login"
     
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form['email']
 
+        # First check users table
+        cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
+        user = cursor.fetchone()
+
+        table = "users"
+
+        # If not found → check admin table
+        if not user:
+            cursor.execute("SELECT * FROM admins WHERE email=%s", (email,))
+            user = cursor.fetchone()
+            table = "admins"
+
+        if user:
+            token = str(uuid.uuid4())
+            expiry = datetime.now() + timedelta(minutes=15)
+
+            cursor.execute(
+                 f"UPDATE {table} SET reset_token=%s, token_expiry=%s WHERE email=%s",
+                     (token, expiry, email)
+            )
+            db.commit()
+
+            reset_link = f"http://127.0.0.1:5000/reset-password/{token}"
+            print("Reset link:", reset_link)  
+
+            flash("Reset link sent! Check Your email.")
+            return redirect('/forgot-password')
+        else:
+            flash("Email not found!")
+            return redirect('/forgot-password')
+        
+    return render_template('forgot_password.html')    
+       
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    cursor.execute(
+        "SELECT * FROM users WHERE reset_token=%s AND token_expiry > NOW()",
+        (token,)
+    )
+    user = cursor.fetchone()
+
+    if not user:
+        return "Invalid or expired token"
+
+    if request.method == 'POST':
+        new_password = request.form['password']
+
+        cursor.execute(
+            "UPDATE users SET password=%s, reset_token=NULL, token_expiry=NULL WHERE reset_token=%s",
+            (new_password, token)
+        )
+        db.commit()
+
+        flash("Password updated successfully!")
+        return redirect('/')
+    return render_template('reset_password.html')       
+        
 @app.route('/admin')
 def admin():
 
