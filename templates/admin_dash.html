@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+background:#f4f4f4;
+min-height:100vh;
+display:flex;
+flex-direction:column;
+}
+
+/* Header */
+
+header{
+background:#1f2027;
+color:white;
+padding:15px 40px;
+font-size:22px;
+}
+
+/* Main */
+
+.main{
+flex:1;
+padding:40px;
+}
+
+/* Table Card */
+
+.card{
+background:white;
+padding:30px;
+border-radius:10px;
+box-shadow:0 10px 25px rgba(0,0,0,0.1);
+}
+
+.card h2{
+margin-bottom:20px;
+color:#1f2027;
+}
+
+/* Table */
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+}
+
+th, td{
+padding:12px;
+border-bottom:1px solid #ddd;
+text-align:left;
+}
+
+th{
+background:#1f2027;
+color:white;
+}
+
+tr:hover{
+background:#f2f2f2;
+}
+
+/* Footer */
+
+footer{
+background:#1f2027;
+color:white;
+text-align:center;
+padding:12px;
+}
+
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+Urban Utility Portal - Admin Dashboard
+</header>
+
+<div class="main">
+
+<div class="card">
+    
+
+<h2>Submitted Complaints</h2>
+
+<a href="/edit_announcement" style="
+background:#0d6efd;
+color:white;
+padding:10px 18px;
+border-radius:6px;
+text-decoration:none;
+display:inline-block;
+margin-bottom:20px;
+font-size:14px;
+">
+Edit Announcement
+</a>
+
+<table>
+
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Ward</th>
+<th>Category</th>
+<th>Description</th>
+</tr>
+
+{% for complaint in complaints %}
+
+<tr>
+<td>{{ complaint[0] }}</td>
+<td>{{ complaint[1] }}</td>
+<td>{{ complaint[2] }}</td>
+<td>{{ complaint[3] }}</td>
+<td>{{ complaint[4] }}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+</div>
+
+<footer>
+Municipal Complaint Monitoring System
+</footer>
+
+</body>
+</html>

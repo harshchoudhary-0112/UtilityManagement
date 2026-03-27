@@ -1,0 +1,47 @@
+<html>
+
+<head>
+
+<link rel="stylesheet" href="{{url_for('static',filename='style.css')}}">
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Admin Complaint Panel</h2>
+
+<table border="1" width="100%">
+
+<tr>
+
+<th>ID</th>
+<th>Name</th>
+<th>Email</th>
+<th>Complaint</th>
+<th>Status</th>
+
+</tr>
+
+{% for c in complaints %}
+
+<tr>
+
+<td>{{c[0]}}</td>
+<td>{{c[1]}}</td>
+<td>{{c[2]}}</td>
+<td>{{c[3]}}</td>
+<td>{{c[4]}}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+</body>
+
+</html>

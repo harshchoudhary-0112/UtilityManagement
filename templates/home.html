@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Real Time Urban Utility Management & Communication</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+html{
+scroll-behavior:smooth;
+}
+
+body{
+margin:0;
+font-family:Arial, sans-serif;
+background:#f4f7fb;
+}
+
+/* HEADER */
+
+header{
+background:#004d7a;
+color:white;
+padding:15px 30px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+header h1{
+margin:0;
+font-size:22px;
+}
+
+/* NAVBAR */
+
+nav{
+display:flex;
+align-items:center;
+}
+
+nav a{
+color:white;
+margin-left:20px;
+text-decoration:none;
+font-size:14px;
+transition:0.3s;
+}
+
+nav a:hover{
+color:#ffd166;
+}
+
+.login-btn{
+margin-left:20px;
+padding:8px 16px;
+background:#00c853;
+color:white;
+border-radius:5px;
+text-decoration:none;
+font-size:14px;
+transition:0.3s;
+}
+
+.login-btn:hover{
+background:#00a843;
+transform:scale(1.05);
+}
+
+/* ANNOUNCEMENT BAR */
+
+.announcement-bar{
+background:#ff9800;
+color:white;
+padding:10px;
+font-weight:bold;
+text-align:center;
+}
+
+/* HERO */
+
+.hero{
+background:linear-gradient(to right,#00aaff,#00d4a5);
+color:white;
+text-align:center;
+padding:70px 20px;
+}
+
+.hero h2{
+font-size:34px;
+margin-bottom:10px;
+}
+
+.hero p{
+font-size:16px;
+}
+
+/* SERVICES */
+
+.services{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+padding:40px 20px;
+gap:25px;
+}
+
+/* CARDS */
+
+.card{
+background:white;
+width:280px;
+padding:25px;
+border-radius:10px;
+box-shadow:0 4px 12px rgba(0,0,0,0.08);
+text-align:center;
+transition:0.3s;
+scroll-margin-top:80px;
+}
+
+.card:hover{
+transform:translateY(-6px);
+box-shadow:0 6px 18px rgba(0,0,0,0.15);
+}
+
+.card h3{
+color:#004d7a;
+}
+
+/* BUTTON */
+
+.btn{
+display:inline-block;
+margin-top:12px;
+padding:10px 16px;
+background:#0077b6;
+color:white;
+text-decoration:none;
+border-radius:5px;
+font-size:14px;
+transition:0.3s;
+}
+
+.btn:hover{
+background:#005f8f;
+transform:scale(1.05);
+}
+
+/* ANNOUNCEMENTS SECTION */
+
+.announcements{
+background:white;
+padding:30px;
+margin:20px;
+border-radius:10px;
+box-shadow:0 3px 10px rgba(0,0,0,0.05);
+}
+
+/* FOOTER */
+
+footer{
+background:#002f4b;
+color:white;
+text-align:center;
+padding:15px;
+margin-top:20px;
+}
+
+/* ADMIN FOOTER */
+
+.admin-footer{
+position:fixed;
+bottom:0;
+width:100%;
+background:#1f2027;
+color:white;
+text-align:center;
+padding:12px;
+font-size:14px;
+}
+
+.admin-footer a{
+color:#e59a9a;
+text-decoration:none;
+margin-left:6px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width:600px){
+
+header{
+flex-direction:column;
+align-items:flex-start;
+}
+
+header h1{
+font-size:14px;
+}
+
+nav a{
+font-size:12px;
+}
+
+.login-btn{
+font-size:12px;
+}
+
+.hero h2{
+font-size:24px;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+<h1>Real Time Urban Utility Management & Communication Portal</h1>
+
+<nav>
+<a href="#">Home</a>
+<a href="#water">Water Services</a>
+<a href="#electricity">Electricity</a>
+<a href="#">Contact</a>
+<a href="/login" class="login-btn">Login</a>
+</nav>
+
+</header>
+
+<!-- ANNOUNCEMENT BAR -->
+
+<div class="announcement-bar">
+Welcome to Real Time Urban Utility Management System
+</div>
+
+<section class="hero">
+
+<h2>Welcome to Municipal Services</h2>
+
+<p>Details related to Water Supply and Electricity for each Ward</p>
+
+</section>
+
+<section class="services">
+
+<div class="card" id="water">
+<h3>Water Supply</h3>
+<p>Check water supply schedules, report issues, and manage connections.</p>
+</div>
+
+<div class="card" id="electricity">
+<h3>Electricity Services</h3>
+<p>Report outages and know more about electricity distribution.</p>
+</div>
+
+</section>
+
+<section class="announcements">
+
+<h3>Announcements</h3>
+
+<div class="announcement-bar">
+{{ announcement }}
+</div>
+
+</section>
+
+<footer>
+
+<p>© 2026 CDGI MINOR PROJECT | All Rights Reserved</p>
+
+</footer>
+
+<div class="admin-footer">
+
+Admin Access :
+<a href="/adminpage">Admin Login</a>
+
+</div>
+
+</body>
+</html>

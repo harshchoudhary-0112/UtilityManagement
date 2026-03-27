@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Edit Announcement</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+body{
+margin:0;
+font-family:Arial, Helvetica, sans-serif;
+background:linear-gradient(135deg,#00aaff,#00d4a5);
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.container{
+background:white;
+padding:40px;
+border-radius:12px;
+box-shadow:0 8px 25px rgba(0,0,0,0.2);
+width:420px;
+max-width:90%;
+}
+
+h2{
+text-align:center;
+margin-bottom:25px;
+color:#004d7a;
+}
+
+label{
+font-size:14px;
+font-weight:bold;
+color:#333;
+}
+
+textarea{
+width:100%;
+margin-top:8px;
+padding:12px;
+border-radius:6px;
+border:1px solid #ccc;
+font-size:14px;
+resize:none;
+height:120px;
+outline:none;
+transition:0.3s;
+}
+
+textarea:focus{
+border-color:#00aaff;
+box-shadow:0 0 5px rgba(0,170,255,0.4);
+}
+
+button{
+margin-top:20px;
+width:100%;
+padding:12px;
+background:linear-gradient(90deg,#0077b6,#00b4d8);
+color:white;
+border:none;
+border-radius:6px;
+font-size:15px;
+cursor:pointer;
+transition:0.3s;
+}
+
+button:hover{
+background:linear-gradient(90deg,#005f8f,#0096c7);
+}
+
+.back{
+display:block;
+text-align:center;
+margin-top:15px;
+text-decoration:none;
+color:#0077b6;
+font-size:14px;
+}
+
+.back:hover{
+text-decoration:underline;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Update Announcement</h2>
+
+<form method="POST">
+
+<label>Announcement Message</label>
+
+<textarea name="announcement" placeholder="Write the announcement here..."></textarea>
+
+<button type="submit">Update Announcement</button>
+
+</form>
+
+<a href="{{ url_for('home') }}" class="back">Back to Home</a>
+
+</div>
+
+</body>
+</html>
