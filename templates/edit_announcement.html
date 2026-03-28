@@ -7,30 +7,58 @@
 
 <style>
 
-body{
+*{
 margin:0;
+padding:0;
+box-sizing:border-box;
 font-family:Arial, Helvetica, sans-serif;
-background:linear-gradient(135deg,#00aaff,#00d4a5);
-height:100vh;
-display:flex;
-align-items:center;
-justify-content:center;
 }
+
+body{
+background:#f4f4f4;
+min-height:100vh;
+display:flex;
+flex-direction:column;
+}
+
+/* Header */
+
+header{
+background:#1f2027;
+color:white;
+padding:15px 40px;
+font-size:22px;
+}
+
+/* Main Layout */
+
+.main{
+flex:1;
+display:flex;
+justify-content:center;
+align-items:center;
+padding:40px;
+}
+
+/* Card */
 
 .container{
-background:white;
-padding:40px;
-border-radius:12px;
-box-shadow:0 8px 25px rgba(0,0,0,0.2);
 width:420px;
-max-width:90%;
+background:white;
+padding:35px;
+border-radius:10px;
+box-shadow:0 10px 25px rgba(0,0,0,0.1);
 }
 
+/* Heading */
+
 h2{
+margin-bottom:20px;
+color:#1f2027;
 text-align:center;
-margin-bottom:25px;
-color:#004d7a;
 }
+
+/* Label */
 
 label{
 font-size:14px;
@@ -38,9 +66,11 @@ font-weight:bold;
 color:#333;
 }
 
+/* Textarea */
+
 textarea{
 width:100%;
-margin-top:8px;
+margin-top:10px;
 padding:12px;
 border-radius:6px;
 border:1px solid #ccc;
@@ -48,66 +78,83 @@ font-size:14px;
 resize:none;
 height:120px;
 outline:none;
-transition:0.3s;
 }
 
-textarea:focus{
-border-color:#00aaff;
-box-shadow:0 0 5px rgba(0,170,255,0.4);
-}
+/* Button */
 
 button{
-margin-top:20px;
 width:100%;
 padding:12px;
-background:linear-gradient(90deg,#0077b6,#00b4d8);
-color:white;
+margin-top:15px;
 border:none;
 border-radius:6px;
-font-size:15px;
+background:#1f2027;
+color:white;
+font-weight:bold;
 cursor:pointer;
 transition:0.3s;
 }
 
 button:hover{
-background:linear-gradient(90deg,#005f8f,#0096c7);
+background:#444;
 }
+
+/* Footer */
+
+footer{
+background:#1f2027;
+color:white;
+text-align:center;
+padding:12px;
+}
+
+footer a{
+color:#ffb3b3;
+text-decoration:none;
+}
+
+/* Back link */
 
 .back{
 display:block;
 text-align:center;
 margin-top:15px;
+color:#1f2027;
 text-decoration:none;
-color:#0077b6;
-font-size:14px;
 }
 
 .back:hover{
 text-decoration:underline;
 }
-
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<header>
+Real Time Urban Utility Management & Communication Portal
+</header>
 
-<h2>Update Announcement</h2>
+<div class="main">
+    <div class="container">
 
-<form method="POST">
+        <h2>Update Announcement</h2>
 
-<label>Announcement Message</label>
+        <form method="POST">
+            <label>Announcement Message</label>
+            <textarea name="announcement" placeholder="Write the announcement here..."></textarea>
 
-<textarea name="announcement" placeholder="Write the announcement here..."></textarea>
+            <button type="submit">Update Announcement</button>
+        </form>
 
-<button type="submit">Update Announcement</button>
+        <a href="{{ url_for('home') }}" class="back">Back to Home</a>
 
-</form>
-
-<a href="{{ url_for('home') }}" class="back">Back to Home</a>
-
+    </div>
 </div>
+
+<footer>
+Return to <a href="/">Home</a>
+</footer>
 
 </body>
 </html>
