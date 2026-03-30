@@ -6,144 +6,694 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-
 *{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial, Helvetica, sans-serif;
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI', sans-serif;
+}
+
+:root{
+  --bg-1:#eef2f7;
+  --bg-2:#dbeafe;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --white:rgba(255,255,255,0.88);
+  --border:rgba(255,255,255,0.35);
+  --shadow:0 20px 45px rgba(15,23,42,0.12);
+  --shadow-soft:0 10px 25px rgba(15,23,42,0.08);
+  --green:#00c853;
+  --green-dark:#00a86b;
+  --blue:#0077b6;
+  --blue-light:#00b4d8;
+  --red:#ff4d4d;
+  --orange:#f97316;
+  --orange-light:#fb7185;
+  --purple:#7c3aed;
+  --purple-dark:#6d28d9;
+  --dark:#1f2027;
 }
 
 body{
-background:#f4f4f4;
-min-height:100vh;
-display:flex;
-flex-direction:column;
+  min-height:100vh;
+  color:var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(0,180,216,0.18), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(0,200,83,0.15), transparent 28%),
+    linear-gradient(135deg,var(--bg-1),var(--bg-2));
+  display:flex;
+  flex-direction:column;
+  padding-bottom:76px;
 }
-
-/* Header */
 
 header{
-background:#1f2027;
-color:white;
-padding:15px 40px;
-font-size:22px;
+  position:sticky;
+  top:0;
+  z-index:1000;
+  background:rgba(31,32,39,0.82);
+  color:white;
+  padding:16px 28px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  backdrop-filter:blur(16px);
+  box-shadow:0 8px 24px rgba(0,0,0,0.16);
+  border-bottom:1px solid rgba(255,255,255,0.08);
 }
 
-/* Main */
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.brand-mark{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  box-shadow:0 8px 16px rgba(0,0,0,0.18);
+  font-size:20px;
+}
+
+.brand-text h1{
+  font-size:18px;
+  font-weight:700;
+}
+
+.brand-text p{
+  font-size:12px;
+  color:rgba(255,255,255,0.72);
+  margin-top:2px;
+}
+
+.header-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.nav-btn{
+  padding:10px 16px;
+  background:linear-gradient(135deg,var(--green-dark),var(--green));
+  color:white;
+  border-radius:999px;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:600;
+  transition:0.3s ease;
+  box-shadow:0 10px 20px rgba(0,200,83,0.2);
+}
+
+.nav-btn.secondary{
+  background:linear-gradient(135deg,var(--red),var(--orange-light));
+  box-shadow:0 10px 20px rgba(255,77,77,0.18);
+}
+
+.nav-btn.purple{
+  background:linear-gradient(135deg,var(--purple-dark),var(--purple));
+  box-shadow:0 10px 20px rgba(124,58,237,0.22);
+}
+
+.nav-btn:hover{
+  transform:translateY(-2px);
+}
 
 .main{
-flex:1;
-padding:40px;
+  flex:1;
+  width:min(1400px,calc(100% - 32px));
+  margin:28px auto;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:22px;
+  align-items:start;
 }
 
-/* Table Card */
-
-.card{
-background:white;
-padding:30px;
-border-radius:10px;
-box-shadow:0 10px 25px rgba(0,0,0,0.1);
+.panel{
+  background:var(--white);
+  border:1px solid var(--border);
+  backdrop-filter:blur(16px);
+  border-radius:24px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
 }
 
-.card h2{
-margin-bottom:20px;
-color:#1f2027;
+.panel-inner{
+  padding:24px;
 }
 
-/* Table */
+.hero-card{
+  position:relative;
+}
+
+.hero-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(135deg, rgba(124,58,237,0.08), rgba(0,200,83,0.08));
+  pointer-events:none;
+}
+
+.welcome-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.8);
+  color:var(--purple);
+  font-size:13px;
+  font-weight:700;
+  box-shadow:var(--shadow-soft);
+  margin-bottom:18px;
+}
+
+.hero-title{
+  font-size:28px;
+  line-height:1.2;
+  color:#111827;
+  margin-bottom:10px;
+}
+
+.hero-text{
+  font-size:14px;
+  line-height:1.7;
+  color:var(--muted);
+  margin-bottom:22px;
+  max-width:50ch;
+}
+
+.action-grid{
+  display:grid;
+  gap:14px;
+}
+
+.action-card{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:16px;
+  border-radius:18px;
+  text-decoration:none;
+  color:inherit;
+  background:linear-gradient(135deg,#ffffff,#f8fbff);
+  border:1px solid rgba(17,24,39,0.06);
+  box-shadow:var(--shadow-soft);
+  transition:0.3s ease;
+}
+
+.action-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 16px 30px rgba(15,23,42,0.12);
+}
+
+.action-icon{
+  width:52px;
+  height:52px;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:white;
+  font-size:24px;
+  flex-shrink:0;
+}
+
+.action-icon.purple{
+  background:linear-gradient(135deg,var(--purple-dark),var(--purple));
+}
+
+.action-icon.orange{
+  background:linear-gradient(135deg,var(--orange),var(--orange-light));
+}
+
+.action-icon.green{
+  background:linear-gradient(135deg,var(--green-dark),var(--green));
+}
+
+.action-body{
+  flex:1;
+}
+
+.action-body h3{
+  font-size:16px;
+  margin-bottom:4px;
+  color:#111827;
+}
+
+.action-body p{
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.5;
+}
+
+.action-arrow{
+  font-size:20px;
+  color:var(--purple);
+  font-weight:700;
+}
+
+.table-panel .panel-inner{
+  padding:24px;
+}
+
+.panel-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:18px;
+}
+
+.panel-head-left{
+  display:flex;
+  gap:14px;
+}
+
+.panel-icon{
+  width:54px;
+  height:54px;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:white;
+  font-size:24px;
+  background:linear-gradient(135deg,var(--purple),var(--blue));
+  box-shadow:0 14px 24px rgba(124,58,237,0.18);
+}
+
+.panel-head h2{
+  font-size:24px;
+  color:#111827;
+  margin-bottom:4px;
+}
+
+.panel-head p{
+  font-size:14px;
+  color:var(--muted);
+  line-height:1.6;
+}
+
+.table-container{
+  width:100%;
+  overflow-x:auto;
+  border-radius:18px;
+  border:1px solid rgba(17,24,39,0.05);
+  background:#fafbff;
+}
 
 table{
-width:100%;
-border-collapse:collapse;
-margin-top:20px;
+  width:100%;
+  min-width:1200px;
+  border-collapse:separate;
+  border-spacing:0;
 }
 
-th, td{
-padding:12px;
-border-bottom:1px solid #ddd;
-text-align:left;
+thead th{
+  background:linear-gradient(135deg,#f8fbff,#f0f7ff);
+  color:#1f2937;
+  font-size:13px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+  padding:18px 16px;
+  border-bottom:2px solid rgba(17,24,39,0.08);
+  white-space:nowrap;
 }
 
-th{
-background:#1f2027;
-color:white;
+tbody td{
+  padding:18px 16px;
+  border-bottom:1px solid rgba(17,24,39,0.04);
+  vertical-align:middle;
+  font-size:14px;
+  color:#1f2937;
 }
 
-tr:hover{
-background:#f2f2f2;
+tbody tr:hover{
+  background:rgba(124,58,237,0.03);
 }
 
-/* Footer */
-
-footer{
-background:#1f2027;
-color:white;
-text-align:center;
-padding:12px;
+tbody tr:last-child td{
+  border-bottom:none;
 }
 
+.id-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:42px;
+  height:32px;
+  padding:0 12px;
+  border-radius:999px;
+  background:linear-gradient(135deg,rgba(124,58,237,0.12),rgba(124,58,237,0.08));
+  color:var(--purple);
+  font-weight:700;
+  font-size:13px;
+  box-shadow:var(--shadow-soft);
+}
 
+.status-select,
+.reply-box{
+  width:100%;
+  border:1px solid rgba(17,24,39,0.12);
+  border-radius:12px;
+  background:rgba(255,255,255,0.85);
+  padding:12px 14px;
+  font-size:14px;
+  color:var(--text);
+  outline:none;
+  transition:0.3s ease;
+  backdrop-filter:blur(8px);
+}
+
+.status-select:focus,
+.reply-box:focus{
+  border-color:var(--purple);
+  box-shadow:0 0 0 4px rgba(124,58,237,0.15);
+  transform:translateY(-1px);
+}
+
+.reply-box{
+  min-height:72px;
+  resize:vertical;
+  font-family:inherit;
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.btn{
+  border:none;
+  border-radius:12px;
+  padding:10px 16px;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+  transition:0.3s ease;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+
+.btn-update{
+  background:linear-gradient(135deg,var(--green-dark),var(--green));
+  color:white;
+  box-shadow:0 8px 20px rgba(0,200,83,0.25);
+}
+
+.btn-update:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 25px rgba(0,200,83,0.3);
+}
+
+.btn-delete{
+  background:linear-gradient(135deg,var(--red),var(--orange-light));
+  color:white;
+  box-shadow:0 8px 20px rgba(255,77,77,0.25);
+}
+
+.btn-delete:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 25px rgba(255,77,77,0.3);
+}
+
+.desc{
+  max-width:280px;
+  color:var(--muted);
+  line-height:1.6;
+  font-size:14px;
+}
+
+.empty-state{
+  text-align:center;
+  padding:48px 24px;
+  color:var(--muted);
+}
+
+.empty-icon{
+  font-size:64px;
+  display:block;
+  margin-bottom:16px;
+  opacity:0.4;
+}
+
+footer.user-footer{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:14px 24px;
+  background:rgba(31,32,39,0.88);
+  color:white;
+  backdrop-filter:blur(16px);
+  border-top:1px solid rgba(255,255,255,0.08);
+}
+
+.footer-links{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.footer-link{
+  text-decoration:none;
+  color:white;
+  padding:8px 13px;
+  border-radius:10px;
+  font-size:13px;
+  font-weight:600;
+}
+
+.footer-link.home{
+  background:linear-gradient(135deg,var(--green-dark),var(--green));
+}
+
+.footer-link.logout{
+  background:linear-gradient(135deg,var(--red),var(--orange-light));
+}
+
+@media (max-width: 980px){
+  .main{
+    width:min(100% - 20px, 1400px);
+    margin:18px auto;
+  }
+  
+  .hero-title{
+    font-size:24px;
+  }
+  
+  .panel-inner{
+    padding:20px;
+  }
+}
+
+@media (max-width: 640px){
+  header{
+    padding:14px 16px;
+    align-items:flex-start;
+    gap:14px;
+    flex-direction:column;
+  }
+  
+  .header-actions{
+    width:100%;
+    justify-content:space-between;
+  }
+  
+  .main{
+    width:min(100% - 20px, 1400px);
+    margin:18px auto;
+    padding-bottom:10px;
+  }
+  
+  .panel-inner{
+    padding:18px;
+  }
+  
+  .brand-text h1{
+    font-size:16px;
+  }
+  
+  .hero-title{
+    font-size:22px;
+  }
+  
+  .table-container{
+    min-width:100%;
+  }
+  
+  table{
+    min-width:100%;
+  }
+  
+  footer.user-footer{
+    padding:12px 14px;
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  
+  .footer-links{
+    width:100%;
+    justify-content:flex-start;
+    flex-wrap:wrap;
+  }
+}
 </style>
 
+<script>
+function toggleUserPanel() {
+  const panel = document.getElementById('userPanel');
+  panel.classList.toggle('active');
+}
+</script>
 </head>
 
 <body>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <script>
+      alert("{{ messages[0] }}");
+    </script>
+  {% endif %}
+{% endwith %}
 
 <header>
-Urban Utility Portal - Admin Dashboard
+  <div class="brand">
+    <div class="brand-mark">⚙️</div>
+    <div class="brand-text">
+      <h1>Admin Dashboard</h1>
+      <p>Complaint management & citizen communication</p>
+    </div>
+  </div>
+
+  <div class="header-actions">
+    <a href="{{ url_for('home') }}" class="nav-btn">Home</a>
+    <a href="/edit_announcement" class="nav-btn purple">Edit Announcement</a>
+    <a href="{{ url_for('admin_announcement') }}" class="nav-btn secondary">Ward Announcement</a>
+    <a href="{{ url_for('logout') }}" class="nav-btn secondary">Logout</a>
+  </div>
 </header>
 
 <div class="main">
+  <section class="panel hero-card">
+    <div class="panel-inner">
+      <div class="welcome-badge">🔧 Admin Control</div>
+      <h2 class="hero-title">Manage complaints, update statuses, and communicate with citizens.</h2>
+      <p class="hero-text">
+        Review all submitted complaints, update their progress with replies, 
+        manage announcements, and maintain smooth civic service operations.
+      </p>
 
-<div class="card">
-    
+      <div class="action-grid">
+        <a href="#complaints-table" class="action-card">
+          <div class="action-icon purple">📋</div>
+          <div class="action-body">
+            <h3>View All Complaints</h3>
+            <p>Complete overview of pending and active complaints</p>
+          </div>
+          <div class="action-arrow">→</div>
+        </a>
+      </div>
+    </div>
+  </section>
 
-<h2>Submitted Complaints</h2>
+  <section class="panel table-panel">
+    <div class="panel-inner">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-icon">📊</div>
+          <div>
+            <h2>Complaint Records</h2>
+            <p>Manage all citizen complaints from one centralized location</p>
+          </div>
+        </div>
+      </div>
 
-<a href="/edit_announcement" style="
-background:#0d6efd;
-color:white;
-padding:10px 18px;
-border-radius:6px;
-text-decoration:none;
-display:inline-block;
-margin-bottom:20px;
-font-size:14px;
-">
-Edit Announcement
-</a>
+      {% if complaints %}
+      <div class="table-container">
+        <table id="complaints-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Ward</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th>Reply</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for complaint in complaints %}
+            <tr>
+              <td><span class="id-badge">{{ complaint[0] }}</span></td>
+              <td>{{ complaint[1] }}</td>
+              <td>{{ complaint[2] }}</td>
+              <td>{{ complaint[3] }}</td>
+              <td class="desc">{{ complaint[4] }}</td>
 
-<table>
+              <form action="/update_complaint/{{ complaint[0] }}" method="POST">
+                <td>
+                  <select name="status" class="status-select">
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Rejected">Rejected</option>
+                  </select>
+                </td>
 
-<tr>
-<th>ID</th>
-<th>Name</th>
-<th>Ward</th>
-<th>Category</th>
-<th>Description</th>
-</tr>
+                <td>
+                  <textarea name="admin_reply" rows="2" class="reply-box" placeholder="Write reply here..."></textarea>
+                </td>
 
-{% for complaint in complaints %}
-
-<tr>
-<td>{{ complaint[0] }}</td>
-<td>{{ complaint[1] }}</td>
-<td>{{ complaint[2] }}</td>
-<td>{{ complaint[3] }}</td>
-<td>{{ complaint[4] }}</td>
-</tr>
-
-{% endfor %}
-
-</table>
-
+                <td>
+                  <div class="actions">
+                    <button type="submit" class="btn btn-update">Update</button>
+                    <button
+                      type="submit"
+                      formaction="/delete_complaint/{{ complaint[0] }}"
+                      onclick="return confirm('Are you sure to delete this complaint?')"
+                      class="btn btn-delete"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </form>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <h3>No complaints yet</h3>
+        <p style="max-width: 32ch; margin: 0 auto;">No complaints have been submitted. Citizens will start using the service soon.</p>
+      </div>
+      {% endif %}
+    </div>
+  </section>
 </div>
 
-</div>
-
-<footer>
-Municipal Complaint Monitoring System
+<footer class="user-footer">
+  <div>© 2026 CDGI | Admin Dashboard</div>
+  <div class="footer-links">
+    <a href="{{ url_for('home') }}" class="footer-link home">Home</a>
+    <a href="{{ url_for('logout') }}" class="footer-link logout">Logout</a>
+  </div>
 </footer>
 
 </body>

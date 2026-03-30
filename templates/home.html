@@ -4,226 +4,236 @@
 <meta charset="UTF-8">
 <title>Real Time Urban Utility Management & Communication</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
-
 html{
 scroll-behavior:smooth;
 }
 
 body{
 margin:0;
-font-family:Arial, sans-serif;
-background:#f4f7fb;
+font-family:'Segoe UI', sans-serif;
+background:linear-gradient(135deg,#eef2f7,#e3f2fd);
 }
 
-/* HEADER */
+/* NORMAL NAV LINKS (Home, Water, etc.) */
+nav a{
+color:white;
+text-decoration:none;
+margin-left:15px;
+font-size:14px;
+opacity:0.9;
+transition:0.3s;
+}
 
+nav a:hover{
+opacity:1;
+color:#00e676;
+}
+
+nav a:first-child{
+font-weight:bold;
+border-bottom:2px solid #00e676;
+padding-bottom:3px;
+}
+/* HEADER (GLASS EFFECT) */
 header{
-background:#004d7a;
+position:sticky;
+top:0;
+z-index:1000;
+backdrop-filter:blur(10px);
+background:rgba(31,32,39,0.85);
 color:white;
 padding:15px 30px;
 display:flex;
 justify-content:space-between;
 align-items:center;
+box-shadow:0 4px 15px rgba(0,0,0,0.2);
 }
 
 header h1{
-margin:0;
-font-size:22px;
+font-size:20px;
 }
 
-/* NAVBAR */
-
-nav{
-display:flex;
-align-items:center;
-}
-
-nav a{
-color:white;
-margin-left:20px;
-text-decoration:none;
-font-size:14px;
-transition:0.3s;
-}
-
-nav a:hover{
-color:#ffd166;
-}
-
-.login-btn{
-margin-left:20px;
+/* NAV BUTTON */
+.nav-btn{
+margin-left:12px;
 padding:8px 16px;
-background:#00c853;
+background:linear-gradient(45deg,#00c853,#00e676);
 color:white;
-border-radius:5px;
+border-radius:20px;
 text-decoration:none;
 font-size:14px;
 transition:0.3s;
 }
 
-.login-btn:hover{
-background:#00a843;
-transform:scale(1.05);
-}
-
-/* ANNOUNCEMENT BAR */
-
-.announcement-bar{
-background:#ff9800;
-color:white;
-padding:10px;
-font-weight:bold;
-text-align:center;
+.nav-btn:hover{
+transform:scale(1.08);
+box-shadow:0 5px 15px rgba(0,200,83,0.4);
 }
 
 /* HERO */
-
 .hero{
-background:linear-gradient(to right,#00aaff,#00d4a5);
-color:white;
 text-align:center;
-padding:70px 20px;
+padding:100px 20px;
+color:white;
+background:linear-gradient(135deg,#0077b6,#00c853);
+border-bottom-left-radius:40px;
+border-bottom-right-radius:40px;
 }
 
 .hero h2{
-font-size:34px;
+font-size:40px;
 margin-bottom:10px;
 }
 
 .hero p{
-font-size:16px;
+font-size:18px;
+opacity:0.9;
+}
+
+.hero .cta{
+margin-top:20px;
+display:inline-block;
+padding:12px 22px;
+background:white;
+color:#0077b6;
+border-radius:25px;
+text-decoration:none;
+font-weight:bold;
+transition:0.3s;
+}
+
+.hero .cta:hover{
+background:#f1f1f1;
+transform:scale(1.05);
 }
 
 /* SERVICES */
-
 .services{
 display:flex;
 flex-wrap:wrap;
 justify-content:center;
-padding:40px 20px;
-gap:25px;
+padding:60px 20px;
+gap:30px;
 }
 
-/* CARDS */
-
+/* CARD */
 .card{
-background:white;
+background:rgba(255,255,255,0.8);
+backdrop-filter:blur(10px);
 width:280px;
-padding:25px;
-border-radius:10px;
-box-shadow:0 4px 12px rgba(0,0,0,0.08);
+padding:30px;
+border-radius:20px;
+box-shadow:0 8px 25px rgba(0,0,0,0.1);
 text-align:center;
 transition:0.3s;
-scroll-margin-top:80px;
 }
 
 .card:hover{
-transform:translateY(-6px);
-box-shadow:0 6px 18px rgba(0,0,0,0.15);
+transform:translateY(-10px) scale(1.03);
+box-shadow:0 12px 30px rgba(0,0,0,0.2);
 }
 
 .card h3{
-color:#004d7a;
+margin-top:10px;
+color:#1f2027;
 }
 
-/* BUTTON */
-
-.btn{
-display:inline-block;
-margin-top:12px;
-padding:10px 16px;
-background:#0077b6;
-color:white;
-text-decoration:none;
-border-radius:5px;
-font-size:14px;
-transition:0.3s;
+.icon{
+font-size:40px;
 }
 
-.btn:hover{
-background:#005f8f;
-transform:scale(1.05);
-}
-
-/* ANNOUNCEMENTS SECTION */
-
+/* ANNOUNCEMENTS */
 .announcements{
-background:white;
-padding:30px;
 margin:20px;
-border-radius:10px;
-box-shadow:0 3px 10px rgba(0,0,0,0.05);
+padding:25px;
+background:white;
+border-radius:15px;
+box-shadow:0 6px 20px rgba(0,0,0,0.1);
+}
+
+.announcements h3{
+margin-bottom:10px;
+}
+
+.announcement-list{
+list-style:none;
+padding:0;
+}
+
+.announcement-list li{
+background:linear-gradient(45deg,#ff9800,#ffb74d);
+color:white;
+padding:12px;
+margin:8px 0;
+border-radius:8px;
 }
 
 /* FOOTER */
-
 footer{
-background:#002f4b;
+background:#1f2027;
 color:white;
 text-align:center;
 padding:15px;
-margin-top:20px;
+margin-top:30px;
 }
-
-/* ADMIN FOOTER */
 
 .admin-footer{
 position:fixed;
 bottom:0;
+left:0;
+right:0;
 width:100%;
-background:#1f2027;
+box-sizing:border-box; /* 🔥 IMPORTANT */
+background:linear-gradient(45deg,#1f2027,#343a40);
 color:white;
-text-align:center;
-padding:12px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:12px 25px;
 font-size:14px;
+box-shadow:0 -2px 10px rgba(0,0,0,0.2);
 }
 
-.admin-footer a{
-color:#e59a9a;
+.footer-left{
+font-weight:bold;
+opacity:0.9;
+}
+
+.footer-right{
+display:flex;
+gap:15px;
+}
+
+.footer-link{
 text-decoration:none;
-margin-left:6px;
+color:white;
+padding:6px 12px;
+border-radius:6px;
+transition:0.3s;
 }
 
-/* RESPONSIVE */
-
-@media (max-width:600px){
-
-header{
-flex-direction:column;
-align-items:flex-start;
+/* Variants */
+.footer-link.dashboard{
+background:#00c853;
 }
 
-header h1{
-font-size:14px;
+.footer-link.logout{
+background:#ff4d4d;
 }
 
-nav a{
-font-size:12px;
+.footer-link.login{
+background:#ff9800;
 }
 
-.login-btn{
-font-size:12px;
-}
-
-.hero h2{
-font-size:24px;
-}
-
+/* Hover */
+.footer-link:hover{
+transform:scale(1.08);
+opacity:0.9;
 }
 
 </style>
 </head>
-
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <script>
-      alert("{{ messages[0] }}");
-    </script>
-  {% endif %}
-{% endwith %}
-
 <body>
 
 <header>
@@ -231,39 +241,45 @@ font-size:24px;
 <h1>Real Time Urban Utility Management & Communication Portal</h1>
 
 <nav>
+
 <a href="#">Home</a>
-<a href="#water">Water Services</a>
-<a href="#electricity">Electricity</a>
-<a href="#">Contact</a>
-<a href="/login" class="login-btn">Login</a>
+
+{% if session.get('admin') %}
+    <a href="/admin" class="nav-btn">Admin Dashboard</a>
+    <a href="/logout" class="nav-btn">Logout</a>
+
+{% elif session.get('user_email') %}
+    <a href="/complaint" class="nav-btn">Dashboard</a>
+    <a href="/logout" class="nav-btn">Logout</a>
+
+{% else %}
+    <a href="/login" class="nav-btn">Login</a>
+    <a href="/signup" class="nav-btn">Register</a>
+{% endif %}
+
 </nav>
-
 </header>
-
-<!-- ANNOUNCEMENT BAR -->
-
-<div class="announcement-bar">
-Welcome to Real Time Urban Utility Management System
-</div>
-
 <section class="hero">
 
-<h2>Welcome to Municipal Services</h2>
+<h2>Smart City Utility Portal</h2>
+<p>Manage complaints, track services & stay updated easily</p>
 
-<p>Details related to Water Supply and Electricity for each Ward</p>
+<a href="/register_complaint" class="cta">Register Complaint</a>
 
 </section>
 
 <section class="services">
 
-<div class="card" id="water">
-<h3>Water Supply</h3>
-<p>Check water supply schedules, report issues, and manage connections.</p>
+<div class="card">
+<div class="icon">💧</div>
+<h3>Water Services</h3>
+<p>Check schedules, report issues & manage supply.</p>
 </div>
 
-<div class="card" id="electricity">
-<h3>Electricity Services</h3>
-<p>Report outages and know more about electricity distribution.</p>
+<div class="card">
+<div class="icon">⚡</div>
+<h3>Electricity</h3>
+<p>Report outages & stay updated on power supply.</p>
 </div>
 
 </section>
@@ -272,24 +288,39 @@ Welcome to Real Time Urban Utility Management System
 
 <h3>Announcements</h3>
 
-<div class="announcement-bar">
-{{ announcement }}
-</div>
+<ul class="announcement-list">
+{% for a in announcements %}
+    <li>{{ a[0] }}</li>
+{% endfor %}
+</ul>
 
 </section>
 
-<footer>
+<footer class="admin-footer">
 
-<p>© 2026 CDGI MINOR PROJECT | All Rights Reserved</p>
+<div class="footer-left">
+© 2026 CDGI | Real Time Urban Utility Management & Communication Portal
+</div>
 
-</footer>
+<div class="footer-right">
 
-<div class="admin-footer">
+{% if session.get('admin') %}
 
-Admin Access :
-<a href="/adminpage">Admin Login</a>
+    <a href="/admin" class="footer-link dashboard">Dashboard</a>
+    <a href="/logout" class="footer-link logout">Logout</a>
+
+{% elif session.get('user_email') %}
+
+    <span style="opacity:0.8;">User Mode</span>
+
+{% else %}
+
+    <a href="/adminpage" class="footer-link login">Admin Login</a>
+
+{% endif %}
 
 </div>
 
+</footer>
 </body>
 </html>

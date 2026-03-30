@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>User Login</title>
+<title>Register Complaint</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -27,7 +27,9 @@
   --blue:#0077b6;
   --blue-light:#00b4d8;
   --red:#ff4d4d;
+  --orange:#f97316;
   --orange-light:#fb7185;
+  --dark:#1f2027;
 }
 
 body{
@@ -102,6 +104,11 @@ header{
   font-weight:600;
   transition:0.3s ease;
   box-shadow:0 10px 20px rgba(0,200,83,0.2);
+}
+
+.nav-btn.secondary{
+  background:linear-gradient(135deg,var(--red),var(--orange-light));
+  box-shadow:0 10px 20px rgba(255,77,77,0.18);
 }
 
 .nav-btn:hover{
@@ -220,6 +227,8 @@ header{
 .panel-head{
   display:flex;
   align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
   margin-bottom:18px;
 }
 
@@ -253,19 +262,10 @@ header{
   line-height:1.6;
 }
 
-.flash-box{
-  background:rgba(239,68,68,0.08);
-  border:1px solid rgba(239,68,68,0.14);
-  color:#b91c1c;
-  padding:12px 14px;
-  border-radius:14px;
-  font-size:14px;
-  margin-bottom:14px;
-}
-
 .form-grid{
   display:grid;
   gap:16px;
+  margin-top:8px;
 }
 
 .form-group{
@@ -279,7 +279,9 @@ header{
   color:#1f2937;
 }
 
-.input-field{
+.input-field,
+.textarea-field,
+.select-field{
   width:100%;
   border:1px solid rgba(17,24,39,0.12);
   border-radius:16px;
@@ -292,17 +294,24 @@ header{
   backdrop-filter:blur(8px);
 }
 
-.input-field:focus{
+.input-field:focus,
+.textarea-field:focus,
+.select-field:focus{
   border-color:var(--blue);
   box-shadow:0 0 0 4px rgba(0,119,182,0.12);
   transform:translateY(-1px);
 }
 
+.textarea-field{
+  min-height:130px;
+  resize:vertical;
+}
+
 .form-actions{
   display:flex;
-  flex-direction:column;
+  flex-wrap:wrap;
   gap:12px;
-  margin-top:12px;
+  margin-top:10px;
 }
 
 .submit-btn{
@@ -320,25 +329,27 @@ header{
 
 .submit-btn:hover{
   transform:translateY(-2px);
+  box-shadow:0 16px 28px rgba(0,119,182,0.25);
 }
 
-.inline-link,
-.alt-link{
+.track-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:14px 18px;
+  border-radius:14px;
   text-decoration:none;
   font-size:14px;
   font-weight:600;
   color:var(--blue);
+  background:rgba(0,119,182,0.08);
+  border:1px solid rgba(0,119,182,0.12);
+  transition:0.3s ease;
 }
 
-.inline-link:hover,
-.alt-link:hover{
-  text-decoration:underline;
-}
-
-.alt-link{
-  display:block;
-  margin-top:18px;
-  text-align:center;
+.track-link:hover{
+  transform:translateY(-2px);
+  background:rgba(0,119,182,0.12);
 }
 
 footer.user-footer{
@@ -376,13 +387,21 @@ footer.user-footer{
   background:linear-gradient(135deg,var(--green-dark),var(--green));
 }
 
-@media (max-width:980px){
+.footer-link.logout{
+  background:linear-gradient(135deg,var(--red),var(--orange-light));
+}
+
+@media (max-width: 980px){
   .main{
     grid-template-columns:1fr;
   }
+
+  .hero-title{
+    font-size:24px;
+  }
 }
 
-@media (max-width:640px){
+@media (max-width: 640px){
   header{
     padding:14px 16px;
     align-items:flex-start;
@@ -393,16 +412,34 @@ footer.user-footer{
   .header-actions{
     width:100%;
     justify-content:space-between;
-    flex-wrap:wrap;
   }
 
   .main{
-    width:min(100% - 20px,1100px);
+    width:min(100% - 20px, 1100px);
     margin:18px auto;
+    padding-bottom:10px;
   }
 
-  .panel-inner{
+  .panel-inner,
+  .form-panel .panel-inner{
     padding:18px;
+  }
+
+  .brand-text h1{
+    font-size:16px;
+  }
+
+  .hero-title{
+    font-size:22px;
+  }
+
+  .form-actions{
+    flex-direction:column;
+  }
+
+  .submit-btn,
+  .track-link{
+    width:100%;
   }
 
   footer.user-footer{
@@ -413,6 +450,7 @@ footer.user-footer{
 
   .footer-links{
     width:100%;
+    justify-content:flex-start;
     flex-wrap:wrap;
   }
 }
@@ -423,41 +461,44 @@ footer.user-footer{
 
 <header>
   <div class="brand">
-    <div class="brand-mark">👤</div>
+    <div class="brand-mark">📝</div>
     <div class="brand-text">
-      <h1>User Login</h1>
-      <p>Access your complaint dashboard securely</p>
+      <h1>Register Complaint</h1>
+      <p>Submit issues related to civic and utility services</p>
     </div>
   </div>
 
   <div class="header-actions">
+    <a href="/dashboard" class="nav-btn">Dashboard</a>
     <a href="/" class="nav-btn">Home</a>
+    <a href="/logout" class="nav-btn secondary">Logout</a>
   </div>
 </header>
 
 <div class="main">
   <section class="panel hero-card">
     <div class="panel-inner">
-      <div class="welcome-badge">🔐 Secure Access</div>
-      <h2 class="hero-title">Login to manage complaints and track updates easily.</h2>
+      <div class="welcome-badge">📢 Complaint Support</div>
+      <h2 class="hero-title">Register your issue and help us improve local services.</h2>
       <p class="hero-text">
-        Access your user panel to register complaints, monitor status changes, and stay updated with announcements from the administration.
+        Submit a complaint about water, electricity, roads, cleanliness, or any other civic issue.
+        Your request will be reviewed by the administration and updated regularly.
       </p>
 
       <div class="info-list">
         <div class="info-card">
-          <div class="info-icon">📌</div>
+          <div class="info-icon">📝</div>
           <div class="info-body">
-            <h3>Track Complaints</h3>
-            <p>Check complaint progress, admin replies, and current status from one dashboard.</p>
+            <h3>Easy Submission</h3>
+            <p>Fill in the complaint details with category and description in a few simple steps.</p>
           </div>
         </div>
 
         <div class="info-card">
-          <div class="info-icon">📢</div>
+          <div class="info-icon">📌</div>
           <div class="info-body">
-            <h3>Stay Informed</h3>
-            <p>View public updates and ward announcements relevant to your account and location.</p>
+            <h3>Track Progress</h3>
+            <p>Once submitted, you can monitor status updates and read replies from the admin team.</p>
           </div>
         </div>
       </div>
@@ -468,40 +509,51 @@ footer.user-footer{
     <div class="panel-inner">
       <div class="panel-head">
         <div class="panel-head-left">
-          <div class="panel-icon">🔓</div>
+          <div class="panel-icon">📨</div>
           <div>
-            <h2>User Login</h2>
-            <p>Enter your registered email and password to continue.</p>
+            <h2>Complaint Form</h2>
+            <p>Enter your complaint details clearly so the issue can be resolved faster.</p>
           </div>
         </div>
       </div>
 
-      {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="flash-box">{{ messages[0] }}</div>
-      {% endif %}
-      {% endwith %}
-
-      <form method="POST" action="{{ url_for('login') }}">
+      <form action="/register_complaint" method="POST">
         <div class="form-grid">
           <div class="form-group">
-            <label for="email">Email Address</label>
-            <input type="email" id="email" name="email" class="input-field" placeholder="Enter your email" required>
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" class="input-field" placeholder="Enter your full name" required>
           </div>
 
           <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" class="input-field" placeholder="Enter your password" required>
+            <label for="ward">Ward Number</label>
+            <input type="text" id="ward" name="ward" class="input-field" placeholder="Enter your ward number" required>
+          </div>
+
+          <div class="form-group">
+            <label for="category">Complaint Category</label>
+            <select id="category" name="category" class="select-field" required>
+              <option value="">Select complaint category</option>
+              <option value="Water Supply">Water Supply</option>
+              <option value="Electricity Supply">Electricity Supply</option>
+              <option value="Road Damage">Road Damage</option>
+              <option value="Garbage / Waste">Garbage / Waste</option>
+              <option value="Drainage Issue">Drainage Issue</option>
+              <option value="Street Light">Street Light</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="description">Complaint Description</label>
+            <textarea id="description" name="description" class="textarea-field" placeholder="Describe your complaint in detail..." required></textarea>
           </div>
         </div>
 
         <div class="form-actions">
-          <button type="submit" class="submit-btn">Login</button>
-          <a href="{{ url_for('forgot_password') }}" class="inline-link">Forgot Password?</a>
+          <button type="submit" class="submit-btn">Submit Complaint</button>
+          <a href="/track_complaints" class="track-link">Track Previous Complaints</a>
         </div>
       </form>
-
-      <a href="{{ url_for('signup') }}" class="alt-link">Don't have an account? Register</a>
     </div>
   </section>
 </div>
@@ -510,6 +562,7 @@ footer.user-footer{
   <div>© 2026 CDGI | User Panel</div>
   <div class="footer-links">
     <a href="/" class="footer-link home">Home</a>
+    <a href="/logout" class="footer-link logout">Logout</a>
   </div>
 </footer>
 

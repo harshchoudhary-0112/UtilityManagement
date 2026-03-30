@@ -1,23 +1,765 @@
-<html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<title>User Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="{{url_for('static',filename='style.css')}}">
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI', sans-serif;
+}
 
+:root{
+  --bg-1:#eef2f7;
+  --bg-2:#dbeafe;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --white:rgba(255,255,255,0.88);
+  --border:rgba(255,255,255,0.35);
+  --shadow:0 20px 45px rgba(15,23,42,0.12);
+  --shadow-soft:0 10px 25px rgba(15,23,42,0.08);
+  --green:#00c853;
+  --green-dark:#00a86b;
+  --blue:#0077b6;
+  --blue-light:#00b4d8;
+  --red:#ff4d4d;
+  --dark:#1f2027;
+}
+
+body{
+  min-height:100vh;
+  color:var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(0,180,216,0.18), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(0,200,83,0.15), transparent 28%),
+    linear-gradient(135deg,var(--bg-1),var(--bg-2));
+  display:flex;
+  flex-direction:column;
+  padding-bottom:76px;
+}
+
+header{
+  position:sticky;
+  top:0;
+  z-index:1000;
+  background:rgba(31,32,39,0.82);
+  color:white;
+  padding:16px 28px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  backdrop-filter:blur(16px);
+  box-shadow:0 8px 24px rgba(0,0,0,0.16);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.brand-mark{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,var(--blue),var(--green));
+  box-shadow:0 8px 16px rgba(0,0,0,0.18);
+  font-size:20px;
+}
+
+.brand-text h1{
+  font-size:18px;
+  font-weight:700;
+}
+
+.brand-text p{
+  font-size:12px;
+  color:rgba(255,255,255,0.72);
+  margin-top:2px;
+}
+
+.header-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.nav-btn{
+  padding:10px 16px;
+  background:linear-gradient(135deg,var(--green-dark),var(--green));
+  color:white;
+  border-radius:999px;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:600;
+  transition:0.3s ease;
+  box-shadow:0 10px 20px rgba(0,200,83,0.2);
+}
+
+.nav-btn.secondary{
+  background:linear-gradient(135deg,#f97316,#fb7185);
+  box-shadow:0 10px 20px rgba(249,115,22,0.18);
+}
+
+.nav-btn:hover{
+  transform:translateY(-2px);
+}
+
+.user-trigger{
+  width:44px;
+  height:44px;
+  border:none;
+  border-radius:14px;
+  background:rgba(255,255,255,0.12);
+  color:white;
+  font-size:20px;
+  cursor:pointer;
+  backdrop-filter:blur(10px);
+  transition:0.3s ease;
+}
+
+.user-trigger:hover{
+  background:rgba(255,255,255,0.18);
+  transform:translateY(-2px);
+}
+
+.main{
+  flex:1;
+  width:min(1200px,calc(100% - 32px));
+  margin:28px auto;
+  display:grid;
+  grid-template-columns:360px 1fr;
+  gap:22px;
+  align-items:start;
+}
+
+.panel{
+  background:var(--white);
+  border:1px solid var(--border);
+  backdrop-filter:blur(16px);
+  border-radius:24px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+
+.panel-inner{
+  padding:24px;
+}
+
+.hero-card{
+  position:relative;
+}
+
+.hero-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(135deg, rgba(0,119,182,0.08), rgba(0,200,83,0.08));
+  pointer-events:none;
+}
+
+.welcome-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.8);
+  color:var(--blue);
+  font-size:13px;
+  font-weight:700;
+  box-shadow:var(--shadow-soft);
+  margin-bottom:18px;
+}
+
+.hero-title{
+  font-size:28px;
+  line-height:1.2;
+  color:#111827;
+  margin-bottom:10px;
+}
+
+.hero-text{
+  font-size:14px;
+  line-height:1.7;
+  color:var(--muted);
+  margin-bottom:22px;
+  max-width:40ch;
+}
+
+.quick-grid{
+  display:grid;
+  gap:14px;
+}
+
+.action-card{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:16px;
+  border-radius:18px;
+  text-decoration:none;
+  color:inherit;
+  background:linear-gradient(135deg,#ffffff,#f8fbff);
+  border:1px solid rgba(17,24,39,0.06);
+  box-shadow:var(--shadow-soft);
+  transition:0.3s ease;
+}
+
+.action-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 16px 30px rgba(15,23,42,0.12);
+}
+
+.action-icon{
+  width:52px;
+  height:52px;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:white;
+  font-size:24px;
+  flex-shrink:0;
+}
+
+.action-icon.blue{
+  background:linear-gradient(135deg,var(--blue),var(--blue-light));
+}
+
+.action-icon.green{
+  background:linear-gradient(135deg,var(--green-dark),var(--green));
+}
+
+.action-body{
+  flex:1;
+}
+
+.action-body h3{
+  font-size:16px;
+  margin-bottom:4px;
+  color:#111827;
+}
+
+.action-body p{
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.5;
+}
+
+.action-arrow{
+  font-size:20px;
+  color:var(--blue);
+  font-weight:700;
+}
+
+.announcement-panel .panel-inner{
+  padding:24px;
+}
+
+.panel-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:18px;
+}
+
+.panel-head-left{
+  display:flex;
+  gap:14px;
+}
+
+.panel-icon{
+  width:54px;
+  height:54px;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:white;
+  font-size:24px;
+  background:linear-gradient(135deg,var(--blue),var(--green));
+  box-shadow:0 14px 24px rgba(0,119,182,0.18);
+}
+
+.panel-head h2{
+  font-size:24px;
+  color:#111827;
+  margin-bottom:4px;
+}
+
+.panel-head p{
+  font-size:14px;
+  color:var(--muted);
+  line-height:1.6;
+}
+
+.announcement-group{
+  margin-top:20px;
+}
+
+.group-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  padding:6px 11px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+  color:white;
+}
+
+.badge.general{
+  background:linear-gradient(135deg,var(--blue),var(--blue-light));
+}
+
+.badge.ward{
+  background:linear-gradient(135deg,var(--green-dark),var(--green));
+}
+
+.group-title h3{
+  font-size:17px;
+  color:#1f2937;
+}
+
+.announcement-list{
+  display:grid;
+  gap:12px;
+}
+
+.announcement-card{
+  position:relative;
+  border-radius:18px;
+  padding:16px 16px 14px;
+  border:1px solid rgba(17,24,39,0.05);
+  box-shadow:var(--shadow-soft);
+  overflow:hidden;
+}
+
+.announcement-card.general{
+  background:linear-gradient(135deg,#eef7ff,#f9fcff);
+}
+
+.announcement-card.ward{
+  background:linear-gradient(135deg,#effff4,#fbfffd);
+}
+
+.announcement-strip{
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  width:6px;
+}
+
+.announcement-card.general .announcement-strip{
+  background:linear-gradient(180deg,var(--blue),var(--blue-light));
+}
+
+.announcement-card.ward .announcement-strip{
+  background:linear-gradient(180deg,var(--green-dark),var(--green));
+}
+
+.announcement-meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+  padding-left:6px;
+}
+
+.announcement-tag{
+  display:inline-block;
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:700;
+  background:rgba(255,255,255,0.75);
+  color:#1f2937;
+}
+
+.announcement-time{
+  font-size:12px;
+  color:var(--muted);
+}
+
+.announcement-message{
+  padding-left:6px;
+  font-size:14px;
+  line-height:1.65;
+  color:#1f2937;
+}
+
+.empty-box{
+  padding:16px;
+  border-radius:16px;
+  border:1px dashed rgba(17,24,39,0.15);
+  background:rgba(255,255,255,0.55);
+  color:var(--muted);
+  font-size:14px;
+}
+
+.user-panel{
+  position:fixed;
+  top:0;
+  right:-360px;
+  width:340px;
+  max-width:92vw;
+  height:100%;
+  background:rgba(255,255,255,0.96);
+  backdrop-filter:blur(18px);
+  box-shadow:-18px 0 40px rgba(15,23,42,0.16);
+  z-index:2000;
+  padding:24px;
+  transition:right 0.35s ease;
+  overflow-y:auto;
+}
+
+.user-panel.active{
+  right:0;
+}
+
+.panel-close{
+  position:absolute;
+  top:16px;
+  right:18px;
+  font-size:28px;
+  cursor:pointer;
+  color:#ef4444;
+}
+
+.user-panel-top{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-bottom:22px;
+  padding-right:28px;
+}
+
+.user-avatar{
+  width:58px;
+  height:58px;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,var(--blue),var(--green));
+  color:white;
+  font-size:26px;
+  box-shadow:var(--shadow-soft);
+}
+
+.user-panel-top h3{
+  font-size:20px;
+  color:#111827;
+}
+
+.user-panel-top p{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+.detail-list{
+  display:grid;
+  gap:12px;
+}
+
+.detail-item{
+  background:#f8fafc;
+  border:1px solid rgba(17,24,39,0.06);
+  border-radius:16px;
+  padding:14px 15px;
+}
+
+.detail-item span{
+  display:block;
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:4px;
+}
+
+.detail-item strong{
+  color:#111827;
+  font-size:14px;
+  word-break:break-word;
+}
+
+footer.user-footer{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:14px 24px;
+  background:rgba(31,32,39,0.88);
+  color:white;
+  backdrop-filter:blur(16px);
+  border-top:1px solid rgba(255,255,255,0.08);
+}
+
+.footer-links{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.footer-link{
+  text-decoration:none;
+  color:white;
+  padding:8px 13px;
+  border-radius:10px;
+  font-size:13px;
+  font-weight:600;
+}
+
+.footer-link.home{
+  background:linear-gradient(135deg,var(--green-dark),var(--green));
+}
+
+.footer-link.logout{
+  background:linear-gradient(135deg,#ef4444,#fb7185);
+}
+
+@media (max-width: 980px){
+  .main{
+    grid-template-columns:1fr;
+  }
+
+  .hero-title{
+    font-size:24px;
+  }
+}
+
+@media (max-width: 640px){
+  header{
+    padding:14px 16px;
+    align-items:flex-start;
+    gap:14px;
+    flex-direction:column;
+  }
+
+  .header-actions{
+    width:100%;
+    justify-content:space-between;
+  }
+
+  .main{
+    width:min(100% - 20px, 1200px);
+    margin:18px auto;
+    padding-bottom:10px;
+  }
+
+  .panel-inner,
+  .announcement-panel .panel-inner{
+    padding:18px;
+  }
+
+  .brand-text h1{
+    font-size:16px;
+  }
+
+  .hero-title{
+    font-size:22px;
+  }
+
+  footer.user-footer{
+    padding:12px 14px;
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .footer-links{
+    width:100%;
+    justify-content:flex-start;
+    flex-wrap:wrap;
+  }
+}
+</style>
+
+<script>
+function toggleUserPanel() {
+  const panel = document.getElementById('userPanel');
+  panel.classList.toggle('active');
+}
+</script>
 </head>
 
 <body>
 
-<div class="container">
+<header>
+  <div class="brand">
+    <div class="brand-mark">👤</div>
+    <div class="brand-text">
+      <h1>User Dashboard</h1>
+      <p>Utility management and complaint services</p>
+    </div>
+  </div>
 
-<h2>User Dashboard</h2>
+  <div class="header-actions">
+    <a href="/" class="nav-btn">Home</a>
+    <a href="/logout" class="nav-btn secondary">Logout</a>
+    <button class="user-trigger" onclick="toggleUserPanel()">👤</button>
+  </div>
+</header>
 
-<a href="/complaint">
-<button>Register Complaint</button>
-</a>
+<div class="user-panel" id="userPanel">
+  <span class="panel-close" onclick="toggleUserPanel()">×</span>
+
+  <div class="user-panel-top">
+    <div class="user-avatar">👤</div>
+    <div>
+      <h3>{{ session['user_name'] }}</h3>
+      <p>User information panel</p>
+    </div>
+  </div>
+
+  <div class="detail-list">
+    <div class="detail-item">
+      <span>Full Name</span>
+      <strong>{{ session['user_name'] }}</strong>
+    </div>
+
+    <div class="detail-item">
+      <span>Email Address</span>
+      <strong>{{ session['user_email'] }}</strong>
+    </div>
+
+    <div class="detail-item">
+      <span>Ward Number</span>
+      <strong>{{ session['user_ward'] }}</strong>
+    </div>
+
+    <div class="detail-item">
+      <span>Mobile Number</span>
+      <strong>{{ session['user_mobile'] }}</strong>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <section class="panel hero-card">
+    <div class="panel-inner">
+      <div class="welcome-badge">✨ Welcome back</div>
+      <h2 class="hero-title">Manage complaints and stay updated with ward notices.</h2>
+      <p class="hero-text">
+        Use the quick actions below to register a new issue, track previous complaints,
+        and read the latest public and ward-specific announcements.
+      </p>
+
+      <div class="quick-grid">
+        <a href="/register_complaint" class="action-card">
+          <div class="action-icon blue">📝</div>
+          <div class="action-body">
+            <h3>Register Complaint</h3>
+            <p>Submit a new complaint related to water, electricity, roads, waste, or other civic services.</p>
+          </div>
+          <div class="action-arrow">→</div>
+        </a>
+
+        <a href="/track_complaints" class="action-card">
+          <div class="action-icon green">📌</div>
+          <div class="action-body">
+            <h3>Track Complaints</h3>
+            <p>View complaint progress, current status, timestamps, and admin responses in one place.</p>
+          </div>
+          <div class="action-arrow">→</div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel announcement-panel">
+    <div class="panel-inner">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-icon">📢</div>
+          <div>
+            <h2>Announcements</h2>
+            <p>Latest public notices and updates for your ward.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="announcement-group">
+        <div class="group-title">
+          <span class="badge general">General</span>
+          <h3>For All Wards</h3>
+        </div>
+
+        {% if general_announcements %}
+          <div class="announcement-list">
+            {% for a in general_announcements %}
+              <div class="announcement-card general">
+                <div class="announcement-strip"></div>
+                <div class="announcement-meta">
+                  <span class="announcement-tag">Public Notice</span>
+                  <span class="announcement-time">{{ a[3] }}</span>
+                </div>
+                <div class="announcement-message">{{ a[2] }}</div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-box">No general announcements available right now.</div>
+        {% endif %}
+      </div>
+
+      <div class="announcement-group">
+        <div class="group-title">
+          <span class="badge ward">Ward</span>
+          <h3>Ward {{ user_ward }} Updates</h3>
+        </div>
+
+        {% if ward_announcements %}
+          <div class="announcement-list">
+            {% for a in ward_announcements %}
+              <div class="announcement-card ward">
+                <div class="announcement-strip"></div>
+                <div class="announcement-meta">
+                  <span class="announcement-tag">Ward {{ a[1] }}</span>
+                  <span class="announcement-time">{{ a[3] }}</span>
+                </div>
+                <div class="announcement-message">{{ a[2] }}</div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-box">No ward announcements available for your area.</div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
 
 </div>
 
-</body>
+<footer class="user-footer">
+  <div>© 2026 CDGI | User Panel</div>
+  <div class="footer-links">
+    <a href="/" class="footer-link home">Home</a>
+    <a href="/logout" class="footer-link logout">Logout</a>
+  </div>
+</footer>
 
+</body>
 </html>

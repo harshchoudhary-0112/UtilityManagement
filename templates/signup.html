@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>User Login</title>
+<title>User Signup</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -298,17 +298,12 @@ header{
   transform:translateY(-1px);
 }
 
-.form-actions{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  margin-top:12px;
-}
-
 .submit-btn{
+  width:100%;
   border:none;
   border-radius:14px;
   padding:14px 22px;
+  margin-top:14px;
   background:linear-gradient(135deg,var(--blue),var(--green));
   color:white;
   font-size:14px;
@@ -322,23 +317,18 @@ header{
   transform:translateY(-2px);
 }
 
-.inline-link,
 .alt-link{
+  display:block;
+  margin-top:18px;
+  text-align:center;
   text-decoration:none;
   font-size:14px;
   font-weight:600;
   color:var(--blue);
 }
 
-.inline-link:hover,
 .alt-link:hover{
   text-decoration:underline;
-}
-
-.alt-link{
-  display:block;
-  margin-top:18px;
-  text-align:center;
 }
 
 footer.user-footer{
@@ -423,10 +413,10 @@ footer.user-footer{
 
 <header>
   <div class="brand">
-    <div class="brand-mark">👤</div>
+    <div class="brand-mark">📝</div>
     <div class="brand-text">
-      <h1>User Login</h1>
-      <p>Access your complaint dashboard securely</p>
+      <h1>User Signup</h1>
+      <p>Create your account to access civic complaint services</p>
     </div>
   </div>
 
@@ -438,26 +428,26 @@ footer.user-footer{
 <div class="main">
   <section class="panel hero-card">
     <div class="panel-inner">
-      <div class="welcome-badge">🔐 Secure Access</div>
-      <h2 class="hero-title">Login to manage complaints and track updates easily.</h2>
+      <div class="welcome-badge">✨ New User Registration</div>
+      <h2 class="hero-title">Create your account and start using the complaint portal.</h2>
       <p class="hero-text">
-        Access your user panel to register complaints, monitor status changes, and stay updated with announcements from the administration.
+        Register once to submit complaints, receive updates, track issue progress, and access announcements linked to your ward.
       </p>
 
       <div class="info-list">
         <div class="info-card">
-          <div class="info-icon">📌</div>
+          <div class="info-icon">🧾</div>
           <div class="info-body">
-            <h3>Track Complaints</h3>
-            <p>Check complaint progress, admin replies, and current status from one dashboard.</p>
+            <h3>Complaint Access</h3>
+            <p>Register complaints online without visiting offices and keep your records in one place.</p>
           </div>
         </div>
 
         <div class="info-card">
-          <div class="info-icon">📢</div>
+          <div class="info-icon">📍</div>
           <div class="info-body">
-            <h3>Stay Informed</h3>
-            <p>View public updates and ward announcements relevant to your account and location.</p>
+            <h3>Ward Based Updates</h3>
+            <p>Your ward details help the system show relevant complaint status and local announcements.</p>
           </div>
         </div>
       </div>
@@ -468,10 +458,10 @@ footer.user-footer{
     <div class="panel-inner">
       <div class="panel-head">
         <div class="panel-head-left">
-          <div class="panel-icon">🔓</div>
+          <div class="panel-icon">👥</div>
           <div>
-            <h2>User Login</h2>
-            <p>Enter your registered email and password to continue.</p>
+            <h2>User Signup</h2>
+            <p>Fill in your details below to create a new user account.</p>
           </div>
         </div>
       </div>
@@ -482,26 +472,38 @@ footer.user-footer{
       {% endif %}
       {% endwith %}
 
-      <form method="POST" action="{{ url_for('login') }}">
+      <form method="POST" action="{{ url_for('signup') }}">
         <div class="form-grid">
           <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" class="input-field" placeholder="Enter full name" required>
+          </div>
+
+          <div class="form-group">
             <label for="email">Email Address</label>
-            <input type="email" id="email" name="email" class="input-field" placeholder="Enter your email" required>
+            <input type="email" id="email" name="email" class="input-field" placeholder="Enter email" required>
+          </div>
+
+          <div class="form-group">
+            <label for="ward">Ward Number</label>
+            <input type="text" id="ward" name="ward" class="input-field" placeholder="Enter ward number" required>
+          </div>
+
+          <div class="form-group">
+            <label for="mobile_number">Mobile Number</label>
+            <input type="text" id="mobile_number" name="mobile_number" class="input-field" placeholder="Enter mobile number (+91)" required>
           </div>
 
           <div class="form-group">
             <label for="password">Password</label>
-            <input type="password" id="password" name="password" class="input-field" placeholder="Enter your password" required>
+            <input type="password" id="password" name="password" class="input-field" placeholder="Create password" required>
           </div>
         </div>
 
-        <div class="form-actions">
-          <button type="submit" class="submit-btn">Login</button>
-          <a href="{{ url_for('forgot_password') }}" class="inline-link">Forgot Password?</a>
-        </div>
+        <button type="submit" class="submit-btn">Register</button>
       </form>
 
-      <a href="{{ url_for('signup') }}" class="alt-link">Don't have an account? Register</a>
+      <a href="{{ url_for('login') }}" class="alt-link">Already have an account? Login</a>
     </div>
   </section>
 </div>
