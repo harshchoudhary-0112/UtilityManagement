@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>General Announcement</title>
+<title>Admin Signup</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -28,7 +28,6 @@
   --blue-light:#00b4d8;
   --red:#ff4d4d;
   --orange-light:#fb7185;
-  --dark:#1f2027;
 }
 
 body{
@@ -102,11 +101,6 @@ header{
   font-weight:600;
   transition:0.3s ease;
   box-shadow:0 10px 20px rgba(0,200,83,0.2);
-}
-
-.nav-btn.secondary{
-  background:linear-gradient(135deg,var(--red),var(--orange-light));
-  box-shadow:0 10px 20px rgba(255,77,77,0.18);
 }
 
 .nav-btn:hover{
@@ -225,8 +219,6 @@ header{
 .panel-head{
   display:flex;
   align-items:flex-start;
-  justify-content:space-between;
-  gap:14px;
   margin-bottom:18px;
 }
 
@@ -260,10 +252,19 @@ header{
   line-height:1.6;
 }
 
+.flash-box{
+  background:rgba(239,68,68,0.08);
+  border:1px solid rgba(239,68,68,0.14);
+  color:#b91c1c;
+  padding:12px 14px;
+  border-radius:14px;
+  font-size:14px;
+  margin-bottom:14px;
+}
+
 .form-grid{
   display:grid;
   gap:16px;
-  margin-top:8px;
 }
 
 .form-group{
@@ -277,7 +278,7 @@ header{
   color:#1f2937;
 }
 
-.textarea-field{
+.input-field{
   width:100%;
   border:1px solid rgba(17,24,39,0.12);
   border-radius:16px;
@@ -288,27 +289,37 @@ header{
   outline:none;
   transition:0.3s ease;
   backdrop-filter:blur(8px);
-  min-height:180px;
-  resize:vertical;
 }
 
-.textarea-field:focus{
+.input-field:focus{
   border-color:var(--blue);
   box-shadow:0 0 0 4px rgba(0,119,182,0.12);
   transform:translateY(-1px);
 }
 
-.form-actions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:12px;
-  margin-top:10px;
+.input-field:invalid:focus{
+  border-color:var(--red);
+  box-shadow:0 0 0 4px rgba(239,68,68,0.12);
+}
+
+.input-field:valid:focus{
+  border-color:var(--green);
+  box-shadow:0 0 0 4px rgba(0,200,83,0.12);
+}
+
+.field-note{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:-2px;
+  line-height:1.5;
 }
 
 .submit-btn{
+  width:100%;
   border:none;
   border-radius:14px;
   padding:14px 22px;
+  margin-top:14px;
   background:linear-gradient(135deg,var(--blue),var(--green));
   color:white;
   font-size:14px;
@@ -322,26 +333,21 @@ header{
   transform:translateY(-2px);
 }
 
-.track-link{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:14px 18px;
-  border-radius:14px;
+.alt-link{
+  display:block;
+  margin-top:18px;
+  text-align:center;
   text-decoration:none;
   font-size:14px;
   font-weight:600;
   color:var(--blue);
-  background:rgba(0,119,182,0.08);
-  border:1px solid rgba(0,119,182,0.12);
-  transition:0.3s ease;
 }
 
-.track-link:hover{
-  transform:translateY(-2px);
+.alt-link:hover{
+  text-decoration:underline;
 }
 
-footer.admin-footer{
+footer.user-footer{
   margin-top:auto;
   width:100%;
   display:flex;
@@ -371,21 +377,13 @@ footer.admin-footer{
   font-weight:600;
 }
 
-.footer-link.dashboard{
+.footer-link.home{
   background:linear-gradient(135deg,var(--green-dark),var(--green));
-}
-
-.footer-link.logout{
-  background:linear-gradient(135deg,var(--red),var(--orange-light));
 }
 
 @media (max-width:980px){
   .main{
     grid-template-columns:1fr;
-  }
-
-  .hero-title{
-    font-size:24px;
   }
 }
 
@@ -412,16 +410,7 @@ footer.admin-footer{
     padding:18px;
   }
 
-  .form-actions{
-    flex-direction:column;
-  }
-
-  .submit-btn,
-  .track-link{
-    width:100%;
-  }
-
-  footer.admin-footer{
+  footer.user-footer{
     padding:12px 14px;
     flex-direction:column;
     align-items:flex-start;
@@ -439,42 +428,41 @@ footer.admin-footer{
 
 <header>
   <div class="brand">
-    <div class="brand-mark">📢</div>
+    <div class="brand-mark">🛡️</div>
     <div class="brand-text">
-      <h1>General Announcement</h1>
-      <p>Publish one common message for all wards</p>
+      <h1>Admin Signup</h1>
+      <p>Create your admin account to manage civic complaint services</p>
     </div>
   </div>
 
   <div class="header-actions">
-    <a href="/admin" class="nav-btn">Dashboard</a>
-    <a href="/logout" class="nav-btn secondary">Logout</a>
+    <a href="/" class="nav-btn">Home</a>
   </div>
 </header>
 
 <div class="main">
   <section class="panel hero-card">
     <div class="panel-inner">
-      <div class="welcome-badge">📣 Public Notice Control</div>
-      <h2 class="hero-title">Publish one general announcement for all residents.</h2>
+      <div class="welcome-badge">✨ New Admin Registration</div>
+      <h2 class="hero-title">Create your admin account and manage the complaint portal.</h2>
       <p class="hero-text">
-        Use this page to update a common announcement that should be visible to every ward. This page is only for general announcements, so ward selection has been removed.
+        Register as an administrator to review complaints, update statuses, publish announcements, and manage citizen communication efficiently.
       </p>
 
       <div class="info-list">
         <div class="info-card">
-          <div class="info-icon">🌐</div>
+          <div class="info-icon">📋</div>
           <div class="info-body">
-            <h3>All Wards Covered</h3>
-            <p>This announcement is meant for everyone, so no separate ward selection is needed here.</p>
+            <h3>Complaint Management</h3>
+            <p>Access submitted complaints, review details, and take action from one central dashboard.</p>
           </div>
         </div>
 
         <div class="info-card">
-          <div class="info-icon">✏️</div>
+          <div class="info-icon">📢</div>
           <div class="info-body">
-            <h3>Simple Update</h3>
-            <p>Just edit the message and publish the updated announcement from one clean admin screen.</p>
+            <h3>Admin Control</h3>
+            <p>Manage ward announcements, update complaint status, and communicate with citizens clearly.</p>
           </div>
         </div>
       </div>
@@ -487,38 +475,126 @@ footer.admin-footer{
         <div class="panel-head-left">
           <div class="panel-icon">🛠️</div>
           <div>
-            <h2>General Announcement</h2>
-            <p>Write or update the message that should appear for all wards.</p>
+            <h2>Admin Signup</h2>
+            <p>Fill in your details below to create a new admin account.</p>
           </div>
         </div>
       </div>
 
-      <form method="POST">
-        <input type="hidden" name="ward" value="all">
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash-box">{{ messages[0] }}</div>
+      {% endif %}
+      {% endwith %}
 
+      <form method="POST" action="{{ url_for('admin_signup') }}" id="signupForm">
         <div class="form-grid">
           <div class="form-group">
-            <label for="announcement">Announcement Message</label>
-            <textarea name="announcement" id="announcement" class="textarea-field" placeholder="Write general announcement here..." required></textarea>
+            <label for="name">Full Name</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              class="input-field"
+              placeholder="Enter full name"
+              pattern="[A-Za-z\s]{2,50}"
+              title="Full name should contain only letters and spaces, 2 to 50 characters"
+              required
+            >
+            <small class="field-note">Only letters and spaces allowed, 2 to 50 characters.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="input-field"
+              placeholder="Enter email"
+              maxlength="100"
+              title="Enter a valid email address"
+              required
+            >
+            <small class="field-note">Enter a valid email address, for example: name@example.com.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="department">Department</label>
+            <input
+              type="text"
+              id="department"
+              name="department"
+              class="input-field"
+              placeholder="Enter department"
+              maxlength="50"
+              required
+            >
+            <small class="field-note">Enter the department or administration section name.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="mobile_number">Mobile Number</label>
+            <input
+              type="text"
+              id="mobile_number"
+              name="mobile_number"
+              class="input-field"
+              placeholder="Enter 10-digit mobile number"
+              pattern="[0-9]{10}"
+              maxlength="10"
+              inputmode="numeric"
+              title="Mobile number must be exactly 10 digits"
+              required
+            >
+            <small class="field-note">Only numbers allowed, exactly 10 digits.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="input-field"
+              placeholder="Create password"
+              pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$"
+              title="Password must be 8 to 20 characters and include uppercase, lowercase, number, and special character"
+              required
+            >
+            <small class="field-note">8 to 20 characters, include uppercase, lowercase, number, and special character.</small>
           </div>
         </div>
 
-        <div class="form-actions">
-          <button type="submit" class="submit-btn">Update General Announcement</button>
-          <a href="/admin" class="track-link">← Back to Dashboard</a>
-        </div>
+        <button type="submit" class="submit-btn">Register Admin</button>
       </form>
+
+      <a href="{{ url_for('adminlogin') }}" class="alt-link">Already have an admin account? Login</a>
     </div>
   </section>
 </div>
 
-<footer class="admin-footer">
+<footer class="user-footer">
   <div>© 2026 CDGI | Admin Panel</div>
   <div class="footer-links">
-    <a href="/admin" class="footer-link dashboard">Dashboard</a>
-    <a href="/logout" class="footer-link logout">Logout</a>
+    <a href="/" class="footer-link home">Home</a>
   </div>
 </footer>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const nameInput = document.getElementById("name");
+  const mobileInput = document.getElementById("mobile_number");
+
+  nameInput.addEventListener("input", function () {
+    this.value = this.value.replace(/[^A-Za-z\s]/g, "");
+  });
+
+  mobileInput.addEventListener("input", function () {
+    this.value = this.value.replace(/[^0-9]/g, "").slice(0, 10);
+  });
+});
+</script>
 
 </body>
 </html>

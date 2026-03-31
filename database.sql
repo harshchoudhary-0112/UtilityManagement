@@ -50,3 +50,11 @@ CREATE TABLE announcements (
 
 INSERT INTO announcements (ward, message)
 VALUES ('all', 'Welcome to Municipal Utility Portal');
+
+ALTER TABLE admins ADD COLUMN name VARCHAR(100);
+UPDATE admins SET name = 'Admin' WHERE name IS NULL;
+UPDATE admins SET name = 'Electrician' WHERE email = 'electricadmin@gmail.com';
+UPDATE admins SET name = 'Waterman' WHERE email = 'wateradmin@gmail.com';
+ALTER TABLE admins ADD COLUMN mobile_number VARCHAR(15);
+UPDATE admins SET mobile_number = '9669337002' WHERE email = 'electricadmin@gmail.com';
+UPDATE admins SET mobile_number = '9669337002' WHERE email = 'wateradmin@gmail.com';

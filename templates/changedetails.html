@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>General Announcement</title>
+<title>Change Details</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -28,7 +28,6 @@
   --blue-light:#00b4d8;
   --red:#ff4d4d;
   --orange-light:#fb7185;
-  --dark:#1f2027;
 }
 
 body{
@@ -102,11 +101,6 @@ header{
   font-weight:600;
   transition:0.3s ease;
   box-shadow:0 10px 20px rgba(0,200,83,0.2);
-}
-
-.nav-btn.secondary{
-  background:linear-gradient(135deg,var(--red),var(--orange-light));
-  box-shadow:0 10px 20px rgba(255,77,77,0.18);
 }
 
 .nav-btn:hover{
@@ -225,8 +219,6 @@ header{
 .panel-head{
   display:flex;
   align-items:flex-start;
-  justify-content:space-between;
-  gap:14px;
   margin-bottom:18px;
 }
 
@@ -260,10 +252,19 @@ header{
   line-height:1.6;
 }
 
+.flash-box{
+  background:rgba(34,197,94,0.10);
+  border:1px solid rgba(34,197,94,0.16);
+  color:#15803d;
+  padding:12px 14px;
+  border-radius:14px;
+  font-size:14px;
+  margin-bottom:14px;
+}
+
 .form-grid{
   display:grid;
   gap:16px;
-  margin-top:8px;
 }
 
 .form-group{
@@ -277,7 +278,7 @@ header{
   color:#1f2937;
 }
 
-.textarea-field{
+.input-field{
   width:100%;
   border:1px solid rgba(17,24,39,0.12);
   border-radius:16px;
@@ -288,27 +289,20 @@ header{
   outline:none;
   transition:0.3s ease;
   backdrop-filter:blur(8px);
-  min-height:180px;
-  resize:vertical;
 }
 
-.textarea-field:focus{
+.input-field:focus{
   border-color:var(--blue);
   box-shadow:0 0 0 4px rgba(0,119,182,0.12);
   transform:translateY(-1px);
 }
 
-.form-actions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:12px;
-  margin-top:10px;
-}
-
 .submit-btn{
+  width:100%;
   border:none;
   border-radius:14px;
   padding:14px 22px;
+  margin-top:14px;
   background:linear-gradient(135deg,var(--blue),var(--green));
   color:white;
   font-size:14px;
@@ -322,26 +316,21 @@ header{
   transform:translateY(-2px);
 }
 
-.track-link{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:14px 18px;
-  border-radius:14px;
+.alt-link{
+  display:block;
+  margin-top:18px;
+  text-align:center;
   text-decoration:none;
   font-size:14px;
   font-weight:600;
   color:var(--blue);
-  background:rgba(0,119,182,0.08);
-  border:1px solid rgba(0,119,182,0.12);
-  transition:0.3s ease;
 }
 
-.track-link:hover{
-  transform:translateY(-2px);
+.alt-link:hover{
+  text-decoration:underline;
 }
 
-footer.admin-footer{
+footer.user-footer{
   margin-top:auto;
   width:100%;
   display:flex;
@@ -371,21 +360,13 @@ footer.admin-footer{
   font-weight:600;
 }
 
-.footer-link.dashboard{
+.footer-link.home{
   background:linear-gradient(135deg,var(--green-dark),var(--green));
-}
-
-.footer-link.logout{
-  background:linear-gradient(135deg,var(--red),var(--orange-light));
 }
 
 @media (max-width:980px){
   .main{
     grid-template-columns:1fr;
-  }
-
-  .hero-title{
-    font-size:24px;
   }
 }
 
@@ -412,16 +393,7 @@ footer.admin-footer{
     padding:18px;
   }
 
-  .form-actions{
-    flex-direction:column;
-  }
-
-  .submit-btn,
-  .track-link{
-    width:100%;
-  }
-
-  footer.admin-footer{
+  footer.user-footer{
     padding:12px 14px;
     flex-direction:column;
     align-items:flex-start;
@@ -439,42 +411,41 @@ footer.admin-footer{
 
 <header>
   <div class="brand">
-    <div class="brand-mark">📢</div>
+    <div class="brand-mark">📝</div>
     <div class="brand-text">
-      <h1>General Announcement</h1>
-      <p>Publish one common message for all wards</p>
+      <h1>Change Details</h1>
+      <p>Update your account information securely</p>
     </div>
   </div>
 
   <div class="header-actions">
-    <a href="/admin" class="nav-btn">Dashboard</a>
-    <a href="/logout" class="nav-btn secondary">Logout</a>
+    <a href="/dashboard" class="nav-btn">Dashboard</a>
   </div>
 </header>
 
 <div class="main">
   <section class="panel hero-card">
     <div class="panel-inner">
-      <div class="welcome-badge">📣 Public Notice Control</div>
-      <h2 class="hero-title">Publish one general announcement for all residents.</h2>
+      <div class="welcome-badge">👤 Profile Update</div>
+      <h2 class="hero-title">Keep your account details accurate and up to date.</h2>
       <p class="hero-text">
-        Use this page to update a common announcement that should be visible to every ward. This page is only for general announcements, so ward selection has been removed.
+        Update your full name, email, ward number, and mobile number so your account information stays current.
       </p>
 
       <div class="info-list">
         <div class="info-card">
-          <div class="info-icon">🌐</div>
+          <div class="info-icon">📛</div>
           <div class="info-body">
-            <h3>All Wards Covered</h3>
-            <p>This announcement is meant for everyone, so no separate ward selection is needed here.</p>
+            <h3>Personal Information</h3>
+            <p>Change your registered name and contact details from one place.</p>
           </div>
         </div>
 
         <div class="info-card">
-          <div class="info-icon">✏️</div>
+          <div class="info-icon">📱</div>
           <div class="info-body">
-            <h3>Simple Update</h3>
-            <p>Just edit the message and publish the updated announcement from one clean admin screen.</p>
+            <h3>Contact Updates</h3>
+            <p>Make sure your ward and mobile number are correct for future notices and services.</p>
           </div>
         </div>
       </div>
@@ -485,38 +456,55 @@ footer.admin-footer{
     <div class="panel-inner">
       <div class="panel-head">
         <div class="panel-head-left">
-          <div class="panel-icon">🛠️</div>
+          <div class="panel-icon">✏️</div>
           <div>
-            <h2>General Announcement</h2>
-            <p>Write or update the message that should appear for all wards.</p>
+            <h2>Change Details</h2>
+            <p>Update your account details below.</p>
           </div>
         </div>
       </div>
 
-      <form method="POST">
-        <input type="hidden" name="ward" value="all">
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="flash-box">{{ messages[0] }}</div>
+        {% endif %}
+      {% endwith %}
 
+      <form method="POST">
         <div class="form-grid">
           <div class="form-group">
-            <label for="announcement">Announcement Message</label>
-            <textarea name="announcement" id="announcement" class="textarea-field" placeholder="Write general announcement here..." required></textarea>
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" class="input-field" value="{{ session['user_name'] }}" placeholder="Enter full name" required>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" class="input-field" value="{{ session['user_email'] }}" placeholder="Enter email address" required>
+          </div>
+
+          <div class="form-group">
+            <label for="ward">Ward Number</label>
+            <input type="text" id="ward" name="ward" class="input-field" value="{{ session['user_ward'] }}" placeholder="Enter ward number" required>
+          </div>
+
+          <div class="form-group">
+            <label for="mobile_number">Mobile Number</label>
+            <input type="text" id="mobile_number" name="mobile_number" class="input-field" value="{{ session['user_mobile'] }}" placeholder="Enter mobile number" required>
           </div>
         </div>
 
-        <div class="form-actions">
-          <button type="submit" class="submit-btn">Update General Announcement</button>
-          <a href="/admin" class="track-link">← Back to Dashboard</a>
-        </div>
+        <button type="submit" class="submit-btn">Update Details</button>
       </form>
+
+      <a href="/dashboard" class="alt-link">Back to Dashboard</a>
     </div>
   </section>
 </div>
 
-<footer class="admin-footer">
-  <div>© 2026 CDGI | Admin Panel</div>
+<footer class="user-footer">
+  <div>© 2026 CDGI | User Panel</div>
   <div class="footer-links">
-    <a href="/admin" class="footer-link dashboard">Dashboard</a>
-    <a href="/logout" class="footer-link logout">Logout</a>
+    <a href="/dashboard" class="footer-link home">Dashboard</a>
   </div>
 </footer>
 

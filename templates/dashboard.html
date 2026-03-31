@@ -39,7 +39,6 @@ body{
     linear-gradient(135deg,var(--bg-1),var(--bg-2));
   display:flex;
   flex-direction:column;
-  padding-bottom:76px;
 }
 
 header{
@@ -102,6 +101,8 @@ header{
   font-weight:600;
   transition:0.3s ease;
   box-shadow:0 10px 20px rgba(0,200,83,0.2);
+  border:none;
+  cursor:pointer;
 }
 
 .nav-btn.secondary{
@@ -502,10 +503,8 @@ header{
 }
 
 footer.user-footer{
-  position:fixed;
-  left:0;
-  right:0;
-  bottom:0;
+  margin-top:auto;
+  width:100%;
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -515,6 +514,7 @@ footer.user-footer{
   color:white;
   backdrop-filter:blur(16px);
   border-top:1px solid rgba(255,255,255,0.08);
+  flex-shrink:0;
 }
 
 .footer-links{
@@ -601,7 +601,25 @@ function toggleUserPanel() {
   const panel = document.getElementById('userPanel');
   panel.classList.toggle('active');
 }
+
+function goToChangePassword() {
+  window.location.href = "{{ url_for('change_password') }}";
+}
+
+function toggleUserPanel() {
+  const panel = document.getElementById('userPanel');
+  panel.classList.toggle('active');
+}
+
+function goToChangePassword() {
+  window.location.href = "{{ url_for('change_password') }}";
+}
+
+function goToChangeDetails() {
+  window.location.href = "{{ url_for('change_details') }}";
+}
 </script>
+
 </head>
 
 <body>
@@ -653,6 +671,14 @@ function toggleUserPanel() {
       <span>Mobile Number</span>
       <strong>{{ session['user_mobile'] }}</strong>
     </div>
+
+    <button type="button" class="nav-btn secondary" onclick="goToChangePassword()" style="width:100%; margin-top:12px;">
+      Change Password
+    </button>
+
+    <button type="button" class="nav-btn" onclick="goToChangeDetails()" style="width:100%;">
+    Change Details
+    </button>
   </div>
 </div>
 

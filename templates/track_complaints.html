@@ -41,7 +41,6 @@ body{
     linear-gradient(135deg,var(--bg-1),var(--bg-2));
   display:flex;
   flex-direction:column;
-  padding-bottom:76px;
 }
 
 header{
@@ -331,10 +330,8 @@ tbody tr:last-child td{
 }
 
 footer.user-footer{
-  position:fixed;
-  left:0;
-  right:0;
-  bottom:0;
+  margin-top:auto;
+  width:100%;
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -344,6 +341,7 @@ footer.user-footer{
   color:white;
   backdrop-filter:blur(16px);
   border-top:1px solid rgba(255,255,255,0.08);
+  flex-shrink:0;
 }
 
 .footer-links{

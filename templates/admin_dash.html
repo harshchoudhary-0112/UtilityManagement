@@ -43,7 +43,7 @@ body{
     linear-gradient(135deg,var(--bg-1),var(--bg-2));
   display:flex;
   flex-direction:column;
-  padding-bottom:76px;
+  
 }
 
 header{
@@ -106,6 +106,8 @@ header{
   font-weight:600;
   transition:0.3s ease;
   box-shadow:0 10px 20px rgba(0,200,83,0.2);
+  border:none;
+  cursor:pointer;
 }
 
 .nav-btn.secondary{
@@ -119,6 +121,24 @@ header{
 }
 
 .nav-btn:hover{
+  transform:translateY(-2px);
+}
+
+.user-trigger{
+  width:44px;
+  height:44px;
+  border:none;
+  border-radius:14px;
+  background:rgba(255,255,255,0.12);
+  color:white;
+  font-size:20px;
+  cursor:pointer;
+  backdrop-filter:blur(10px);
+  transition:0.3s ease;
+}
+
+.user-trigger:hover{
+  background:rgba(255,255,255,0.18);
   transform:translateY(-2px);
 }
 
@@ -444,11 +464,96 @@ tbody tr:last-child td{
   opacity:0.4;
 }
 
-footer.user-footer{
+/* USER PANEL STYLES - SAME AS USER DASHBOARD */
+.user-panel{
   position:fixed;
-  left:0;
+  top:0;
+  right:-360px;
+  width:340px;
+  max-width:92vw;
+  height:100%;
+  background:rgba(255,255,255,0.96);
+  backdrop-filter:blur(18px);
+  box-shadow:-18px 0 40px rgba(15,23,42,0.16);
+  z-index:2000;
+  padding:24px;
+  transition:right 0.35s ease;
+  overflow-y:auto;
+}
+
+.user-panel.active{
   right:0;
-  bottom:0;
+}
+
+.panel-close{
+  position:absolute;
+  top:16px;
+  right:18px;
+  font-size:28px;
+  cursor:pointer;
+  color:#ef4444;
+}
+
+.user-panel-top{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-bottom:22px;
+  padding-right:28px;
+}
+
+.user-avatar{
+  width:58px;
+  height:58px;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,var(--purple),var(--blue));
+  color:white;
+  font-size:26px;
+  box-shadow:var(--shadow-soft);
+}
+
+.user-panel-top h3{
+  font-size:20px;
+  color:#111827;
+}
+
+.user-panel-top p{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+.detail-list{
+  display:grid;
+  gap:12px;
+}
+
+.detail-item{
+  background:#f8fafc;
+  border:1px solid rgba(17,24,39,0.06);
+  border-radius:16px;
+  padding:14px 15px;
+}
+
+.detail-item span{
+  display:block;
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:4px;
+}
+
+.detail-item strong{
+  color:#111827;
+  font-size:14px;
+  word-break:break-word;
+}
+
+footer.user-footer{
+  margin-top:auto;
+  width:100%;
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -458,6 +563,7 @@ footer.user-footer{
   color:white;
   backdrop-filter:blur(16px);
   border-top:1px solid rgba(255,255,255,0.08);
+  flex-shrink:0;
 }
 
 .footer-links{
@@ -556,6 +662,14 @@ function toggleUserPanel() {
   const panel = document.getElementById('userPanel');
   panel.classList.toggle('active');
 }
+
+function goToChangePassword() {
+  window.location.href = "{{ url_for('admin_change_password') }}";
+}
+
+function goToChangeDetails() {
+  window.location.href = "{{ url_for('admin_change_details') }}";
+}
 </script>
 </head>
 
@@ -582,8 +696,52 @@ function toggleUserPanel() {
     <a href="/edit_announcement" class="nav-btn purple">Edit Announcement</a>
     <a href="{{ url_for('admin_announcement') }}" class="nav-btn secondary">Ward Announcement</a>
     <a href="{{ url_for('logout') }}" class="nav-btn secondary">Logout</a>
+    <button class="user-trigger" onclick="toggleUserPanel()">👤</button>
   </div>
 </header>
+
+<!-- ADMIN USER PANEL - IDENTICAL TO USER DASHBOARD -->
+<div class="user-panel" id="userPanel">
+  <span class="panel-close" onclick="toggleUserPanel()">×</span>
+
+  <div class="user-panel-top">
+    <div class="user-avatar">👨‍💼</div>
+    <div>
+      <h3>{{ session['admin_name'] or 'Admin' }}</h3>
+      <p>Admin information panel</p>
+    </div>
+  </div>
+
+  <div class="detail-list">
+    <div class="detail-item">
+      <span>Full Name</span>
+      <strong>{{ session['admin_name'] or 'Admin User' }}</strong>
+    </div>
+
+    <div class="detail-item">
+      <span>Email Address</span>
+      <strong>{{ session['admin_email'] or session['user_email'] }}</strong>
+    </div>
+
+    <div class="detail-item">
+      <span>Admin Role</span>
+      <strong>Super Admin</strong>
+    </div>
+
+    <div class="detail-item">
+      <span>Department</span>
+      <strong>Civic Management</strong>
+    </div>
+
+    <button type="button" class="nav-btn secondary" onclick="goToChangePassword()" style="width:100%; margin-top:12px;">
+      Change Password
+    </button>
+
+    <button type="button" class="nav-btn" onclick="goToChangeDetails()" style="width:100%;">
+      Change Details
+    </button>
+  </div>
+</div>
 
 <div class="main">
   <section class="panel hero-card">
