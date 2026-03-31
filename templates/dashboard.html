@@ -91,6 +91,15 @@ header{
   gap:10px;
 }
 
+.header-chatbot{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
 .nav-btn{
   padding:10px 16px;
   background:linear-gradient(135deg,var(--green-dark),var(--green));
@@ -540,6 +549,121 @@ footer.user-footer{
   background:linear-gradient(135deg,#ef4444,#fb7185);
 }
 
+.chatbot-toggle{
+  border:none;
+  border-radius:999px;
+  background:linear-gradient(135deg,#0077b6,#00c853);
+  color:#fff;
+  font-size:14px;
+  font-weight:600;
+  padding:10px 18px;
+  cursor:pointer;
+  box-shadow:0 12px 24px rgba(0,0,0,0.2);
+  white-space:nowrap;
+}
+
+.chatbot-box{
+  position:absolute;
+  top:58px;
+  left:50%;
+  transform:translateX(-50%);
+  width:340px;
+  max-width:calc(100vw - 24px);
+  height:460px;
+  background:#ffffff;
+  border-radius:20px;
+  box-shadow:0 18px 40px rgba(15,23,42,0.2);
+  border:1px solid rgba(17,24,39,0.08);
+  display:none;
+  overflow:hidden;
+}
+
+.chatbot-box.open{
+  display:flex;
+  flex-direction:column;
+}
+
+.chatbot-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 16px;
+  background:linear-gradient(135deg,#0077b6,#00c853);
+  color:white;
+}
+
+.chatbot-header h3{
+  font-size:16px;
+  margin:0;
+}
+
+.chatbot-close{
+  border:none;
+  background:transparent;
+  color:white;
+  font-size:18px;
+  cursor:pointer;
+}
+
+.chatbot-messages{
+  flex:1;
+  padding:14px;
+  overflow-y:auto;
+  background:#f8fafc;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.bot-message,
+.user-message{
+  max-width:85%;
+  padding:10px 12px;
+  border-radius:14px;
+  font-size:14px;
+  line-height:1.5;
+  white-space:pre-line;
+}
+
+.bot-message{
+  align-self:flex-start;
+  background:#eaf4ff;
+  color:#1e293b;
+}
+
+.user-message{
+  align-self:flex-end;
+  background:#0077b6;
+  color:white;
+}
+
+.chatbot-input-area{
+  display:flex;
+  gap:10px;
+  padding:12px;
+  border-top:1px solid rgba(15,23,42,0.08);
+  background:white;
+}
+
+.chatbot-input-area input{
+  flex:1;
+  border:1px solid rgba(17,24,39,0.14);
+  border-radius:12px;
+  padding:10px 12px;
+  font-size:14px;
+  outline:none;
+}
+
+.chatbot-input-area button{
+  border:none;
+  border-radius:12px;
+  padding:10px 14px;
+  background:#00a86b;
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+}
+
 @media (max-width: 980px){
   .main{
     grid-template-columns:1fr;
@@ -561,6 +685,15 @@ footer.user-footer{
   .header-actions{
     width:100%;
     justify-content:space-between;
+  }
+
+  .header-chatbot{
+    position:static;
+    transform:none;
+    width:100%;
+    justify-content:center;
+    margin-top:4px;
+    order:3;
   }
 
   .main{
@@ -593,33 +726,16 @@ footer.user-footer{
     justify-content:flex-start;
     flex-wrap:wrap;
   }
+
+  .chatbot-box{
+    top:60px;
+    left:50%;
+    transform:translateX(-50%);
+    width:min(100vw - 20px, 360px);
+    height:420px;
+  }
 }
 </style>
-
-<script>
-function toggleUserPanel() {
-  const panel = document.getElementById('userPanel');
-  panel.classList.toggle('active');
-}
-
-function goToChangePassword() {
-  window.location.href = "{{ url_for('change_password') }}";
-}
-
-function toggleUserPanel() {
-  const panel = document.getElementById('userPanel');
-  panel.classList.toggle('active');
-}
-
-function goToChangePassword() {
-  window.location.href = "{{ url_for('change_password') }}";
-}
-
-function goToChangeDetails() {
-  window.location.href = "{{ url_for('change_details') }}";
-}
-</script>
-
 </head>
 
 <body>
@@ -630,6 +746,34 @@ function goToChangeDetails() {
     <div class="brand-text">
       <h1>User Dashboard</h1>
       <p>Utility management and complaint services</p>
+    </div>
+  </div>
+
+  <div class="header-chatbot">
+    <button class="chatbot-toggle" id="chatbotToggle">💬 Chatbot</button>
+
+    <div class="chatbot-box" id="chatbotBox">
+      <div class="chatbot-header">
+        <h3>User Assistant</h3>
+        <button class="chatbot-close" id="chatbotClose">✕</button>
+      </div>
+
+      <div class="chatbot-messages" id="chatbotMessages">
+        <div class="bot-message">
+          Hello {{ session.get('user_name', 'User') }}! I can help you register complaints, show announcements, show your complaints, and update your mobile number.
+        </div>
+      </div>
+
+      <form id="chatbotForm" class="chatbot-input-area">
+        <input
+          type="text"
+          id="chatbotInput"
+          placeholder="Type: show announcements"
+          autocomplete="off"
+          required
+        >
+        <button type="submit">Send</button>
+      </form>
     </div>
   </div>
 
@@ -677,13 +821,12 @@ function goToChangeDetails() {
     </button>
 
     <button type="button" class="nav-btn" onclick="goToChangeDetails()" style="width:100%;">
-    Change Details
+      Change Details
     </button>
   </div>
 </div>
 
 <div class="main">
-
   <section class="panel hero-card">
     <div class="panel-inner">
       <div class="welcome-badge">✨ Welcome back</div>
@@ -776,16 +919,85 @@ function goToChangeDetails() {
       </div>
     </div>
   </section>
-
 </div>
 
 <footer class="user-footer">
   <div>© 2026 CDGI | User Panel</div>
-  <div class="footer-links">
-    <a href="/" class="footer-link home">Home</a>
-    <a href="/logout" class="footer-link logout">Logout</a>
-  </div>
+
 </footer>
+
+<script>
+function toggleUserPanel() {
+  const panel = document.getElementById('userPanel');
+  panel.classList.toggle('active');
+}
+
+function goToChangePassword() {
+  window.location.href = "{{ url_for('change_password') }}";
+}
+
+function goToChangeDetails() {
+  window.location.href = "{{ url_for('change_details') }}";
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const chatbotToggle = document.getElementById("chatbotToggle");
+  const chatbotBox = document.getElementById("chatbotBox");
+  const chatbotClose = document.getElementById("chatbotClose");
+  const chatbotForm = document.getElementById("chatbotForm");
+  const chatbotInput = document.getElementById("chatbotInput");
+  const chatbotMessages = document.getElementById("chatbotMessages");
+
+  if (!chatbotToggle || !chatbotBox) {
+    return;
+  }
+
+  chatbotToggle.addEventListener("click", function () {
+    chatbotBox.classList.toggle("open");
+  });
+
+  if (chatbotClose) {
+    chatbotClose.addEventListener("click", function () {
+      chatbotBox.classList.remove("open");
+    });
+  }
+
+  function appendMessage(text, className) {
+    const div = document.createElement("div");
+    div.className = className;
+    div.textContent = text;
+    chatbotMessages.appendChild(div);
+    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+  }
+
+  if (chatbotForm) {
+    chatbotForm.addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const message = chatbotInput.value.trim();
+      if (!message) return;
+
+      appendMessage(message, "user-message");
+      chatbotInput.value = "";
+
+      try {
+        const response = await fetch("/chatbot", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message: message })
+        });
+
+        const data = await response.json();
+        appendMessage(data.reply, "bot-message");
+      } catch (error) {
+        appendMessage("Sorry, something went wrong while connecting to the assistant.", "bot-message");
+      }
+    });
+  }
+});
+</script>
 
 </body>
 </html>

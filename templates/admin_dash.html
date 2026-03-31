@@ -693,6 +693,7 @@ function goToChangeDetails() {
 
   <div class="header-actions">
     <a href="{{ url_for('home') }}" class="nav-btn">Home</a>
+    <a href="{{ url_for('admin_history') }}" class="nav-btn">View History</a>
     <a href="/edit_announcement" class="nav-btn purple">Edit Announcement</a>
     <a href="{{ url_for('admin_announcement') }}" class="nav-btn secondary">Ward Announcement</a>
     <a href="{{ url_for('logout') }}" class="nav-btn secondary">Logout</a>
@@ -700,7 +701,7 @@ function goToChangeDetails() {
   </div>
 </header>
 
-<!-- ADMIN USER PANEL - IDENTICAL TO USER DASHBOARD -->
+
 <div class="user-panel" id="userPanel">
   <span class="panel-close" onclick="toggleUserPanel()">×</span>
 
@@ -848,10 +849,7 @@ function goToChangeDetails() {
 
 <footer class="user-footer">
   <div>© 2026 CDGI | Admin Dashboard</div>
-  <div class="footer-links">
-    <a href="{{ url_for('home') }}" class="footer-link home">Home</a>
-    <a href="{{ url_for('logout') }}" class="footer-link logout">Logout</a>
-  </div>
+
 </footer>
 
 </body>

@@ -48,6 +48,20 @@ CREATE TABLE announcements (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE complaints_history (
+    id INT PRIMARY KEY,
+    name VARCHAR(255),
+    ward VARCHAR(50),
+    category VARCHAR(255),
+    description TEXT,
+    status VARCHAR(50),
+    admin_reply TEXT,
+    user_email VARCHAR(255),
+    department VARCHAR(100),
+    created_at DATETIME,
+    resolved_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 INSERT INTO announcements (ward, message)
 VALUES ('all', 'Welcome to Municipal Utility Portal');
 
@@ -58,3 +72,4 @@ UPDATE admins SET name = 'Waterman' WHERE email = 'wateradmin@gmail.com';
 ALTER TABLE admins ADD COLUMN mobile_number VARCHAR(15);
 UPDATE admins SET mobile_number = '9669337002' WHERE email = 'electricadmin@gmail.com';
 UPDATE admins SET mobile_number = '9669337002' WHERE email = 'wateradmin@gmail.com';
+ALTER TABLE complaintss ADD COLUMN is_deleted INTEGER DEFAULT 0;

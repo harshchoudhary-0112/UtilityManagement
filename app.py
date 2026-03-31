@@ -1,14 +1,12 @@
 import uuid
 from datetime import datetime, timedelta
 import mysql.connector
-from flask import Flask, render_template, request, redirect, flash, url_for, session
+from flask import Flask, render_template, request, redirect, flash, url_for, session, jsonify
 from twilio.rest import Client
 import re
 
-
 app = Flask(__name__)
 app.secret_key = "secret123"
-
 
 
 # ================= CACHE CONTROL =================
@@ -18,7 +16,6 @@ def add_header(response):
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
     return response
-
 
 
 # ================= DATABASE - SINGLE CONSISTENT CONNECTION =================
@@ -31,15 +28,12 @@ def get_db_connection():
     )
 
 
-
 # ================= TWILIO CONFIGURATION =================
 TWILIO_ACCOUNT_SID = "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 TWILIO_AUTH_TOKEN = "your_auth_token"
 TWILIO_PHONE_NUMBER = "+1234567890"
 
-
 twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-
 
 
 def sanitize_phone(n):
@@ -56,12 +50,10 @@ def sanitize_phone(n):
     return n
 
 
-
 def notify_users(ward, message):
     """Send SMS only to ward-specific registered users."""
     if ward == "all":
         return
-
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -92,6 +84,180 @@ def notify_users(ward, message):
         conn.close()
 
 
+def detect_complaint_category(user_message):
+    msg = user_message.lower()
+
+    if "water" in msg:
+        return "Water Supply", "Water"
+    elif "electricity" in msg or "light" in msg or "power" in msg:
+        return "Electricity Supply", "Electricity"
+    else:
+        return "General Complaint", "General"
+
+
+def extract_mobile_number(user_message):
+    match = re.search(r"\b\d{10}\b", user_message)
+    return match.group(0) if match else None
+
+
+# ================= CHAT BOT =================
+def chatbot_reply_logic(user_message):
+    if not session.get('user_email'):
+        return {
+            "reply": "Please login first to use the chatbot.",
+            "action": "none"
+        }
+
+    msg = user_message.strip()
+    msg_lower = msg.lower()
+
+    if not msg:
+        return {
+            "reply": "Please type something. For example: register water complaint, show my complaints, show announcements, update mobile number 9876543210.",
+            "action": "none"
+        }
+
+    if any(x in msg_lower for x in ["help", "what can you do", "commands", "options"]):
+        return {
+            "reply": "I can help you with: 1) register complaint, 2) show my complaints, 3) show announcements, 4) update mobile number. Example: 'register water complaint no water in my area' or 'update mobile number 9876543210'.",
+            "action": "help"
+        }
+
+    if "announcement" in msg_lower or "announcements" in msg_lower or "notice" in msg_lower or "notices" in msg_lower:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT message, ward, created_at
+            FROM announcements
+            WHERE ward = %s OR ward = %s
+            ORDER BY created_at DESC
+            LIMIT 5
+        """, ("all", session.get('user_ward')))
+        announcements = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        if not announcements:
+            return {
+                "reply": "No announcements are available right now.",
+                "action": "announcements"
+            }
+
+        lines = []
+        for a in announcements:
+            lines.append(f"Ward {a[1]}: {a[0]}")
+
+        return {
+            "reply": "Here are the latest announcements:\n" + "\n".join(lines),
+            "action": "announcements"
+        }
+
+    if "show my complaints" in msg_lower or "track complaint" in msg_lower or "track complaints" in msg_lower or "my complaints" in msg_lower:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, category, description, status, admin_reply, created_at
+            FROM complaintss
+            WHERE user_email = %s AND is_deleted = 0
+            ORDER BY created_at DESC
+            LIMIT 5
+        """, (session['user_email'],))
+        complaints = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        if not complaints:
+            return {
+                "reply": "You have not registered any complaints yet.",
+                "action": "complaints"
+            }
+
+        lines = []
+        for c in complaints:
+            reply_text = c[4] if c[4] else "No reply yet"
+            lines.append(f"#{c[0]} | {c[1]} | {c[3]} | {reply_text}")
+
+        return {
+            "reply": "Here are your latest complaints:\n" + "\n".join(lines),
+            "action": "complaints"
+        }
+
+    if "update mobile" in msg_lower or "change mobile" in msg_lower or "update phone" in msg_lower or "change phone" in msg_lower:
+        mobile = extract_mobile_number(msg)
+
+        if not mobile:
+            return {
+                "reply": "Please send a valid 10-digit mobile number. Example: update mobile number 9876543210",
+                "action": "update_mobile"
+            }
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE users SET mobile_number = %s WHERE email = %s",
+            (mobile, session['user_email'])
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        session['user_mobile'] = mobile
+
+        return {
+            "reply": f"Your mobile number has been updated to {mobile}.",
+            "action": "update_mobile"
+        }
+
+    if "complaint" in msg_lower or "register complaint" in msg_lower:
+        category, department = detect_complaint_category(msg)
+        description = msg
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO complaintss (name, ward, category, description, status, user_email, department)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (
+            session.get('user_name'),
+            session.get('user_ward'),
+            category,
+            description,
+            "Pending",
+            session.get('user_email'),
+            department
+        ))
+        conn.commit()
+        complaint_id = cursor.lastrowid
+        cursor.close()
+        conn.close()
+
+        return {
+            "reply": f"Your complaint has been registered successfully. Complaint ID: {complaint_id}. Category: {category}. Status: Pending.",
+            "action": "register_complaint"
+        }
+
+    return {
+        "reply": "Sorry, I could not understand that clearly. Try: 'show announcements', 'show my complaints', 'update mobile number 9876543210', or 'register water complaint no water since morning'.",
+        "action": "unknown"
+    }
+
+
+@app.route('/chatbot', methods=['POST'])
+def chatbot():
+    if not session.get('user_email'):
+        return jsonify({
+            "reply": "Please login first to use the chatbot.",
+            "action": "none"
+        }), 401
+
+    data = request.get_json()
+    user_message = data.get('message', '').strip()
+
+    result = chatbot_reply_logic(user_message)
+    return jsonify(result)
+
 
 # ================= HOME =================
 @app.route('/')
@@ -108,11 +274,10 @@ def home():
     announcements = cursor.fetchall()
     cursor.close()
     conn.close()
-    
+
     return render_template(
-        'home.html', 
+        'home.html',
         announcements=announcements,
-       
         user_logged_in=session.get('user_email'),
         admin_logged_in=session.get('admin_email'),
         user_name=session.get('user_name'),
@@ -121,18 +286,15 @@ def home():
     )
 
 
-
 # ================= USER DASHBOARD =================
 @app.route('/dashboard')
 def dashboard():
     if not session.get('user_email'):
         return redirect(url_for('login'))
 
-
     user_ward = session.get('user_ward')
     conn = get_db_connection()
     cursor = conn.cursor()
-
 
     cursor.execute("""
         SELECT id, ward, message, created_at
@@ -142,7 +304,6 @@ def dashboard():
     """, ("all",))
     general_announcements = cursor.fetchall()
 
-
     cursor.execute("""
         SELECT id, ward, message, created_at
         FROM announcements
@@ -151,10 +312,8 @@ def dashboard():
     """, (user_ward,))
     ward_announcements = cursor.fetchall()
 
-
     cursor.close()
     conn.close()
-
 
     return render_template(
         'dashboard.html',
@@ -164,18 +323,15 @@ def dashboard():
     )
 
 
-
 # ================= USER AUTH =================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if session.get('user_email'):
         return redirect('/dashboard')
 
-
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -199,9 +355,7 @@ def login():
         cursor.close()
         conn.close()
 
-
     return render_template('login.html')
-
 
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -213,46 +367,37 @@ def signup():
         mobile_number = request.form['mobile_number'].strip()
         password = request.form['password']
 
-
         if not re.fullmatch(r"[A-Za-z\s]{2,50}", name):
             flash("Full name must contain only letters and spaces")
             return redirect(url_for('signup'))
-
 
         if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
             flash("Enter a valid email address")
             return redirect(url_for('signup'))
 
-
         if not re.fullmatch(r"\d{1,4}", ward):
             flash("Ward number must contain only 1 to 4 digits")
             return redirect(url_for('signup'))
-
 
         if not re.fullmatch(r"\d{10}", mobile_number):
             flash("Mobile number must be exactly 10 digits")
             return redirect(url_for('signup'))
 
-
         if not re.fullmatch(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$", password):
             flash("Password must be 8 to 20 characters and include uppercase, lowercase, number, and special character")
             return redirect(url_for('signup'))
 
-
         conn = get_db_connection()
         cursor = conn.cursor()
 
-
         cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
         existing_user = cursor.fetchone()
-
 
         if existing_user:
             cursor.close()
             conn.close()
             flash("Email already registered. Please login.")
             return redirect(url_for('signup'))
-
 
         cursor.execute(
             "INSERT INTO users (name, email, ward, mobile_number, password) VALUES (%s, %s, %s, %s, %s)",
@@ -262,20 +407,16 @@ def signup():
         cursor.close()
         conn.close()
 
-
         flash("Signup successful! Please login.")
         return redirect(url_for('login'))
 
-
     return render_template('signup.html')
-
 
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect('/')
-
 
 
 # ================= COMPLAINTS =================
@@ -288,14 +429,12 @@ def register_complaint():
         description = request.form['description']
         user_email = session.get('user_email')
 
-
         if category == "Water Supply":
             department = "Water"
         elif category == "Electricity Supply":
             department = "Electricity"
         else:
             department = "General"
-
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -307,13 +446,10 @@ def register_complaint():
         cursor.close()
         conn.close()
 
-
         flash("Complaint submitted successfully")
         return redirect('/track_complaints')
 
-
     return render_template('register_complaint.html')
-
 
 
 @app.route('/track_complaints')
@@ -322,20 +458,45 @@ def track_complaints():
         flash("Please login first")
         return redirect('/login')
 
-
     email = session['user_email']
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute(
-        "SELECT id, name, ward, category, description, status, admin_reply, created_at "
-        "FROM complaintss WHERE user_email = %s ORDER BY created_at DESC",
-        (email,)
-    )
+    cursor.execute("""
+        SELECT id, name, ward, category, description, status, admin_reply, created_at
+        FROM complaintss
+        WHERE user_email = %s AND is_deleted = 0
+        ORDER BY created_at DESC
+    """, (email,))
     complaints = cursor.fetchall()
     cursor.close()
     conn.close()
     return render_template('track_complaints.html', complaints=complaints)
 
+
+@app.route('/delete_complaint/<int:id>', methods=['POST'])
+def delete_complaint(id):
+    if not session.get('user_email'):
+        flash("Please login first")
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE complaintss
+        SET is_deleted = 1
+        WHERE id = %s AND user_email = %s AND status = 'Resolved'
+    """, (id, session['user_email']))
+    conn.commit()
+
+    if cursor.rowcount > 0:
+        flash("Complaint removed from your track page successfully!")
+    else:
+        flash("Complaint could not be removed. Only your resolved complaints can be hidden.")
+
+    cursor.close()
+    conn.close()
+    return redirect(url_for('track_complaints'))
 
 
 # ================= ADMIN =================
@@ -346,14 +507,12 @@ def adminpage():
     return render_template('admin_login.html')
 
 
-
 @app.route('/adminlogin', methods=['GET', 'POST'])
 def adminlogin():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
         department = request.form['department']
-
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -365,10 +524,9 @@ def adminlogin():
         cursor.close()
         conn.close()
 
-
         if admin:
             session['admin_email'] = admin[1]
-            session['admin_name'] = admin[0]      
+            session['admin_name'] = admin[0]
             session['admin_department'] = admin[2]
             flash('Login successful')
             return redirect(url_for('admin'))
@@ -376,8 +534,8 @@ def adminlogin():
             flash('Invalid email, password, or department')
             return redirect(url_for('adminlogin'))
 
-
     return render_template('admin_login.html')
+
 
 @app.route('/admin_signup', methods=['GET', 'POST'])
 def admin_signup():
@@ -408,7 +566,6 @@ def admin_signup():
             flash("Password must be 8 to 20 characters and include uppercase, lowercase, number, and special character")
             return redirect(url_for('admin_signup'))
 
-        
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM admins WHERE email = %s", (email,))
@@ -420,7 +577,6 @@ def admin_signup():
             flash("Admin email already registered. Please login.")
             return redirect(url_for('admin_signup'))
 
-       
         cursor.execute(
             "INSERT INTO admins (name, email, department, mobile_number, password) VALUES (%s, %s, %s, %s, %s)",
             (name, email, department, mobile_number, password)
@@ -434,21 +590,43 @@ def admin_signup():
 
     return render_template('admin_signup.html')
 
+
+@app.route('/admin_history')
+def admin_history():
+    if 'admin_email' not in session:
+        return redirect(url_for('adminlogin'))
+
+    department = session.get('admin_department')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT * FROM complaintss
+        WHERE department = %s AND status = %s
+        ORDER BY created_at DESC
+    """, (department, 'Resolved'))
+    complaints = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template('admin_history.html', complaints=complaints)
+
+
 @app.route('/admin')
 def admin():
     if 'admin_email' not in session:
         return redirect(url_for('adminlogin'))
 
-
     department = session.get('admin_department')
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM complaintss WHERE department = %s", (department,))
+    cursor.execute("""
+        SELECT * FROM complaintss
+        WHERE department = %s AND status != %s
+        ORDER BY created_at DESC
+    """, (department, 'Resolved'))
     complaints = cursor.fetchall()
     cursor.close()
     conn.close()
     return render_template('admin_dash.html', complaints=complaints)
-
 
 
 @app.route('/update_complaint/<int:id>', methods=['POST'])
@@ -456,10 +634,8 @@ def update_complaint(id):
     if 'admin_email' not in session:
         return redirect(url_for('adminpage'))
 
-
     status = request.form['status']
     reply = request.form['admin_reply']
-
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -474,40 +650,18 @@ def update_complaint(id):
     return redirect(url_for('admin'))
 
 
-
-@app.route('/delete_complaint/<int:id>', methods=['POST'])
-def delete_complaint(id):
-    if 'admin_email' not in session:
-        flash("Admin login required")
-        return redirect(url_for('adminpage'))
-
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM complaintss WHERE id = %s", (id,))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    flash("Complaint deleted successfully!")
-    return redirect(url_for('admin'))
-
-
-
 # ================= ADMIN ANNOUNCEMENTS =================
-@app.route('/admin/announcement', methods=['GET', 'POST'])
+@app.route('/admin_announcement', methods=['GET', 'POST'])
 def admin_announcement():
     if 'admin_email' not in session:
         return redirect(url_for('adminpage'))
-
 
     if request.method == 'POST':
         ward = request.form['ward'].strip()
         message = request.form['message'].strip()
 
-
         if not ward:
             ward = "all"
-
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -519,17 +673,13 @@ def admin_announcement():
         cursor.close()
         conn.close()
 
-
         if ward != "all":
             notify_users(ward, message)
-
 
         flash("Announcement sent successfully!")
         return redirect(url_for('admin_announcement'))
 
-
     return render_template('admin_announcement.html')
-
 
 
 # ================= EDIT GENERAL ANNOUNCEMENT =================
@@ -538,15 +688,12 @@ def edit_announcement():
     if 'admin_email' not in session:
         return redirect(url_for('adminpage'))
 
-
     if request.method == 'POST':
         announcement = request.form['announcement'].strip()
         ward = request.form.get('ward', 'all').strip()
 
-
         if ward == "":
             ward = "all"
-
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -558,17 +705,13 @@ def edit_announcement():
         cursor.close()
         conn.close()
 
-
         if ward != "all":
             notify_users(ward, announcement)
-
 
         flash("Announcement added successfully!")
         return redirect(url_for('edit_announcement'))
 
-
     return render_template('edit_announcement.html')
-
 
 
 # ================= PASSWORD RESET =================
@@ -580,7 +723,6 @@ def forgot_password():
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
         user = cursor.fetchone()
-
 
         if user:
             token = str(uuid.uuid4())
@@ -595,13 +737,10 @@ def forgot_password():
         else:
             flash("Email not found")
 
-
         cursor.close()
         conn.close()
 
-
     return render_template('forgot_password.html')
-
 
 
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
@@ -614,24 +753,20 @@ def reset_password(token):
     )
     user = cursor.fetchone()
 
-
     if not user:
         cursor.close()
         conn.close()
         flash("Invalid or expired token")
         return redirect(url_for('login'))
 
-
     if request.method == 'POST':
         new_pass = request.form['password']
-
 
         if not re.fullmatch(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$", new_pass):
             flash("Password must be 8-20 characters with uppercase, lowercase, number, and special character")
             cursor.close()
             conn.close()
             return render_template('reset_password.html')
-
 
         cursor.execute(
             "UPDATE users SET password = %s, reset_token = NULL, token_expiry = NULL WHERE reset_token = %s",
@@ -643,11 +778,9 @@ def reset_password(token):
         flash("Password updated successfully!")
         return redirect(url_for('login'))
 
-
     cursor.close()
     conn.close()
     return render_template('reset_password.html')
-
 
 
 # ================= USER CHANGE PASSWORD =================
@@ -657,27 +790,22 @@ def change_password():
         flash("Please login first")
         return redirect(url_for('login'))
 
-
     if request.method == 'POST':
         current_password = request.form['current_password'].strip()
         new_password = request.form['new_password'].strip()
         confirm_password = request.form['confirm_password'].strip()
 
-
         if not current_password or not new_password or not confirm_password:
             flash("All fields are required")
             return redirect(url_for('change_password'))
-
 
         if new_password != confirm_password:
             flash("New password and confirm password do not match")
             return redirect(url_for('change_password'))
 
-
         if not re.fullmatch(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$", new_password):
             flash("New password must be 8-20 characters with uppercase, lowercase, number, and special character")
             return redirect(url_for('change_password'))
-
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -687,13 +815,11 @@ def change_password():
         )
         user = cursor.fetchone()
 
-
         if not user or user[0] != current_password:
             cursor.close()
             conn.close()
             flash("Current password is incorrect")
             return redirect(url_for('change_password'))
-
 
         cursor.execute(
             "UPDATE users SET password = %s WHERE email = %s",
@@ -703,13 +829,10 @@ def change_password():
         cursor.close()
         conn.close()
 
-
         flash("✅ Password changed successfully!")
         return redirect(url_for('dashboard'))
 
-
     return render_template('change_password.html')
-
 
 
 # ================= USER CHANGE DETAILS =================
@@ -718,7 +841,6 @@ def change_details():
     if not session.get('user_email'):
         flash("Please login first")
         return redirect(url_for('login'))
-
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -730,38 +852,31 @@ def change_details():
     cursor.close()
     conn.close()
 
-
     if request.method == 'POST':
         name = request.form['name'].strip()
         email = request.form['email'].strip()
         ward = request.form['ward'].strip()
         mobile_number = request.form['mobile_number'].strip()
 
-
         if not name or not email or not ward or not mobile_number:
             flash("All fields are required")
             return redirect(url_for('change_details'))
-
 
         if not re.fullmatch(r"[A-Za-z\s]{2,50}", name):
             flash("Full name must contain only letters and spaces")
             return redirect(url_for('change_details'))
 
-
         if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
             flash("Enter a valid email address")
             return redirect(url_for('change_details'))
-
 
         if not re.fullmatch(r"\d{1,4}", ward):
             flash("Ward number must contain only 1 to 4 digits")
             return redirect(url_for('change_details'))
 
-
         if not re.fullmatch(r"\d{10}", mobile_number):
             flash("Mobile number must be exactly 10 digits")
             return redirect(url_for('change_details'))
-
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -771,13 +886,11 @@ def change_details():
         )
         existing_user = cursor.fetchone()
 
-
         if existing_user:
             cursor.close()
             conn.close()
             flash("Email already exists with another account")
             return redirect(url_for('change_details'))
-
 
         cursor.execute("""
             UPDATE users
@@ -786,23 +899,18 @@ def change_details():
         """, (name, email, ward, mobile_number, session['user_email']))
         conn.commit()
 
-
         session['user_name'] = name
         session['user_email'] = email
         session['user_ward'] = ward
         session['user_mobile'] = mobile_number
 
-
         cursor.close()
         conn.close()
-
 
         flash("✅ Profile details updated successfully!")
         return redirect(url_for('dashboard'))
 
-
     return render_template('changedetails.html', user=current_user)
-
 
 
 # ================= ADMIN PASSWORD/DETAILS =================
@@ -812,17 +920,14 @@ def admin_change_password():
         flash("Please login first")
         return redirect(url_for('adminlogin'))
 
-
     if request.method == 'POST':
         current_password = request.form['current_password']
         new_password = request.form['new_password']
         confirm_password = request.form['confirm_password']
 
-
         if new_password != confirm_password:
             flash("New password and confirm password do not match")
             return redirect(url_for('admin_change_password'))
-
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -832,20 +937,17 @@ def admin_change_password():
         )
         admin_data = cursor.fetchone()
 
-
         if not admin_data:
             cursor.close()
             conn.close()
             flash("Admin not found")
             return redirect(url_for('adminlogin'))
 
-
         if admin_data[0] != current_password:
             cursor.close()
             conn.close()
             flash("Current password is incorrect")
             return redirect(url_for('admin_change_password'))
-
 
         cursor.execute(
             "UPDATE admins SET password = %s WHERE email = %s",
@@ -855,13 +957,10 @@ def admin_change_password():
         cursor.close()
         conn.close()
 
-
         flash("Password changed successfully")
         return redirect(url_for('admin'))
 
-
     return render_template('admin_change_password.html')
-
 
 
 @app.route('/admin_change_details', methods=['GET', 'POST'])
@@ -877,9 +976,8 @@ def admin_change_details():
         new_name = request.form['name']
         new_email = request.form['email']
         new_department = request.form['department']
-        new_mobile = request.form['mobile_number']  
+        new_mobile = request.form['mobile_number']
 
-      
         if not re.fullmatch(r"\d{10}", new_mobile):
             flash("Mobile number must be exactly 10 digits")
             cursor.close()
@@ -892,18 +990,16 @@ def admin_change_details():
         )
         conn.commit()
 
-        
         session['admin_email'] = new_email
         session['admin_name'] = new_name
         session['admin_department'] = new_department
-        session['admin_mobile'] = new_mobile  # ✅ NEW
+        session['admin_mobile'] = new_mobile
 
         cursor.close()
         conn.close()
         flash("Admin details updated successfully")
         return redirect(url_for('admin'))
 
-    
     cursor.execute(
         "SELECT name, email, department, mobile_number FROM admins WHERE email = %s",
         (session['admin_email'],)
