@@ -545,29 +545,27 @@ def admin_signup():
         department = request.form['department'].strip()
         mobile_number = request.form['mobile_number'].strip()
         password = request.form['password']
+        page = request.form['page']   # 🔥 IMPORTANT
 
         if not re.fullmatch(r"[A-Za-z\s]{2,50}", name):
             flash("Full name must contain only letters and spaces")
-            return redirect(url_for('admin_signup'))
+            return redirect(url_for(f'admin_signup_{page}'))
 
         if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
             flash("Enter a valid email address")
-            return redirect(url_for('admin_signup'))
-
-        if not re.fullmatch(r"[A-Za-z\s]{2,50}", department):
-            flash("Department must contain only letters and spaces")
-            return redirect(url_for('admin_signup'))
+            return redirect(url_for(f'admin_signup_{page}'))
 
         if not re.fullmatch(r"\d{10}", mobile_number):
             flash("Mobile number must be exactly 10 digits")
-            return redirect(url_for('admin_signup'))
+            return redirect(url_for(f'admin_signup_{page}'))
 
         if not re.fullmatch(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$", password):
-            flash("Password must be 8 to 20 characters and include uppercase, lowercase, number, and special character")
-            return redirect(url_for('admin_signup'))
+            flash("Password must be strong")
+            return redirect(url_for(f'admin_signup_{page}'))
 
         conn = get_db_connection()
         cursor = conn.cursor()
+
         cursor.execute("SELECT * FROM admins WHERE email = %s", (email,))
         existing_admin = cursor.fetchone()
 
@@ -575,13 +573,14 @@ def admin_signup():
             cursor.close()
             conn.close()
             flash("Admin email already registered. Please login.")
-            return redirect(url_for('admin_signup'))
+            return redirect(url_for(f'admin_signup_{page}'))
 
         cursor.execute(
             "INSERT INTO admins (name, email, department, mobile_number, password) VALUES (%s, %s, %s, %s, %s)",
             (name, email, department, mobile_number, password)
         )
         conn.commit()
+
         cursor.close()
         conn.close()
 
@@ -590,6 +589,14 @@ def admin_signup():
 
     return render_template('admin_signup.html')
 
+@app.route('/admin_signup_water')
+def admin_signup_water():
+    return render_template('admin_signup_water.html')
+
+
+@app.route('/admin_signup_electricity')
+def admin_signup_electricity():
+    return render_template('admin_signup_electricity.html')
 
 @app.route('/admin_history')
 def admin_history():
