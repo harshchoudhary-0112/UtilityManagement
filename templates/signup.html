@@ -262,6 +262,16 @@ header{
   margin-bottom:14px;
 }
 
+.success-box{
+  background:rgba(0,200,83,0.10);
+  border:1px solid rgba(0,200,83,0.20);
+  color:#067647;
+  padding:12px 14px;
+  border-radius:14px;
+  font-size:14px;
+  margin-bottom:14px;
+}
+
 .form-grid{
   display:grid;
   gap:16px;
@@ -333,6 +343,24 @@ header{
   transform:translateY(-2px);
 }
 
+.secondary-btn{
+  width:100%;
+  border:none;
+  border-radius:14px;
+  padding:14px 22px;
+  margin-top:10px;
+  background:linear-gradient(135deg,#64748b,#334155);
+  color:white;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  transition:0.3s ease;
+}
+
+.secondary-btn:hover{
+  transform:translateY(-2px);
+}
+
 .alt-link{
   display:block;
   margin-top:18px;
@@ -345,6 +373,33 @@ header{
 
 .alt-link:hover{
   text-decoration:underline;
+}
+
+.otp-box{
+  text-align:center;
+  padding:8px 0 4px;
+}
+
+.otp-email{
+  font-size:14px;
+  color:#111827;
+  margin-bottom:6px;
+  font-weight:600;
+  word-break:break-word;
+}
+
+.otp-note{
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.6;
+  margin-bottom:16px;
+}
+
+.otp-input{
+  text-align:center;
+  font-size:20px;
+  letter-spacing:6px;
+  font-weight:700;
 }
 
 footer.user-footer{
@@ -410,6 +465,11 @@ footer.user-footer{
     padding:18px;
   }
 
+  .otp-input{
+    letter-spacing:4px;
+    font-size:18px;
+  }
+
   footer.user-footer{
     padding:12px 14px;
     flex-direction:column;
@@ -443,11 +503,19 @@ footer.user-footer{
 <div class="main">
   <section class="panel hero-card">
     <div class="panel-inner">
-      <div class="welcome-badge">✨ New User Registration</div>
-      <h2 class="hero-title">Create your account and start using the complaint portal.</h2>
-      <p class="hero-text">
-        Register once to submit complaints, receive updates, track issue progress, and access announcements linked to your ward.
-      </p>
+      {% if session.get('pending_user_signup') %}
+        <div class="welcome-badge">📧 Email Verification</div>
+        <h2 class="hero-title">Verify your email to complete account creation.</h2>
+        <p class="hero-text">
+          We have sent a 6-digit verification code to your email address. Enter that code to activate your new user account.
+        </p>
+      {% else %}
+        <div class="welcome-badge">✨ New User Registration</div>
+        <h2 class="hero-title">Create your account and start using the complaint portal.</h2>
+        <p class="hero-text">
+          Register once to submit complaints, receive updates, track issue progress, and access announcements linked to your ward.
+        </p>
+      {% endif %}
 
       <div class="info-list">
         <div class="info-card">
@@ -473,10 +541,16 @@ footer.user-footer{
     <div class="panel-inner">
       <div class="panel-head">
         <div class="panel-head-left">
-          <div class="panel-icon">👥</div>
+          <div class="panel-icon">{% if session.get('pending_user_signup') %}🔐{% else %}👥{% endif %}</div>
           <div>
-            <h2>User Signup</h2>
-            <p>Fill in your details below to create a new user account.</p>
+            <h2>{% if session.get('pending_user_signup') %}Verify Email{% else %}User Signup{% endif %}</h2>
+            <p>
+              {% if session.get('pending_user_signup') %}
+                Enter the verification code sent to your email.
+              {% else %}
+                Fill in your details below to create a new user account.
+              {% endif %}
+            </p>
           </div>
         </div>
       </div>
@@ -487,98 +561,139 @@ footer.user-footer{
       {% endif %}
       {% endwith %}
 
-      <form method="POST" action="{{ url_for('signup') }}" id="signupForm">
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="name">Full Name</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              class="input-field"
-              placeholder="Enter full name"
-              pattern="[A-Za-z\s]{2,50}"
-              title="Full name should contain only letters and spaces, 2 to 50 characters"
-              required
-            >
-            <small class="field-note">Only letters and spaces allowed, 2 to 50 characters.</small>
-          </div>
-
-          <div class="form-group">
-            <label for="email">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              class="input-field"
-              placeholder="Enter email"
-              maxlength="100"
-              title="Enter a valid email address"
-              required
-            >
-            <small class="field-note">Enter a valid email address, for example: name@example.com.</small>
-          </div>
-
-          <div class="form-group">
-            <label for="ward">Ward Number</label>
-            <input
-              type="text"
-              id="ward"
-              name="ward"
-              class="input-field"
-              placeholder="Enter ward number"
-              pattern="[0-9]{1,4}"
-              maxlength="4"
-              title="Ward number should contain only digits, 1 to 4 numbers"
-              required
-            >
-            <small class="field-note">Only numbers allowed, 1 to 4 digits.</small>
-          </div>
-
-          <div class="form-group">
-            <label for="mobile_number">Mobile Number</label>
-            <input
-              type="text"
-              id="mobile_number"
-              name="mobile_number"
-              class="input-field"
-              placeholder="Enter 10-digit mobile number"
-              pattern="[0-9]{10}"
-              maxlength="10"
-              inputmode="numeric"
-              title="Mobile number must be exactly 10 digits"
-              required
-            >
-            <small class="field-note">Only numbers allowed, exactly 10 digits.</small>
-          </div>
-
-          <div class="form-group">
-            <label for="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              class="input-field"
-              placeholder="Create password"
-              pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$"
-              title="Password must be 8 to 20 characters and include uppercase, lowercase, number, and special character"
-              required
-            >
-            <small class="field-note">8 to 20 characters, include uppercase, lowercase, number, and special character.</small>
-          </div>
+      {% if session.get('pending_user_signup') %}
+        <div class="otp-box">
+          <div class="otp-email">{{ session['pending_user_signup']['email'] }}</div>
+          <div class="otp-note">Enter the 6-digit code sent to this email address. The code is valid for 10 minutes.</div>
         </div>
 
-        <button type="submit" class="submit-btn">Register</button>
-      </form>
+        <form method="POST" action="{{ url_for('signup') }}">
+          <input type="hidden" name="form_type" value="verify_otp">
 
-      <a href="{{ url_for('login') }}" class="alt-link">Already have an account? Login</a>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="otp">Verification Code</label>
+              <input
+                type="text"
+                id="otp"
+                name="otp"
+                class="input-field otp-input"
+                placeholder="000000"
+                pattern="\d{6}"
+                maxlength="6"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                title="Enter 6-digit verification code"
+                required
+              >
+              <small class="field-note">Only numbers allowed, exactly 6 digits.</small>
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn">Verify & Create Account</button>
+        </form>
+
+        <form method="POST" action="{{ url_for('signup') }}">
+          <input type="hidden" name="form_type" value="resend_otp">
+          <button type="submit" class="secondary-btn">Resend Code</button>
+        </form>
+
+        <a href="{{ url_for('signup_cancel') }}" class="alt-link">Use different email / Start again</a>
+      {% else %}
+        <form method="POST" action="{{ url_for('signup') }}" id="signupForm">
+          <input type="hidden" name="form_type" value="signup">
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="name">Full Name</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                class="input-field"
+                placeholder="Enter full name"
+                pattern="[A-Za-z\s]{2,50}"
+                title="Full name should contain only letters and spaces, 2 to 50 characters"
+                required
+              >
+              <small class="field-note">Only letters and spaces allowed, 2 to 50 characters.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                class="input-field"
+                placeholder="Enter email"
+                maxlength="100"
+                title="Enter a valid email address"
+                required
+              >
+              <small class="field-note">Enter a valid email address, for example: name@example.com.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="ward">Ward Number</label>
+              <input
+                type="text"
+                id="ward"
+                name="ward"
+                class="input-field"
+                placeholder="Enter ward number"
+                pattern="[0-9]{1,4}"
+                maxlength="4"
+                title="Ward number should contain only digits, 1 to 4 numbers"
+                required
+              >
+              <small class="field-note">Only numbers allowed, 1 to 4 digits.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="mobile_number">Mobile Number</label>
+              <input
+                type="text"
+                id="mobile_number"
+                name="mobile_number"
+                class="input-field"
+                placeholder="Enter 10-digit mobile number"
+                pattern="[0-9]{10}"
+                maxlength="10"
+                inputmode="numeric"
+                title="Mobile number must be exactly 10 digits"
+                required
+              >
+              <small class="field-note">Only numbers allowed, exactly 10 digits.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                class="input-field"
+                placeholder="Create password"
+                pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$"
+                title="Password must be 8 to 20 characters and include uppercase, lowercase, number, and special character"
+                required
+              >
+              <small class="field-note">8 to 20 characters, include uppercase, lowercase, number, and special character.</small>
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn">Register</button>
+        </form>
+
+        <a href="{{ url_for('login') }}" class="alt-link">Already have an account? Login</a>
+      {% endif %}
     </div>
   </section>
 </div>
 
 <footer class="user-footer">
   <div>© 2026 CDGI | User Panel</div>
- 
 </footer>
 
 <script>
@@ -586,18 +701,31 @@ document.addEventListener("DOMContentLoaded", function () {
   const nameInput = document.getElementById("name");
   const wardInput = document.getElementById("ward");
   const mobileInput = document.getElementById("mobile_number");
+  const otpInput = document.getElementById("otp");
 
-  nameInput.addEventListener("input", function () {
-    this.value = this.value.replace(/[^A-Za-z\s]/g, "");
-  });
+  if (nameInput) {
+    nameInput.addEventListener("input", function () {
+      this.value = this.value.replace(/[^A-Za-z\s]/g, "");
+    });
+  }
 
-  wardInput.addEventListener("input", function () {
-    this.value = this.value.replace(/[^0-9]/g, "");
-  });
+  if (wardInput) {
+    wardInput.addEventListener("input", function () {
+      this.value = this.value.replace(/[^0-9]/g, "");
+    });
+  }
 
-  mobileInput.addEventListener("input", function () {
-    this.value = this.value.replace(/[^0-9]/g, "").slice(0, 10);
-  });
+  if (mobileInput) {
+    mobileInput.addEventListener("input", function () {
+      this.value = this.value.replace(/[^0-9]/g, "").slice(0, 10);
+    });
+  }
+
+  if (otpInput) {
+    otpInput.addEventListener("input", function () {
+      this.value = this.value.replace(/[^0-9]/g, "").slice(0, 6);
+    });
+  }
 });
 </script>
 

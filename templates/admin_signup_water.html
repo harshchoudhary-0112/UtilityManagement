@@ -251,6 +251,16 @@ header{
   line-height:1.6;
 }
 
+.flash-box{
+  background:rgba(239,68,68,0.08);
+  border:1px solid rgba(239,68,68,0.14);
+  color:#b91c1c;
+  padding:12px 14px;
+  border-radius:14px;
+  font-size:14px;
+  margin-bottom:14px;
+}
+
 .form-grid{
   display:grid;
   gap:16px;
@@ -434,7 +444,7 @@ footer.user-footer{
       <div class="welcome-badge">💧 Water Department Access</div>
       <h2 class="hero-title">Create your water department admin account.</h2>
       <p class="hero-text">
-        Register to manage water-related complaints, update service statuses, and coordinate citizen communication from one dashboard.
+        Register to manage water-related complaints, update service statuses, and coordinate citizen communication from one dashboard. A verification link will be sent to your email after signup.
       </p>
 
       <div class="info-list">
@@ -472,41 +482,89 @@ footer.user-footer{
           <div class="panel-icon">💧</div>
           <div>
             <h2>Water Admin Signup</h2>
-            <p>Fill in your details below to create a new water department admin account.</p>
+            <p>Fill in your details below to create a new water department admin account. You must verify your email before login.</p>
           </div>
         </div>
       </div>
 
-      <form action="/admin_signup" method="POST" class="form-grid">
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash-box">{{ messages[0] }}</div>
+      {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('admin_signup') }}" id="waterSignupForm">
         <input type="hidden" name="page" value="water">
         <input type="hidden" name="department" value="Water">
 
-        <div class="form-group">
-          <label for="water-name">Full Name</label>
-          <input id="water-name" class="input-field" type="text" name="name" placeholder="Enter full name" required>
-        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="water-name">Full Name</label>
+            <input
+              id="water-name"
+              class="input-field"
+              type="text"
+              name="name"
+              placeholder="Enter full name"
+              pattern="[A-Za-z\s]{2,50}"
+              title="Full name should contain only letters and spaces, 2 to 50 characters"
+              required
+            >
+            <p class="field-note">Only letters and spaces allowed, 2 to 50 characters.</p>
+          </div>
 
-        <div class="form-group">
-          <label for="water-email">Email Address</label>
-          <input id="water-email" class="input-field" type="email" name="email" placeholder="Enter email address" required>
-        </div>
+          <div class="form-group">
+            <label for="water-email">Email Address</label>
+            <input
+              id="water-email"
+              class="input-field"
+              type="email"
+              name="email"
+              placeholder="Enter email address"
+              maxlength="100"
+              title="Enter a valid email address"
+              required
+            >
+            <p class="field-note">Enter a valid email address, for example: name@example.com.</p>
+          </div>
 
-        <div class="form-group">
-          <label for="water-mobile">Mobile Number</label>
-          <input id="water-mobile" class="input-field" type="text" name="mobile_number" placeholder="Enter mobile number" required>
-          <p class="field-note">Use the official contact number used for department communication.</p>
-        </div>
+          <div class="form-group">
+            <label for="water-mobile">Mobile Number</label>
+            <input
+              id="water-mobile"
+              class="input-field"
+              type="text"
+              name="mobile_number"
+              placeholder="Enter 10-digit mobile number"
+              pattern="[0-9]{10}"
+              maxlength="10"
+              inputmode="numeric"
+              title="Mobile number must be exactly 10 digits"
+              required
+            >
+            <p class="field-note">Use the official contact number used for department communication.</p>
+          </div>
 
-        <div class="form-group">
-          <label for="water-password">Password</label>
-          <input id="water-password" class="input-field" type="password" name="password" placeholder="Create password" required>
-          <p class="field-note">Choose a strong password to keep the department account secure.</p>
+          <div class="form-group">
+            <label for="water-password">Password</label>
+            <input
+              id="water-password"
+              class="input-field"
+              type="password"
+              name="password"
+              placeholder="Create password"
+              pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$"
+              title="Password must be 8 to 20 characters and include uppercase, lowercase, number, and special character"
+              required
+            >
+            <p class="field-note">8 to 20 characters, include uppercase, lowercase, number, and special character.</p>
+          </div>
         </div>
 
         <button type="submit" class="submit-btn">Create Water Admin Account</button>
       </form>
 
-      <a href="{{ url_for('adminlogin') }}"" class="alt-link">Already have a water admin account? Login</a>
+      <a href="{{ url_for('adminlogin') }}" class="alt-link">Already have a water admin account? Login</a>
     </div>
   </section>
 </div>
@@ -517,6 +575,21 @@ footer.user-footer{
     <a href="/" class="footer-link home">Back to Home</a>
   </div>
 </footer>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const nameInput = document.getElementById("water-name");
+  const mobileInput = document.getElementById("water-mobile");
+
+  nameInput.addEventListener("input", function () {
+    this.value = this.value.replace(/[^A-Za-z\s]/g, "");
+  });
+
+  mobileInput.addEventListener("input", function () {
+    this.value = this.value.replace(/[^0-9]/g, "").slice(0, 10);
+  });
+});
+</script>
 
 </body>
 </html>

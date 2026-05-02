@@ -4,9 +4,84 @@ import mysql.connector
 from flask import Flask, render_template, request, redirect, flash, url_for, session, jsonify
 from twilio.rest import Client
 import re
+import smtplib
+from email.mime.text import MIMEText
+from werkzeug.security import generate_password_hash, check_password_hash
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+
 
 app = Flask(__name__)
 app.secret_key = "secret123"
+
+serializer = URLSafeTimedSerializer(app.secret_key)
+
+
+# ================= EMAIL HELPERS =================
+def send_email(to_email, subject, body):
+    sender_email = "harshchoudhar6268y@gmail.com"
+    sender_password = "zikz hpnq feac menc"
+
+    msg = MIMEText(body)
+    msg['Subject'] = subject
+    msg['From'] = sender_email
+    msg['To'] = to_email
+
+    try:
+        server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
+        server.login(sender_email, sender_password)
+        server.send_message(msg)
+        server.quit()
+        print(f"✅ Email sent successfully to {to_email}")
+        return True
+    except Exception as e:
+        print("❌ Email error:", str(e))
+        return False
+
+
+def send_reset_email(to_email, reset_link):
+    subject = "Password Reset Request"
+    body = f"""
+Hello,
+
+Click the link below to reset your password:
+
+{reset_link}
+
+This link will expire in 15 minutes.
+
+If you did not request this, please ignore this email.
+"""
+    return send_email(to_email, subject, body)
+
+
+def send_verification_email(to_email, verify_link, role):
+    subject = "Verify Your Email"
+    body = f"""
+Hello,
+
+Click the link below to verify your {role} account email:
+
+{verify_link}
+
+This link will expire in 60 minutes.
+
+If you did not create this account, please ignore this email.
+"""
+    return send_email(to_email, subject, body)
+
+
+def generate_email_token(email, role):
+    return serializer.dumps({"email": email, "role": role}, salt="email-verify-salt")
+
+
+def verify_email_token(token, max_age=3600):
+    try:
+        data = serializer.loads(token, salt="email-verify-salt", max_age=max_age)
+        return data
+    except SignatureExpired:
+        return None
+    except BadSignature:
+        return None
 
 
 # ================= CACHE CONTROL =================
@@ -18,7 +93,7 @@ def add_header(response):
     return response
 
 
-# ================= DATABASE - SINGLE CONSISTENT CONNECTION =================
+# ================= DATABASE =================
 def get_db_connection():
     return mysql.connector.connect(
         host="localhost",
@@ -37,7 +112,6 @@ twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 
 def sanitize_phone(n):
-    """Ensure mobile number is in +91XXXXXXXXXX format (India)."""
     n = str(n).strip()
     if not n.startswith("9"):
         if n.startswith("0"):
@@ -51,7 +125,6 @@ def sanitize_phone(n):
 
 
 def notify_users(ward, message):
-    """Send SMS only to ward-specific registered users."""
     if ward == "all":
         return
 
@@ -330,30 +403,35 @@ def login():
         return redirect('/dashboard')
 
     if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
+        email = request.form['email'].strip()
+        password = request.form['password'].strip()
 
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT id, name, email, ward, password, mobile_number FROM users WHERE email = %s AND password = %s",
-            (email, password)
-        )
+        cursor.execute("""
+            SELECT id, name, email, ward, password, mobile_number, is_verified
+            FROM users
+            WHERE email = %s
+        """, (email,))
         user = cursor.fetchone()
-        if user:
-            session['user_id'] = user[0]
-            session['user_name'] = user[1]
-            session['user_email'] = user[2]
-            session['user_ward'] = user[3]
-            session['user_mobile'] = user[5]
-            flash("Login successful!")
-            cursor.close()
-            conn.close()
-            return redirect('/dashboard')
-        else:
-            flash("Invalid credentials")
         cursor.close()
         conn.close()
+
+        if not user or not check_password_hash(user[4], password):
+            flash("Invalid credentials")
+            return redirect(url_for('login'))
+
+        if int(user[6]) != 1:
+            flash("Please verify your email before login.")
+            return redirect(url_for('login'))
+
+        session['user_id'] = user[0]
+        session['user_name'] = user[1]
+        session['user_email'] = user[2]
+        session['user_ward'] = user[3]
+        session['user_mobile'] = user[5]
+        flash("Login successful!")
+        return redirect('/dashboard')
 
     return render_template('login.html')
 
@@ -399,18 +477,116 @@ def signup():
             flash("Email already registered. Please login.")
             return redirect(url_for('signup'))
 
-        cursor.execute(
-            "INSERT INTO users (name, email, ward, mobile_number, password) VALUES (%s, %s, %s, %s, %s)",
-            (name, email, ward, mobile_number, password)
-        )
+        hashed_password = generate_password_hash(password)
+
+        cursor.execute("""
+            INSERT INTO users (name, email, ward, mobile_number, password, is_verified)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (name, email, ward, mobile_number, hashed_password, 0))
         conn.commit()
         cursor.close()
         conn.close()
 
-        flash("Signup successful! Please login.")
+        token = generate_email_token(email, "user")
+        verify_link = url_for('verify_email', token=token, _external=True)
+        send_verification_email(email, verify_link, "user")
+
+        flash("Signup successful! Please verify your email, then login.")
         return redirect(url_for('login'))
 
     return render_template('signup.html')
+
+
+@app.route('/verify-email/<token>')
+def verify_email(token):
+    data = verify_email_token(token, max_age=3600)
+
+    if not data:
+        flash("Verification link is invalid or expired.")
+        return redirect(url_for('home'))
+
+    email = data.get("email")
+    role = data.get("role")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        if role == "user":
+            cursor.execute("UPDATE users SET is_verified = 1 WHERE email = %s", (email,))
+            conn.commit()
+            flash("User email verified successfully! You can now login.")
+            return redirect(url_for('login'))
+
+        elif role == "admin":
+            cursor.execute("UPDATE admins SET is_verified = 1 WHERE email = %s", (email,))
+            conn.commit()
+            flash("Admin email verified successfully! You can now login.")
+            return redirect(url_for('adminlogin'))
+
+        else:
+            flash("Invalid verification request.")
+            return redirect(url_for('home'))
+
+    except Exception as e:
+        conn.rollback()
+        print("Verification error:", str(e))
+        flash("Something went wrong during verification.")
+        return redirect(url_for('home'))
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.route('/resend-verification', methods=['GET', 'POST'])
+def resend_verification():
+    if request.method == 'POST':
+        email = request.form['email'].strip()
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("SELECT email, is_verified FROM users WHERE email = %s", (email,))
+            user = cursor.fetchone()
+
+            if user:
+                if int(user[1]) == 1:
+                    flash("User email is already verified.")
+                    return redirect(url_for('resend_verification'))
+
+                token = generate_email_token(email, "user")
+                verify_link = url_for('verify_email', token=token, _external=True)
+                send_verification_email(email, verify_link, "user")
+                flash("Verification email resent successfully.")
+                return redirect(url_for('login'))
+
+            cursor.execute("SELECT email, is_verified FROM admins WHERE email = %s", (email,))
+            admin = cursor.fetchone()
+
+            if admin:
+                if int(admin[1]) == 1:
+                    flash("Admin email is already verified.")
+                    return redirect(url_for('resend_verification'))
+
+                token = generate_email_token(email, "admin")
+                verify_link = url_for('verify_email', token=token, _external=True)
+                send_verification_email(email, verify_link, "admin")
+                flash("Verification email resent successfully.")
+                return redirect(url_for('adminlogin'))
+
+            flash("Email not found.")
+            return redirect(url_for('resend_verification'))
+
+        except Exception as e:
+            print("Resend verification error:", str(e))
+            flash("Something went wrong. Please try again.")
+            return redirect(url_for('resend_verification'))
+        finally:
+            cursor.close()
+            conn.close()
+
+    return render_template('resend_verification.html')
 
 
 @app.route('/logout')
@@ -510,32 +686,46 @@ def adminpage():
 @app.route('/adminlogin', methods=['GET', 'POST'])
 def adminlogin():
     if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        department = request.form['department']
+        email = request.form['email'].strip().lower()
+        password = request.form['password'].strip()
+        department = request.form['department'].strip().lower()
 
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT name, email, department FROM admins WHERE email = %s AND password = %s AND department = %s",
-            (email, password, department)
-        )
+        cursor.execute("""
+            SELECT name, email, department, password, is_verified
+            FROM admins
+            WHERE email = %s
+        """, (email,))
         admin = cursor.fetchone()
         cursor.close()
         conn.close()
 
-        if admin:
-            session['admin_email'] = admin[1]
-            session['admin_name'] = admin[0]
-            session['admin_department'] = admin[2]
-            flash('Login successful')
-            return redirect(url_for('admin'))
-        else:
-            flash('Invalid email, password, or department')
+        if not admin:
+            flash('Admin email not found')
             return redirect(url_for('adminlogin'))
 
-    return render_template('admin_login.html')
+        db_department = admin[2].strip().lower()
 
+        if db_department != department:
+            flash('Invalid department selected')
+            return redirect(url_for('adminlogin'))
+
+        if not check_password_hash(admin[3], password):
+            flash('Invalid password')
+            return redirect(url_for('adminlogin'))
+
+        if int(admin[4]) != 1:
+            flash("Please verify your admin email before login.")
+            return redirect(url_for('adminlogin'))
+
+        session['admin_email'] = admin[1]
+        session['admin_name'] = admin[0]
+        session['admin_department'] = admin[2]
+        flash('Login successful')
+        return redirect(url_for('admin'))
+        
+    return render_template('admin_login.html')
 
 @app.route('/admin_signup', methods=['GET', 'POST'])
 def admin_signup():
@@ -545,7 +735,7 @@ def admin_signup():
         department = request.form['department'].strip()
         mobile_number = request.form['mobile_number'].strip()
         password = request.form['password']
-        page = request.form['page']   # 🔥 IMPORTANT
+        page = request.form['page']
 
         if not re.fullmatch(r"[A-Za-z\s]{2,50}", name):
             flash("Full name must contain only letters and spaces")
@@ -575,19 +765,25 @@ def admin_signup():
             flash("Admin email already registered. Please login.")
             return redirect(url_for(f'admin_signup_{page}'))
 
-        cursor.execute(
-            "INSERT INTO admins (name, email, department, mobile_number, password) VALUES (%s, %s, %s, %s, %s)",
-            (name, email, department, mobile_number, password)
-        )
-        conn.commit()
+        hashed_password = generate_password_hash(password)
 
+        cursor.execute("""
+            INSERT INTO admins (name, email, department, mobile_number, password, is_verified)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (name, email, department, mobile_number, hashed_password, 0))
+        conn.commit()
         cursor.close()
         conn.close()
 
-        flash("Admin signup successful! Please login.")
+        token = generate_email_token(email, "admin")
+        verify_link = url_for('verify_email', token=token, _external=True)
+        send_verification_email(email, verify_link, "admin")
+
+        flash("Admin signup successful! Please verify your email, then login.")
         return redirect(url_for('adminlogin'))
 
     return render_template('admin_signup.html')
+
 
 @app.route('/admin_signup_water')
 def admin_signup_water():
@@ -597,6 +793,7 @@ def admin_signup_water():
 @app.route('/admin_signup_electricity')
 def admin_signup_electricity():
     return render_template('admin_signup_electricity.html')
+
 
 @app.route('/admin_history')
 def admin_history():
@@ -689,7 +886,7 @@ def admin_announcement():
     return render_template('admin_announcement.html')
 
 
-# ================= EDIT GENERAL ANNOUNCEMENT =================
+# ================= EDIT ANNOUNCEMENT =================
 @app.route('/edit_announcement', methods=['GET', 'POST'])
 def edit_announcement():
     if 'admin_email' not in session:
@@ -725,27 +922,56 @@ def edit_announcement():
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
-        email = request.form['email']
+        email = request.form['email'].strip()
+
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
-        user = cursor.fetchone()
 
-        if user:
+        try:
             token = str(uuid.uuid4())
             expiry = datetime.now() + timedelta(minutes=15)
-            cursor.execute(
-                "UPDATE users SET reset_token = %s, token_expiry = %s WHERE email = %s",
-                (token, expiry, email)
-            )
-            conn.commit()
-            print(f"🔗 Reset link: http://127.0.0.1:5000/reset-password/{token}")
-            flash("Reset link generated (check console for link)")
-        else:
-            flash("Email not found")
 
-        cursor.close()
-        conn.close()
+            cursor.execute("SELECT email FROM users WHERE email = %s", (email,))
+            user = cursor.fetchone()
+
+            if user:
+                cursor.execute("""
+                    UPDATE users
+                    SET reset_token = %s, token_expiry = %s
+                    WHERE email = %s
+                """, (token, expiry, email))
+                conn.commit()
+
+                reset_link = url_for('reset_password', token=token, _external=True)
+                send_reset_email(email, reset_link)
+                flash("Reset link has been sent to your email.")
+                return redirect(url_for('forgot_password'))
+
+            cursor.execute("SELECT email FROM admins WHERE email = %s", (email,))
+            admin = cursor.fetchone()
+
+            if admin:
+                cursor.execute("""
+                    UPDATE admins
+                    SET reset_token = %s, token_expiry = %s
+                    WHERE email = %s
+                """, (token, expiry, email))
+                conn.commit()
+
+                reset_link = url_for('reset_password', token=token, _external=True)
+                send_reset_email(email, reset_link)
+                flash("Reset link has been sent to your email.")
+                return redirect(url_for('forgot_password'))
+
+            flash("Email not found.")
+
+        except Exception as e:
+            conn.rollback()
+            print("Forgot password error:", str(e))
+            flash("Something went wrong. Please try again.")
+        finally:
+            cursor.close()
+            conn.close()
 
     return render_template('forgot_password.html')
 
@@ -754,40 +980,70 @@ def forgot_password():
 def reset_password(token):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute(
-        "SELECT * FROM users WHERE reset_token = %s AND token_expiry > NOW()",
-        (token,)
-    )
-    user = cursor.fetchone()
 
-    if not user:
+    try:
+        cursor.execute("""
+            SELECT email FROM users
+            WHERE reset_token = %s AND token_expiry > NOW()
+        """, (token,))
+        user = cursor.fetchone()
+
+        account_type = None
+
+        if user:
+            account_type = "user"
+        else:
+            cursor.execute("""
+                SELECT email FROM admins
+                WHERE reset_token = %s AND token_expiry > NOW()
+            """, (token,))
+            admin = cursor.fetchone()
+            if admin:
+                account_type = "admin"
+
+        if not account_type:
+            flash("Invalid or expired reset link.")
+            return redirect(url_for('forgot_password'))
+
+        if request.method == 'POST':
+            new_pass = request.form['password'].strip()
+
+            if not re.fullmatch(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$", new_pass):
+                flash("Password must be 8-20 characters with uppercase, lowercase, number, and special character")
+                return render_template('reset_password.html', token=token)
+
+            hashed_password = generate_password_hash(new_pass)
+
+            if account_type == "user":
+                cursor.execute("""
+                    UPDATE users
+                    SET password = %s, reset_token = NULL, token_expiry = NULL
+                    WHERE reset_token = %s
+                """, (hashed_password, token))
+            else:
+                cursor.execute("""
+                    UPDATE admins
+                    SET password = %s, reset_token = NULL, token_expiry = NULL
+                    WHERE reset_token = %s
+                """, (hashed_password, token))
+
+            conn.commit()
+            flash("Password updated successfully!")
+
+            if account_type == "admin":
+                return redirect(url_for('adminlogin'))
+            return redirect(url_for('login'))
+
+        return render_template('reset_password.html', token=token)
+
+    except Exception as e:
+        conn.rollback()
+        print("Reset password error:", str(e))
+        flash("Something went wrong. Please try again.")
+        return redirect(url_for('forgot_password'))
+    finally:
         cursor.close()
         conn.close()
-        flash("Invalid or expired token")
-        return redirect(url_for('login'))
-
-    if request.method == 'POST':
-        new_pass = request.form['password']
-
-        if not re.fullmatch(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$", new_pass):
-            flash("Password must be 8-20 characters with uppercase, lowercase, number, and special character")
-            cursor.close()
-            conn.close()
-            return render_template('reset_password.html')
-
-        cursor.execute(
-            "UPDATE users SET password = %s, reset_token = NULL, token_expiry = NULL WHERE reset_token = %s",
-            (new_pass, token)
-        )
-        conn.commit()
-        cursor.close()
-        conn.close()
-        flash("Password updated successfully!")
-        return redirect(url_for('login'))
-
-    cursor.close()
-    conn.close()
-    return render_template('reset_password.html')
 
 
 # ================= USER CHANGE PASSWORD =================
@@ -822,7 +1078,7 @@ def change_password():
         )
         user = cursor.fetchone()
 
-        if not user or user[0] != current_password:
+        if not user or not check_password_hash(user[0], current_password):
             cursor.close()
             conn.close()
             flash("Current password is incorrect")
@@ -830,7 +1086,7 @@ def change_password():
 
         cursor.execute(
             "UPDATE users SET password = %s WHERE email = %s",
-            (new_password, session['user_email'])
+            (generate_password_hash(new_password), session['user_email'])
         )
         conn.commit()
         cursor.close()
@@ -936,6 +1192,10 @@ def admin_change_password():
             flash("New password and confirm password do not match")
             return redirect(url_for('admin_change_password'))
 
+        if not re.fullmatch(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$", new_password):
+            flash("New password must be 8-20 characters with uppercase, lowercase, number, and special character")
+            return redirect(url_for('admin_change_password'))
+
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
@@ -950,7 +1210,7 @@ def admin_change_password():
             flash("Admin not found")
             return redirect(url_for('adminlogin'))
 
-        if admin_data[0] != current_password:
+        if not check_password_hash(admin_data[0], current_password):
             cursor.close()
             conn.close()
             flash("Current password is incorrect")
@@ -958,7 +1218,7 @@ def admin_change_password():
 
         cursor.execute(
             "UPDATE admins SET password = %s WHERE email = %s",
-            (new_password, session['admin_email'])
+            (generate_password_hash(new_password), session['admin_email'])
         )
         conn.commit()
         cursor.close()
@@ -1020,4 +1280,4 @@ def admin_change_details():
 
 # ================= RUN =================
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=8000, debug=True)

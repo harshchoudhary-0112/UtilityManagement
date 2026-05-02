@@ -5,6 +5,7 @@
 <title>User Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+
 <style>
 *{
   margin:0;
@@ -13,9 +14,11 @@
   font-family:'Segoe UI', sans-serif;
 }
 
+
 html {
   height: 100%;
 }
+
 
 :root{
   --bg-1:#eef2f7;
@@ -34,6 +37,7 @@ html {
   --orange-light:#fb7185;
 }
 
+
 body{
   min-height: 100vh;
   height: 100%;
@@ -45,6 +49,7 @@ body{
     radial-gradient(circle at bottom right, rgba(0,200,83,0.15), transparent 28%),
     linear-gradient(135deg,var(--bg-1),var(--bg-2));
 }
+
 
 header{
   position:sticky;
@@ -62,11 +67,13 @@ header{
   flex-shrink: 0;
 }
 
+
 .brand{
   display:flex;
   align-items:center;
   gap:12px;
 }
+
 
 .brand-mark{
   width:42px;
@@ -80,10 +87,12 @@ header{
   font-size:20px;
 }
 
+
 .brand-text h1{
   font-size:18px;
   font-weight:700;
 }
+
 
 .brand-text p{
   font-size:12px;
@@ -91,11 +100,13 @@ header{
   margin-top:2px;
 }
 
+
 .header-actions{
   display:flex;
   align-items:center;
   gap:10px;
 }
+
 
 .nav-btn{
   padding:10px 16px;
@@ -109,9 +120,11 @@ header{
   box-shadow:0 10px 20px rgba(0,200,83,0.2);
 }
 
+
 .nav-btn:hover{
   transform:translateY(-2px);
 }
+
 
 .main{
   flex: 1;
@@ -123,6 +136,7 @@ header{
   align-items:start;
 }
 
+
 .panel{
   background:var(--white);
   border:1px solid var(--border);
@@ -132,13 +146,16 @@ header{
   overflow:hidden;
 }
 
+
 .panel-inner{
   padding:24px;
 }
 
+
 .hero-card{
   position:relative;
 }
+
 
 .hero-card::before{
   content:"";
@@ -147,6 +164,7 @@ header{
   background:linear-gradient(135deg, rgba(0,119,182,0.08), rgba(0,200,83,0.08));
   pointer-events:none;
 }
+
 
 .welcome-badge{
   display:inline-flex;
@@ -162,12 +180,14 @@ header{
   margin-bottom:18px;
 }
 
+
 .hero-title{
   font-size:28px;
   line-height:1.2;
   color:#111827;
   margin-bottom:10px;
 }
+
 
 .hero-text{
   font-size:14px;
@@ -177,10 +197,12 @@ header{
   max-width:38ch;
 }
 
+
 .info-list{
   display:grid;
   gap:14px;
 }
+
 
 .info-card{
   display:flex;
@@ -192,6 +214,7 @@ header{
   border:1px solid rgba(17,24,39,0.06);
   box-shadow:var(--shadow-soft);
 }
+
 
 .info-icon{
   width:48px;
@@ -206,11 +229,13 @@ header{
   background:linear-gradient(135deg,var(--blue),var(--blue-light));
 }
 
+
 .info-body h3{
   font-size:15px;
   margin-bottom:4px;
   color:#111827;
 }
+
 
 .info-body p{
   font-size:13px;
@@ -218,9 +243,11 @@ header{
   line-height:1.5;
 }
 
+
 .form-panel .panel-inner{
   padding:24px;
 }
+
 
 .panel-head{
   display:flex;
@@ -228,10 +255,12 @@ header{
   margin-bottom:18px;
 }
 
+
 .panel-head-left{
   display:flex;
   gap:14px;
 }
+
 
 .panel-icon{
   width:54px;
@@ -246,17 +275,20 @@ header{
   box-shadow:0 14px 24px rgba(0,119,182,0.18);
 }
 
+
 .panel-head h2{
   font-size:24px;
   color:#111827;
   margin-bottom:4px;
 }
 
+
 .panel-head p{
   font-size:14px;
   color:var(--muted);
   line-height:1.6;
 }
+
 
 .flash-box{
   background:rgba(239,68,68,0.08);
@@ -268,21 +300,25 @@ header{
   margin-bottom:14px;
 }
 
+
 .form-grid{
   display:grid;
   gap:16px;
 }
+
 
 .form-group{
   display:grid;
   gap:8px;
 }
 
+
 .form-group label{
   font-size:14px;
   font-weight:600;
   color:#1f2937;
 }
+
 
 .input-field{
   width:100%;
@@ -297,11 +333,13 @@ header{
   backdrop-filter:blur(8px);
 }
 
+
 .input-field:focus{
   border-color:var(--blue);
   box-shadow:0 0 0 4px rgba(0,119,182,0.12);
   transform:translateY(-1px);
 }
+
 
 .form-actions{
   display:flex;
@@ -309,6 +347,7 @@ header{
   gap:12px;
   margin-top:12px;
 }
+
 
 .submit-btn{
   border:none;
@@ -323,9 +362,11 @@ header{
   box-shadow:0 12px 24px rgba(0,119,182,0.2);
 }
 
+
 .submit-btn:hover{
   transform:translateY(-2px);
 }
+
 
 .inline-link,
 .alt-link{
@@ -335,16 +376,19 @@ header{
   color:var(--blue);
 }
 
+
 .inline-link:hover,
 .alt-link:hover{
   text-decoration:underline;
 }
+
 
 .alt-link{
   display:block;
   margin-top:18px;
   text-align:center;
 }
+
 
 
 footer.user-footer{
@@ -362,11 +406,13 @@ footer.user-footer{
   flex-shrink: 0;
 }
 
+
 .footer-links{
   display:flex;
   align-items:center;
   gap:10px;
 }
+
 
 .footer-link{
   text-decoration:none;
@@ -377,15 +423,18 @@ footer.user-footer{
   font-weight:600;
 }
 
+
 .footer-link.home{
   background:linear-gradient(135deg,var(--green-dark),var(--green));
 }
+
 
 @media (max-width:980px){
   .main{
     grid-template-columns:1fr;
   }
 }
+
 
 @media (max-width:640px){
   header{
@@ -395,26 +444,31 @@ footer.user-footer{
     flex-direction:column;
   }
 
+
   .header-actions{
     width:100%;
     justify-content:space-between;
     flex-wrap:wrap;
   }
 
+
   .main{
     width:min(100% - 20px,1100px);
     margin:18px auto;
   }
 
+
   .panel-inner{
     padding:18px;
   }
+
 
   footer.user-footer{
     padding:12px 14px;
     flex-direction:column;
     align-items:flex-start;
   }
+
 
   .footer-links{
     width:100%;
@@ -423,6 +477,7 @@ footer.user-footer{
 }
 </style>
 </head>
+
 
 <body>
 <header>
@@ -434,10 +489,12 @@ footer.user-footer{
     </div>
   </div>
 
+
   <div class="header-actions">
     <a href="/" class="nav-btn">Home</a>
   </div>
 </header>
+
 
 <div class="main">
   <section class="panel hero-card">
@@ -448,6 +505,7 @@ footer.user-footer{
         Access your user panel to register complaints, monitor status changes, and stay updated with announcements from the administration.
       </p>
 
+
       <div class="info-list">
         <div class="info-card">
           <div class="info-icon">📌</div>
@@ -456,6 +514,7 @@ footer.user-footer{
             <p>Check complaint progress, admin replies, and current status from one dashboard.</p>
           </div>
         </div>
+
 
         <div class="info-card">
           <div class="info-icon">📢</div>
@@ -467,6 +526,7 @@ footer.user-footer{
       </div>
     </div>
   </section>
+
 
   <section class="panel form-panel">
     <div class="panel-inner">
@@ -480,11 +540,13 @@ footer.user-footer{
         </div>
       </div>
 
+
       {% with messages = get_flashed_messages() %}
       {% if messages %}
         <div class="flash-box">{{ messages[0] }}</div>
       {% endif %}
       {% endwith %}
+
 
       <form method="POST" action="{{ url_for('login') }}">
         <div class="form-grid">
@@ -493,11 +555,13 @@ footer.user-footer{
             <input type="email" id="email" name="email" class="input-field" placeholder="Enter your email" required>
           </div>
 
+
           <div class="form-group">
             <label for="password">Password</label>
             <input type="password" id="password" name="password" class="input-field" placeholder="Enter your password" required>
           </div>
         </div>
+
 
         <div class="form-actions">
           <button type="submit" class="submit-btn">Login</button>
@@ -505,15 +569,17 @@ footer.user-footer{
         </div>
       </form>
 
+
       <a href="{{ url_for('signup') }}" class="alt-link">Don't have an account? Register</a>
     </div>
   </section>
 </div>
 
+
 <footer class="user-footer">
   <div>© 2026 CDGI | User Panel</div>
- 
 </footer>
+
 
 </body>
 </html>
