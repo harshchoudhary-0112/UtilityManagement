@@ -4,6 +4,8 @@ import mysql.connector
 from flask import Flask, render_template, request, redirect, flash, url_for, session, jsonify
 from twilio.rest import Client
 import re
+import random
+import string
 import smtplib
 from email.mime.text import MIMEText
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -157,6 +159,67 @@ def notify_users(ward, message):
         conn.close()
 
 
+def notify_users_email(ward, message):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        if ward == "all":
+            cursor.execute("""
+                SELECT email, name, ward
+                FROM users
+                WHERE email IS NOT NULL AND email != ''
+            """)
+        else:
+            cursor.execute("""
+                SELECT email, name, ward
+                FROM users
+                WHERE ward = %s AND email IS NOT NULL AND email != ''
+            """, (ward,))
+
+        users = cursor.fetchall()
+
+        for user in users:
+            to_email = user[0]
+            name = user[1] if user[1] else "User"
+            user_ward = user[2]
+
+            if ward == "all":
+                subject = "New General Announcement"
+                body = f"""
+Hello {name},
+
+A new general announcement has been posted for all users.
+
+Announcement:
+{message}
+
+Regards,
+Utility Portal
+"""
+            else:
+                subject = f"New Announcement for Ward {ward}"
+                body = f"""
+Hello {name},
+
+A new announcement has been posted for Ward {ward}.
+
+Announcement:
+{message}
+
+Regards,
+Utility Portal
+"""
+
+            send_email(to_email, subject, body)
+
+    except Exception as e:
+        print("Announcement email error:", str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+
 def detect_complaint_category(user_message):
     msg = user_message.lower()
 
@@ -171,6 +234,13 @@ def detect_complaint_category(user_message):
 def extract_mobile_number(user_message):
     match = re.search(r"\b\d{10}\b", user_message)
     return match.group(0) if match else None
+
+
+def generate_complaint_id():
+    prefix = "CMP"
+    date_part = datetime.now().strftime("%Y%m%d")
+    random_part = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    return f"{prefix}-{date_part}-{random_part}"
 
 
 # ================= CHAT BOT =================
@@ -231,7 +301,7 @@ def chatbot_reply_logic(user_message):
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT id, category, description, status, admin_reply, created_at
+            SELECT complaint_id, id, category, description, status, admin_reply, created_at
             FROM complaintss
             WHERE user_email = %s AND is_deleted = 0
             ORDER BY created_at DESC
@@ -249,8 +319,8 @@ def chatbot_reply_logic(user_message):
 
         lines = []
         for c in complaints:
-            reply_text = c[4] if c[4] else "No reply yet"
-            lines.append(f"#{c[0]} | {c[1]} | {c[3]} | {reply_text}")
+            reply_text = c[5] if c[5] else "No reply yet"
+            lines.append(f"{c[0]} | {c[2]} | {c[4]} | {reply_text}")
 
         return {
             "reply": "Here are your latest complaints:\n" + "\n".join(lines),
@@ -286,13 +356,16 @@ def chatbot_reply_logic(user_message):
     if "complaint" in msg_lower or "register complaint" in msg_lower:
         category, department = detect_complaint_category(msg)
         description = msg
+        complaint_id = generate_complaint_id()
 
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO complaintss (name, ward, category, description, status, user_email, department)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO complaintss
+            (complaint_id, name, ward, category, description, status, user_email, department)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """, (
+            complaint_id,
             session.get('user_name'),
             session.get('user_ward'),
             category,
@@ -302,7 +375,6 @@ def chatbot_reply_logic(user_message):
             department
         ))
         conn.commit()
-        complaint_id = cursor.lastrowid
         cursor.close()
         conn.close()
 
@@ -586,7 +658,7 @@ def resend_verification():
             cursor.close()
             conn.close()
 
-    return render_template('resend_verification.html')
+    return render_template('resendverification.html')
 
 
 @app.route('/logout')
@@ -612,17 +684,20 @@ def register_complaint():
         else:
             department = "General"
 
+        complaint_id = generate_complaint_id()
+
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO complaintss (name, ward, category, description, status, user_email, department)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (name, ward, category, description, "Pending", user_email, department))
+            INSERT INTO complaintss
+            (complaint_id, name, ward, category, description, status, user_email, department)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (complaint_id, name, ward, category, description, "Pending", user_email, department))
         conn.commit()
         cursor.close()
         conn.close()
 
-        flash("Complaint submitted successfully")
+        flash(f"Complaint submitted successfully! Your Complaint ID is {complaint_id}")
         return redirect('/track_complaints')
 
     return render_template('register_complaint.html')
@@ -638,7 +713,7 @@ def track_complaints():
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT id, name, ward, category, description, status, admin_reply, created_at
+        SELECT complaint_id, id, name, ward, category, description, status, admin_reply, created_at
         FROM complaintss
         WHERE user_email = %s AND is_deleted = 0
         ORDER BY created_at DESC
@@ -727,6 +802,7 @@ def adminlogin():
         
     return render_template('admin_login.html')
 
+
 @app.route('/admin_signup', methods=['GET', 'POST'])
 def admin_signup():
     if request.method == 'POST':
@@ -795,8 +871,8 @@ def admin_signup_electricity():
     return render_template('admin_signup_electricity.html')
 
 
-@app.route('/admin_history')
-def admin_history():
+@app.route('/adminhistory')
+def adminhistory():
     if 'admin_email' not in session:
         return redirect(url_for('adminlogin'))
 
@@ -804,15 +880,16 @@ def admin_history():
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT * FROM complaintss
+        SELECT id, complaint_id, name, ward, category, description, status, admin_reply, created_at
+        FROM complaintss
         WHERE department = %s AND status = %s
         ORDER BY created_at DESC
     """, (department, 'Resolved'))
     complaints = cursor.fetchall()
     cursor.close()
     conn.close()
-    return render_template('admin_history.html', complaints=complaints)
 
+    return render_template('admin_history.html', complaints=complaints)
 
 @app.route('/admin')
 def admin():
@@ -823,7 +900,8 @@ def admin():
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT * FROM complaintss
+        SELECT id, complaint_id, name, ward, category, description, status, admin_reply, created_at
+        FROM complaintss
         WHERE department = %s AND status != %s
         ORDER BY created_at DESC
     """, (department, 'Resolved'))
@@ -831,7 +909,6 @@ def admin():
     cursor.close()
     conn.close()
     return render_template('admin_dash.html', complaints=complaints)
-
 
 @app.route('/update_complaint/<int:id>', methods=['POST'])
 def update_complaint(id):
@@ -877,6 +954,8 @@ def admin_announcement():
         cursor.close()
         conn.close()
 
+        notify_users_email(ward, message)
+
         if ward != "all":
             notify_users(ward, message)
 
@@ -908,6 +987,8 @@ def edit_announcement():
         conn.commit()
         cursor.close()
         conn.close()
+
+        notify_users_email(ward, announcement)
 
         if ward != "all":
             notify_users(ward, announcement)
@@ -1099,82 +1180,112 @@ def change_password():
 
 
 # ================= USER CHANGE DETAILS =================
-@app.route('/change-details', methods=['GET', 'POST'])
+@app.route("/change-details", methods=["GET", "POST"])
 def change_details():
-    if not session.get('user_email'):
+    if not session.get("user_email"):
         flash("Please login first")
-        return redirect(url_for('login'))
+        return redirect(url_for("login"))
 
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
         "SELECT name, email, ward, mobile_number FROM users WHERE email = %s",
-        (session['user_email'],)
+        (session["user_email"],)
     )
     current_user = cursor.fetchone()
     cursor.close()
     conn.close()
 
-    if request.method == 'POST':
-        name = request.form['name'].strip()
-        email = request.form['email'].strip()
-        ward = request.form['ward'].strip()
-        mobile_number = request.form['mobile_number'].strip()
+    if request.method == "POST":
+        name = request.form["name"].strip()
+        email = request.form["email"].strip()
+        ward = request.form["ward"].strip()
+        mobilenumber = request.form["mobile_number"].strip()
 
-        if not name or not email or not ward or not mobile_number:
+        if not name or not email or not ward or not mobilenumber:
             flash("All fields are required")
-            return redirect(url_for('change_details'))
+            return redirect(url_for("change_details"))
 
-        if not re.fullmatch(r"[A-Za-z\s]{2,50}", name):
+        if not re.fullmatch(r"[A-Za-z ]{2,50}", name):
             flash("Full name must contain only letters and spaces")
-            return redirect(url_for('change_details'))
+            return redirect(url_for("change_details"))
 
         if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
             flash("Enter a valid email address")
-            return redirect(url_for('change_details'))
+            return redirect(url_for("change_details"))
 
         if not re.fullmatch(r"\d{1,4}", ward):
             flash("Ward number must contain only 1 to 4 digits")
-            return redirect(url_for('change_details'))
+            return redirect(url_for("change_details"))
 
-        if not re.fullmatch(r"\d{10}", mobile_number):
+        if not re.fullmatch(r"\d{10}", mobilenumber):
             flash("Mobile number must be exactly 10 digits")
-            return redirect(url_for('change_details'))
+            return redirect(url_for("change_details"))
+
+        old_email = session["user_email"]
+        email_changed = (email.lower() != old_email.lower())
 
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT id FROM users WHERE email = %s AND email != %s",
-            (email, session['user_email'])
-        )
-        existing_user = cursor.fetchone()
 
-        if existing_user:
+        try:
+            cursor.execute(
+                "SELECT id FROM users WHERE email = %s AND email != %s",
+                (email, old_email)
+            )
+            existing_user = cursor.fetchone()
+
+            if existing_user:
+                flash("Email already exists with another account")
+                return redirect(url_for("change_details"))
+
+            if email_changed:
+                cursor.execute(
+                    """
+                    UPDATE users
+                    SET name = %s, email = %s, ward = %s, mobile_number = %s, is_verified = 0
+                    WHERE email = %s
+                    """,
+                    (name, email, ward, mobilenumber, old_email)
+                )
+            else:
+                cursor.execute(
+                    """
+                    UPDATE users
+                    SET name = %s, ward = %s, mobile_number = %s
+                    WHERE email = %s
+                    """,
+                    (name, ward, mobilenumber, old_email)
+                )
+
+            conn.commit()
+
+            session["user_name"] = name
+            session["user_email"] = email
+            session["user_ward"] = ward
+            session["user_mobile"] = mobilenumber
+
+            if email_changed:
+                token = generate_email_token(email, "user")
+                verify_link = url_for("verify_email", token=token, _external=True)
+                send_verification_email(email, verify_link, "user")
+                flash("Profile updated. A verification link has been sent to your new email.")
+            else:
+                flash("Profile details updated successfully!")
+
+            return redirect(url_for("dashboard"))
+
+        except Exception as e:
+            conn.rollback()
+            print("Change details error:", str(e))
+            flash("Something went wrong while updating profile.")
+            return redirect(url_for("change_details"))
+
+        finally:
             cursor.close()
             conn.close()
-            flash("Email already exists with another account")
-            return redirect(url_for('change_details'))
 
-        cursor.execute("""
-            UPDATE users
-            SET name = %s, email = %s, ward = %s, mobile_number = %s
-            WHERE email = %s
-        """, (name, email, ward, mobile_number, session['user_email']))
-        conn.commit()
-
-        session['user_name'] = name
-        session['user_email'] = email
-        session['user_ward'] = ward
-        session['user_mobile'] = mobile_number
-
-        cursor.close()
-        conn.close()
-
-        flash("✅ Profile details updated successfully!")
-        return redirect(url_for('dashboard'))
-
-    return render_template('changedetails.html', user=current_user)
-
+    return render_template("changedetails.html", user=current_user)
 
 # ================= ADMIN PASSWORD/DETAILS =================
 @app.route('/admin_change_password', methods=['GET', 'POST'])
@@ -1224,7 +1335,7 @@ def admin_change_password():
         cursor.close()
         conn.close()
 
-        flash("Password changed successfully")
+        flash("✅ Admin password changed successfully!")
         return redirect(url_for('admin'))
 
     return render_template('admin_change_password.html')
@@ -1238,45 +1349,95 @@ def admin_change_details():
 
     conn = get_db_connection()
     cursor = conn.cursor()
-
-    if request.method == 'POST':
-        new_name = request.form['name']
-        new_email = request.form['email']
-        new_department = request.form['department']
-        new_mobile = request.form['mobile_number']
-
-        if not re.fullmatch(r"\d{10}", new_mobile):
-            flash("Mobile number must be exactly 10 digits")
-            cursor.close()
-            conn.close()
-            return redirect(url_for('admin_change_details'))
-
-        cursor.execute(
-            "UPDATE admins SET name = %s, email = %s, department = %s, mobile_number = %s WHERE email = %s",
-            (new_name, new_email, new_department, new_mobile, session['admin_email'])
-        )
-        conn.commit()
-
-        session['admin_email'] = new_email
-        session['admin_name'] = new_name
-        session['admin_department'] = new_department
-        session['admin_mobile'] = new_mobile
-
-        cursor.close()
-        conn.close()
-        flash("Admin details updated successfully")
-        return redirect(url_for('admin'))
-
     cursor.execute(
-        "SELECT name, email, department, mobile_number FROM admins WHERE email = %s",
+        "SELECT name, email, department, mobile_number, is_verified FROM admins WHERE email = %s",
         (session['admin_email'],)
     )
-    admin_data = cursor.fetchone()
+    current_admin = cursor.fetchone()
     cursor.close()
     conn.close()
 
-    return render_template('admin_change_details.html', admin=admin_data)
+    if request.method == 'POST':
+        name = request.form['name'].strip()
+        email = request.form['email'].strip()
+        department = request.form['department'].strip()
+        mobile_number = request.form['mobile_number'].strip()
 
+        if not name or not email or not department or not mobile_number:
+            flash("All fields are required")
+            return redirect(url_for('admin_change_details'))
+
+        if not re.fullmatch(r"[A-Za-z\s]{2,50}", name):
+            flash("Full name must contain only letters and spaces")
+            return redirect(url_for('admin_change_details'))
+
+        if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
+            flash("Enter a valid email address")
+            return redirect(url_for('admin_change_details'))
+
+        if not re.fullmatch(r"\d{10}", mobile_number):
+            flash("Mobile number must be exactly 10 digits")
+            return redirect(url_for('admin_change_details'))
+
+        old_email = session['admin_email']
+        email_changed = (email.lower() != old_email.lower())
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT email FROM admins WHERE email = %s AND email != %s",
+            (email, old_email)
+        )
+        existing_admin = cursor.fetchone()
+
+        if existing_admin:
+            cursor.close()
+            conn.close()
+            flash("Email already exists with another admin account")
+            return redirect(url_for('admin_change_details'))
+
+        try:
+            if email_changed:
+                cursor.execute("""
+                    UPDATE admins
+                    SET name = %s, email = %s, department = %s, mobile_number = %s, is_verified = 0
+                    WHERE email = %s
+                """, (name, email, department, mobile_number, old_email))
+            else:
+                cursor.execute("""
+                    UPDATE admins
+                    SET name = %s, email = %s, department = %s, mobile_number = %s
+                    WHERE email = %s
+                """, (name, email, department, mobile_number, old_email))
+
+            conn.commit()
+
+            session['admin_name'] = name
+            session['admin_email'] = email
+            session['admin_department'] = department
+            session['admin_mobile'] = mobile_number
+
+            if email_changed:
+                token = generate_email_token(email, "admin")
+                verify_link = url_for('verify_email', token=token, _external=True)
+                send_verification_email(email, verify_link, "admin")
+                flash("✅ Admin details updated successfully! A verification link has been sent to your new email.")
+            else:
+                flash("✅ Admin details updated successfully!")
+
+            return redirect(url_for('admin'))
+
+        except Exception as e:
+            conn.rollback()
+            print("Admin change details error:", str(e))
+            flash("Something went wrong while updating admin details")
+            return redirect(url_for('admin_change_details'))
+
+        finally:
+            cursor.close()
+            conn.close()
+
+    return render_template('admin_change_details.html', admin=current_admin)
 
 # ================= RUN =================
 if __name__ == "__main__":

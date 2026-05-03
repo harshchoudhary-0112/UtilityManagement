@@ -416,6 +416,37 @@ header{
   color:#1f2937;
 }
 
+.hidden-announcement{
+  display:none;
+}
+
+.load-more-wrap{
+  margin-top:14px;
+  display:flex;
+  justify-content:center;
+}
+
+.load-more-btn{
+  border:none;
+  border-radius:999px;
+  padding:10px 18px;
+  background:linear-gradient(135deg,var(--blue),var(--green));
+  color:#fff;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  box-shadow:0 10px 22px rgba(0,119,182,0.18);
+  transition:0.3s ease;
+}
+
+.load-more-btn:hover{
+  transform:translateY(-2px);
+}
+
+.load-more-btn.hide-btn{
+  display:none;
+}
+
 .empty-box{
   padding:16px;
   border-radius:16px;
@@ -877,9 +908,9 @@ footer.user-footer{
         </div>
 
         {% if general_announcements %}
-          <div class="announcement-list">
+          <div class="announcement-list" id="generalAnnouncementList">
             {% for a in general_announcements %}
-              <div class="announcement-card general">
+              <div class="announcement-card general general-item {% if loop.index > 4 %}hidden-announcement{% endif %}">
                 <div class="announcement-strip"></div>
                 <div class="announcement-meta">
                   <span class="announcement-tag">Public Notice</span>
@@ -889,6 +920,14 @@ footer.user-footer{
               </div>
             {% endfor %}
           </div>
+
+          {% if general_announcements|length > 4 %}
+            <div class="load-more-wrap">
+              <button type="button" class="load-more-btn" id="loadMoreGeneralBtn" onclick="loadMoreAnnouncements('general')">
+                Load More
+              </button>
+            </div>
+          {% endif %}
         {% else %}
           <div class="empty-box">No general announcements available right now.</div>
         {% endif %}
@@ -901,9 +940,9 @@ footer.user-footer{
         </div>
 
         {% if ward_announcements %}
-          <div class="announcement-list">
+          <div class="announcement-list" id="wardAnnouncementList">
             {% for a in ward_announcements %}
-              <div class="announcement-card ward">
+              <div class="announcement-card ward ward-item {% if loop.index > 4 %}hidden-announcement{% endif %}">
                 <div class="announcement-strip"></div>
                 <div class="announcement-meta">
                   <span class="announcement-tag">Ward {{ a[1] }}</span>
@@ -913,6 +952,14 @@ footer.user-footer{
               </div>
             {% endfor %}
           </div>
+
+          {% if ward_announcements|length > 4 %}
+            <div class="load-more-wrap">
+              <button type="button" class="load-more-btn" id="loadMoreWardBtn" onclick="loadMoreAnnouncements('ward')">
+                Load More
+              </button>
+            </div>
+          {% endif %}
         {% else %}
           <div class="empty-box">No ward announcements available for your area.</div>
         {% endif %}
@@ -923,7 +970,6 @@ footer.user-footer{
 
 <footer class="user-footer">
   <div>© 2026 CDGI | User Panel</div>
-
 </footer>
 
 <script>
@@ -938,6 +984,19 @@ function goToChangePassword() {
 
 function goToChangeDetails() {
   window.location.href = "{{ url_for('change_details') }}";
+}
+
+function loadMoreAnnouncements(type) {
+  const hiddenItems = document.querySelectorAll('.' + type + '-item.hidden-announcement');
+
+  hiddenItems.forEach(function(item) {
+    item.classList.remove('hidden-announcement');
+  });
+
+  const btn = document.getElementById(type === 'general' ? 'loadMoreGeneralBtn' : 'loadMoreWardBtn');
+  if (btn) {
+    btn.classList.add('hide-btn');
+  }
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -998,6 +1057,14 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 </script>
-
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <script>
+      window.onload = function() {
+        alert({{ messages[0] | tojson }});
+      };
+    </script>
+  {% endif %}
+{% endwith %}
 </body>
 </html>

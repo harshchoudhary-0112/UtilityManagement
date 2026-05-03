@@ -440,31 +440,29 @@ footer.user-footer{
               <th>Status</th>
               <th>Reply</th>
               <th>Created At</th>
-              <th>Resolved At</th>
             </tr>
           </thead>
           <tbody>
             {% for complaint in complaints %}
             <tr>
-              <td style="font-weight:600; color:var(--blue);">{{ complaint[0] }}</td>
-              <td>{{ complaint[1] }}</td>
+              <td style="font-weight:600; color:var(--blue);">{{ complaint[1] }}</td>
               <td>{{ complaint[2] }}</td>
               <td>{{ complaint[3] }}</td>
-              <td style="max-width:250px; color:var(--muted);">{{ complaint[4] }}</td>
+              <td>{{ complaint[4] }}</td>
+              <td style="max-width:250px; color:var(--muted);">{{ complaint[5] }}</td>
               <td>
-                <span class="status-badge status-{{ complaint[5]|default('pending')|lower|replace(' ', '-') }}">
-                  {{ complaint[5] or 'Pending' }}
+                <span class="status-badge status-{{ complaint[6]|default('pending')|lower|replace(' ', '-') }}">
+                  {{ complaint[6] or 'Pending' }}
                 </span>
               </td>
               <td>
-                {% if complaint[6] %}
-                  <div class="reply-content">{{ complaint[6] }}</div>
+                {% if complaint[7] %}
+                  <div class="reply-content">{{ complaint[7] }}</div>
                 {% else %}
                   <span class="no-reply">No reply given</span>
                 {% endif %}
               </td>
-              <td style="font-size:13px; color:var(--muted); white-space:nowrap;">{{ complaint[7] }}</td>
-              <td style="font-size:13px; color:var(--muted); white-space:nowrap;">{{ complaint[8] or '—' }}</td>
+              <td style="font-size:13px; color:var(--muted); white-space:nowrap;">{{ complaint[8] }}</td>
             </tr>
             {% endfor %}
           </tbody>

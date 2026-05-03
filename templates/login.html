@@ -569,6 +569,12 @@ footer.user-footer{
         </div>
       </form>
 
+        <div style="text-align:center; margin-top:14px;">
+          <a href="{{ url_for('resend_verification') }}"
+            style="display:inline-block; text-decoration:none; color:#2563eb; font-size:14px; font-weight:600;">
+            Didn't receive verification email? Resend Verification Link
+          </a>
+        </div>
 
       <a href="{{ url_for('signup') }}" class="alt-link">Don't have an account? Register</a>
     </div>

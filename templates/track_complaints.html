@@ -496,36 +496,36 @@ footer.user-footer{
           <tbody>
             {% for complaint in complaints %}
             <tr>
-              <td style="font-weight:600; color:var(--blue);">{{ complaint[0] }}</td>
-              <td>{{ complaint[1] }}</td>
-              <td>{{ complaint[2] }}</td>
-              <td>{{ complaint[3] }}</td>
-              <td style="max-width:250px; color:var(--muted);">{{ complaint[4] }}</td>
+              <td style="font-weight:600; color:var(--blue);">{{ complaint[0] }}</td> <!-- ID -->
+              <td>{{ complaint[2] }}</td> <!-- Name -->
+              <td>{{ complaint[3] }}</td> <!-- Ward -->
+              <td>{{ complaint[4] }}</td> <!-- Category -->
+              <td style="max-width:250px; color:var(--muted);">{{ complaint[5] }}</td> <!-- Description -->
               <td>
-                <span class="status-badge status-{{ complaint[5]|default('pending')|lower|replace(' ', '-') }}">
-                  {{ complaint[5] or 'Pending' }}
+                <span class="status-badge status-{{ complaint[6]|default('pending')|lower|replace(' ', '-') }}">
+                  {{ complaint[6] or 'Pending' }}
                 </span>
               </td>
               <td>
-                {% if complaint[6] %}
-                  <div class="reply-content">{{ complaint[6] }}</div>
+                {% if complaint[7] %}
+                  <div class="reply-content">{{ complaint[7] }}</div>
                 {% else %}
                   <span class="no-reply">No reply yet</span>
                 {% endif %}
               </td>
-              <td style="font-size:13px; color:var(--muted);">{{ complaint[7] }}</td>
+              <td style="font-size:13px; color:var(--muted);">{{ complaint[8] }}</td> <!-- Created -->
               <td>
-                {% if complaint[5] and complaint[5]|lower == 'resolved' %}
-                  <form action="{{ url_for('delete_complaint', id=complaint[0]) }}"
-                      method="POST"
-                      style="display:inline;"
-                      onsubmit="return confirm('Do you want to remove this complaint from your track page?');">
-                    <button type="submit" class="delete-btn"> Delete</button>
+                {% if complaint[6] and complaint[6]|lower == 'resolved' %}
+                  <form action="{{ url_for('delete_complaint', id=complaint[1]) }}" 
+                        method="POST" 
+                        style="display:inline;" 
+                        onsubmit="return confirm('Do you want to remove this complaint from your track page?');">
+                    <button type="submit" class="delete-btn">Delete</button>
                   </form>
                 {% else %}
                   <span style="color:var(--muted); font-size:12px; font-style:italic;">—</span>
                 {% endif %}
-            </td>
+              </td>
             </tr>
             {% endfor %}
           </tbody>
