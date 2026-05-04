@@ -73,3 +73,23 @@ ALTER TABLE admins ADD COLUMN mobile_number VARCHAR(15);
 UPDATE admins SET mobile_number = '9669337002' WHERE email = 'electricadmin@gmail.com';
 UPDATE admins SET mobile_number = '9669337002' WHERE email = 'wateradmin@gmail.com';
 ALTER TABLE complaintss ADD COLUMN is_deleted INTEGER DEFAULT 0;
+ALTER TABLE users ADD COLUMN is_verified TINYINT(1) NOT NULL DEFAULT 0;
+ALTER TABLE admins ADD COLUMN is_verified TINYINT(1) NOT NULL DEFAULT 0;
+UPDATE users
+SET is_verified = 1
+WHERE email IN (
+    'krishna@gmail.com',
+    'harshchoudhary6268@gmail.com',
+    'haritsharma0807@gmail.com',
+    'roopesh.sharma@cdgi.edu.in',
+    'dayanand.yadav@cdgi.edu.in',
+    'harshchoudhar6268y@gmail.com'
+);
+ALTER TABLE complaintss ADD COLUMN complaint_id VARCHAR(30) UNIQUE;
+delete from admins;
+delete from users;
+select * from users; 
+select * from admins; 
+delete from complaintss;
+select * from complaints_history ; 
+select * from announcements;
