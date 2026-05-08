@@ -455,17 +455,46 @@ footer.admin-footer{
     flex-wrap:wrap;
   }
 }
+
+.popup-overlay{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.45);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity 0.3s ease,visibility 0.3s ease;}
+.popup-overlay.active{opacity:1;visibility:visible;}
+.popup-box{width:min(420px,calc(100vw - 32px));background:rgba(255,255,255,0.96);backdrop-filter:blur(20px);border-radius:24px;border:1px solid rgba(255,255,255,0.5);box-shadow:0 25px 60px rgba(15,23,42,0.22);padding:32px 28px 24px;text-align:center;transform:scale(0.9) translateY(20px);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);}
+.popup-overlay.active .popup-box{transform:scale(1) translateY(0);}
+.popup-icon{width:64px;height:64px;margin:0 auto 16px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:30px;background:linear-gradient(135deg,var(--blue),var(--green));box-shadow:0 12px 28px rgba(0,119,182,0.25);color:white;}
+.popup-icon.error{background:linear-gradient(135deg,#ef4444,#fb7185);box-shadow:0 12px 28px rgba(239,68,68,0.25);}
+.popup-icon.warning{background:linear-gradient(135deg,#f97316,#fbbf24);box-shadow:0 12px 28px rgba(249,115,22,0.25);}
+.popup-title{font-size:20px;font-weight:700;color:#111827;margin-bottom:8px;}
+.popup-message{font-size:14px;line-height:1.65;color:#6b7280;margin-bottom:24px;word-break:break-word;}
+.popup-actions{display:flex;gap:10px;justify-content:center;}
+.popup-btn{border:none;border-radius:14px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.25s ease;}
+.popup-btn.primary{background:linear-gradient(135deg,var(--blue),var(--green));color:white;box-shadow:0 8px 20px rgba(0,119,182,0.25);}
+.popup-btn.primary:hover{transform:translateY(-2px);}
+.popup-progress{width:100%;height:4px;background:rgba(17,24,39,0.06);border-radius:999px;margin-top:16px;overflow:hidden;}
+.popup-progress-bar{height:100%;border-radius:999px;background:linear-gradient(135deg,var(--blue),var(--green));animation:popupTimer 4s linear forwards;}
+@keyframes popupTimer{from{width:100%;}to{width:0%;}}
 </style>
 </head>
 
 
 <body>
 <!-- Flash Messages -->
+<div class="popup-overlay" id="popupOverlay">
+  <div class="popup-box">
+    <div class="popup-icon" id="popupIcon">✅</div>
+    <div class="popup-title" id="popupTitle">Notification</div>
+    <div class="popup-message" id="popupMessage"></div>
+    <div class="popup-actions"><button class="popup-btn primary" onclick="closePopup()">Got it</button></div>
+    <div class="popup-progress"><div class="popup-progress-bar" id="popupProgressBar"></div></div>
+  </div>
+</div>
+<script>
+function showPopup(m,t){var o=document.getElementById('popupOverlay'),i=document.getElementById('popupIcon'),tt=document.getElementById('popupTitle'),mg=document.getElementById('popupMessage'),b=document.getElementById('popupProgressBar');mg.textContent=m;if(t==='error'){i.textContent='❌';i.className='popup-icon error';tt.textContent='Error';}else if(t==='warning'){i.textContent='⚠️';i.className='popup-icon warning';tt.textContent='Warning';}else{i.textContent='✅';i.className='popup-icon';tt.textContent='Success';}b.style.animation='none';b.offsetHeight;b.style.animation='popupTimer 4s linear forwards';o.classList.add('active');clearTimeout(window._pt);window._pt=setTimeout(function(){closePopup();},4000);}
+function closePopup(){document.getElementById('popupOverlay').classList.remove('active');clearTimeout(window._pt);}
+document.getElementById('popupOverlay').addEventListener('click',function(e){if(e.target===this)closePopup();});
+</script>
 {% with messages = get_flashed_messages() %}
   {% if messages %}
-    <script>
-      alert("{{ messages[0] }}");
-    </script>
+    <script>document.addEventListener('DOMContentLoaded',function(){var m={{ messages[0] | tojson }},t='success',l=m.toLowerCase();if(l.indexOf('error')!==-1||l.indexOf('fail')!==-1||l.indexOf('invalid')!==-1||l.indexOf('wrong')!==-1||l.indexOf('not found')!==-1||l.indexOf('already')!==-1)t='error';else if(l.indexOf('warning')!==-1)t='warning';showPopup(m,t);});</script>
   {% endif %}
 {% endwith %}
 
@@ -522,67 +551,96 @@ footer.admin-footer{
     <div class="panel-inner">
       <div class="panel-head">
         <div class="panel-head-left">
-          <div class="panel-icon">⚙️</div>
+          <div class="panel-icon">{% if session.get('pending_admin_mobile_otp') %}📱{% else %}⚙️{% endif %}</div>
           <div>
-            <h2>Update Admin Details</h2>
-            <p>Modify your admin account information below.</p>
+            <h2>{% if session.get('pending_admin_mobile_otp') %}Verify Mobile{% else %}Update Admin Details{% endif %}</h2>
+            <p>{% if session.get('pending_admin_mobile_otp') %}Enter the verification code sent to your new mobile number.{% else %}Modify your admin account information below.{% endif %}</p>
           </div>
         </div>
       </div>
 
 
-      
-      <form method="POST" action="{{ url_for('admin_change_details') }}">
-        <div class="form-grid">
-          
-          <div class="form-group">
-            <label for="name">Admin Full Name</label>
-            <input type="text" id="name" name="name" class="input-field" 
-                   value="{{ admin[0] if admin else session.get('admin_name', '') }}" 
-                   placeholder="Enter admin full name" required>
-          </div>
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}<div class="flash-box">{{ messages[0] }}</div>{% endif %}
+      {% endwith %}
 
-
-          
-          <div class="form-group">
-            <label for="email">Admin Email</label>
-            <input type="email" id="email" name="email" class="input-field" 
-                   value="{{ admin[1] if admin else session.get('admin_email', '') }}" 
-                   placeholder="Enter admin email" required>
-          </div>
-
-          <div class="form-group">
-            <label for="mobile_number">Mobile Number</label>
-            <input
-                type="text"
-                id="mobile_number"
-                name="mobile_number"
-                class="input-field"
-                value="{{ admin[3] if admin and admin[3] else session.get('admin_mobile', '') }}"
-                placeholder="Enter 10-digit mobile number"
-                pattern="[0-9]{10}"
-                maxlength="10"
-                inputmode="numeric"
-                title="Mobile number must be exactly 10 digits"
-                required
-            >
-            <small class="field-note">Only numbers allowed, exactly 10 digits.</small>
-          </div>
-
-          <div class="form-group">
-            <label for="department">Department</label>
-            <input type="text" id="department" name="department" class="input-field" 
-                   value="{{ admin[2] if admin else session.get('admin_department', '') }}" 
-                   placeholder="Enter department name" required>
-          </div>
+      {% if session.get('pending_admin_mobile_otp') %}
+        <div style="text-align:center;padding:8px 0 4px;">
+          <div style="font-size:14px;color:#111827;margin-bottom:6px;font-weight:600;">📱 {{ session['pending_admin_mobile_otp']['mobile_number'] }}</div>
+          <div style="font-size:13px;color:#6b7280;line-height:1.6;margin-bottom:16px;">Enter the 6-digit code sent to this mobile number. Valid for 10 minutes.</div>
         </div>
 
+        <form method="POST" action="{{ url_for('admin_change_details') }}">
+          <input type="hidden" name="form_type" value="verify_mobile_otp">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="otp">Verification Code</label>
+              <input type="text" id="otp" name="otp" class="input-field" style="text-align:center;font-size:20px;letter-spacing:6px;font-weight:700;" placeholder="000000" pattern="\d{6}" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required>
+            </div>
+          </div>
+          <button type="submit" class="submit-btn">✅ Verify & Update Details</button>
+        </form>
 
-        <button type="submit" class="submit-btn">✅ Update Admin Details</button>
-      </form>
+        <form method="POST" action="{{ url_for('admin_change_details') }}">
+          <input type="hidden" name="form_type" value="resend_mobile_otp">
+          <button type="submit" style="width:100%;border:none;border-radius:14px;padding:14px 22px;margin-top:10px;background:linear-gradient(135deg,#64748b,#334155);color:white;font-size:14px;font-weight:700;cursor:pointer;">Resend Code</button>
+        </form>
+
+        <a href="{{ url_for('admin_change_details_cancel_otp') }}" class="alt-link">Cancel Verification</a>
+      {% else %}
+        <form method="POST" action="{{ url_for('admin_change_details') }}">
+          <input type="hidden" name="form_type" value="update">
+          <div class="form-grid">
+            
+            <div class="form-group">
+              <label for="name">Admin Full Name</label>
+              <input type="text" id="name" name="name" class="input-field" 
+                     value="{{ admin[0] if admin else session.get('admin_name', '') }}" 
+                     placeholder="Enter admin full name" required>
+            </div>
 
 
-      <a href="/admin" class="alt-link">← Back to Admin Dashboard</a>
+            
+            <div class="form-group">
+              <label for="email">Admin Email</label>
+              <input type="email" id="email" name="email" class="input-field" 
+                     value="{{ admin[1] if admin else session.get('admin_email', '') }}" 
+                     placeholder="Enter admin email" required>
+            </div>
+
+            <div class="form-group">
+              <label for="mobile_number">Mobile Number</label>
+              <input
+                  type="text"
+                  id="mobile_number"
+                  name="mobile_number"
+                  class="input-field"
+                  value="{{ admin[3] if admin and admin[3] else session.get('admin_mobile', '') }}"
+                  placeholder="Enter 10-digit mobile number"
+                  pattern="[0-9]{10}"
+                  maxlength="10"
+                  inputmode="numeric"
+                  title="Mobile number must be exactly 10 digits"
+                  required
+              >
+              <small class="field-note">Only numbers allowed, exactly 10 digits.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="department">Department</label>
+              <input type="text" id="department" name="department" class="input-field" 
+                     value="{{ admin[2] if admin else session.get('admin_department', '') }}" 
+                     placeholder="Enter department name" required>
+            </div>
+          </div>
+
+
+          <button type="submit" class="submit-btn">✅ Update Admin Details</button>
+        </form>
+
+
+        <a href="/admin" class="alt-link">← Back to Admin Dashboard</a>
+      {% endif %}
     </div>
   </section>
 </div>

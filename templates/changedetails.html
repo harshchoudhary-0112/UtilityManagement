@@ -404,6 +404,58 @@ footer.user-footer{
     flex-wrap:wrap;
   }
 }
+
+/* ── Web Popup Modal ── */
+.popup-overlay{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  background:rgba(15,23,42,0.45);
+  backdrop-filter:blur(6px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  opacity:0;
+  visibility:hidden;
+  transition:opacity 0.3s ease, visibility 0.3s ease;
+}
+.popup-overlay.active{ opacity:1; visibility:visible; }
+.popup-box{
+  width:min(420px, calc(100vw - 32px));
+  background:rgba(255,255,255,0.96);
+  backdrop-filter:blur(20px);
+  border-radius:24px;
+  border:1px solid rgba(255,255,255,0.5);
+  box-shadow:0 25px 60px rgba(15,23,42,0.22), 0 0 0 1px rgba(17,24,39,0.04);
+  padding:32px 28px 24px;
+  text-align:center;
+  transform:scale(0.9) translateY(20px);
+  transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+.popup-overlay.active .popup-box{ transform:scale(1) translateY(0); }
+.popup-icon{
+  width:64px; height:64px; margin:0 auto 16px; border-radius:20px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:30px; background:linear-gradient(135deg,var(--blue),var(--green));
+  box-shadow:0 12px 28px rgba(0,119,182,0.25); color:white;
+}
+.popup-icon.error{ background:linear-gradient(135deg,#ef4444,#fb7185); box-shadow:0 12px 28px rgba(239,68,68,0.25); }
+.popup-icon.warning{ background:linear-gradient(135deg,#f97316,#fbbf24); box-shadow:0 12px 28px rgba(249,115,22,0.25); }
+.popup-title{ font-size:20px; font-weight:700; color:#111827; margin-bottom:8px; }
+.popup-message{ font-size:14px; line-height:1.65; color:#6b7280; margin-bottom:24px; word-break:break-word; }
+.popup-actions{ display:flex; gap:10px; justify-content:center; }
+.popup-btn{
+  border:none; border-radius:14px; padding:12px 28px;
+  font-size:14px; font-weight:700; cursor:pointer; transition:all 0.25s ease;
+}
+.popup-btn.primary{
+  background:linear-gradient(135deg,var(--blue),var(--green));
+  color:white; box-shadow:0 8px 20px rgba(0,119,182,0.25);
+}
+.popup-btn.primary:hover{ transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,119,182,0.3); }
+.popup-progress{ width:100%; height:4px; background:rgba(17,24,39,0.06); border-radius:999px; margin-top:16px; overflow:hidden; }
+.popup-progress-bar{ height:100%; border-radius:999px; background:linear-gradient(135deg,var(--blue),var(--green)); animation:popupTimer 4s linear forwards; }
+@keyframes popupTimer{ from{ width:100%; } to{ width:0%; } }
 </style>
 </head>
 
@@ -456,10 +508,10 @@ footer.user-footer{
     <div class="panel-inner">
       <div class="panel-head">
         <div class="panel-head-left">
-          <div class="panel-icon">✏️</div>
+          <div class="panel-icon">{% if session.get('pending_user_mobile_otp') %}📱{% else %}✏️{% endif %}</div>
           <div>
-            <h2>Change Details</h2>
-            <p>Update your account details below.</p>
+            <h2>{% if session.get('pending_user_mobile_otp') %}Verify Mobile{% else %}Change Details{% endif %}</h2>
+            <p>{% if session.get('pending_user_mobile_otp') %}Enter the verification code sent to your new mobile number.{% else %}Update your account details below.{% endif %}</p>
           </div>
         </div>
       </div>
@@ -470,33 +522,59 @@ footer.user-footer{
         {% endif %}
       {% endwith %}
 
-      <form method="POST">
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="name">Full Name</label>
-            <input type="text" id="name" name="name" class="input-field" value="{{ session['user_name'] }}" placeholder="Enter full name" required>
-          </div>
-
-          <div class="form-group">
-            <label for="email">Email Address</label>
-            <input type="email" id="email" name="email" class="input-field" value="{{ session['user_email'] }}" placeholder="Enter email address" required>
-          </div>
-
-          <div class="form-group">
-            <label for="ward">Ward Number</label>
-            <input type="text" id="ward" name="ward" class="input-field" value="{{ session['user_ward'] }}" placeholder="Enter ward number" required>
-          </div>
-
-          <div class="form-group">
-            <label for="mobile_number">Mobile Number</label>
-            <input type="text" id="mobile_number" name="mobile_number" class="input-field" value="{{ session['user_mobile'] }}" placeholder="Enter mobile number" required>
-          </div>
+      {% if session.get('pending_user_mobile_otp') %}
+        <div style="text-align:center;padding:8px 0 4px;">
+          <div style="font-size:14px;color:#111827;margin-bottom:6px;font-weight:600;">📱 {{ session['pending_user_mobile_otp']['mobile_number'] }}</div>
+          <div style="font-size:13px;color:#6b7280;line-height:1.6;margin-bottom:16px;">Enter the 6-digit code sent to this mobile number. Valid for 10 minutes.</div>
         </div>
 
-        <button type="submit" class="submit-btn">Update Details</button>
-      </form>
+        <form method="POST">
+          <input type="hidden" name="form_type" value="verify_mobile_otp">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="otp">Verification Code</label>
+              <input type="text" id="otp" name="otp" class="input-field" style="text-align:center;font-size:20px;letter-spacing:6px;font-weight:700;" placeholder="000000" pattern="\d{6}" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required>
+            </div>
+          </div>
+          <button type="submit" class="submit-btn">Verify & Update Details</button>
+        </form>
 
-      <a href="/dashboard" class="alt-link">Back to Dashboard</a>
+        <form method="POST">
+          <input type="hidden" name="form_type" value="resend_mobile_otp">
+          <button type="submit" style="width:100%;border:none;border-radius:14px;padding:14px 22px;margin-top:10px;background:linear-gradient(135deg,#64748b,#334155);color:white;font-size:14px;font-weight:700;cursor:pointer;">Resend Code</button>
+        </form>
+
+        <a href="{{ url_for('change_details_cancel_otp') }}" class="alt-link">Cancel Verification</a>
+      {% else %}
+        <form method="POST">
+          <input type="hidden" name="form_type" value="update">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="name">Full Name</label>
+              <input type="text" id="name" name="name" class="input-field" value="{{ session['user_name'] }}" placeholder="Enter full name" required>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input type="email" id="email" name="email" class="input-field" value="{{ session['user_email'] }}" placeholder="Enter email address" required>
+            </div>
+
+            <div class="form-group">
+              <label for="ward">Ward Number</label>
+              <input type="text" id="ward" name="ward" class="input-field" value="{{ session['user_ward'] }}" placeholder="Enter ward number" required>
+            </div>
+
+            <div class="form-group">
+              <label for="mobile_number">Mobile Number</label>
+              <input type="text" id="mobile_number" name="mobile_number" class="input-field" value="{{ session['user_mobile'] }}" placeholder="Enter mobile number" required>
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn">Update Details</button>
+        </form>
+
+        <a href="/dashboard" class="alt-link">Back to Dashboard</a>
+      {% endif %}
     </div>
   </section>
 </div>
@@ -505,10 +583,50 @@ footer.user-footer{
   <div>© 2026 CDGI | User Panel</div>
   
 </footer>
+<!-- Web Popup Modal -->
+<div class="popup-overlay" id="popupOverlay">
+  <div class="popup-box">
+    <div class="popup-icon" id="popupIcon">✅</div>
+    <div class="popup-title" id="popupTitle">Notification</div>
+    <div class="popup-message" id="popupMessage"></div>
+    <div class="popup-actions">
+      <button class="popup-btn primary" onclick="closePopup()">Got it</button>
+    </div>
+    <div class="popup-progress"><div class="popup-progress-bar" id="popupProgressBar"></div></div>
+  </div>
+</div>
+
+<script>
+function showPopup(message, type) {
+  var overlay = document.getElementById('popupOverlay');
+  var icon = document.getElementById('popupIcon');
+  var title = document.getElementById('popupTitle');
+  var msg = document.getElementById('popupMessage');
+  var bar = document.getElementById('popupProgressBar');
+  msg.textContent = message;
+  if (type === 'error') { icon.textContent = '❌'; icon.className = 'popup-icon error'; title.textContent = 'Error'; }
+  else if (type === 'warning') { icon.textContent = '⚠️'; icon.className = 'popup-icon warning'; title.textContent = 'Warning'; }
+  else { icon.textContent = '✅'; icon.className = 'popup-icon'; title.textContent = 'Success'; }
+  bar.style.animation = 'none'; bar.offsetHeight; bar.style.animation = 'popupTimer 4s linear forwards';
+  overlay.classList.add('active');
+  clearTimeout(window._popupTimer);
+  window._popupTimer = setTimeout(function() { closePopup(); }, 4000);
+}
+function closePopup() { document.getElementById('popupOverlay').classList.remove('active'); clearTimeout(window._popupTimer); }
+document.getElementById('popupOverlay').addEventListener('click', function(e) { if (e.target === this) closePopup(); });
+</script>
+
 {% with messages = get_flashed_messages() %}
   {% if messages %}
     <script>
-      alert("{{ messages[0] }}");
+      document.addEventListener('DOMContentLoaded', function() {
+        var msg = {{ messages[0] | tojson }};
+        var type = 'success';
+        var lower = msg.toLowerCase();
+        if (lower.indexOf('error') !== -1 || lower.indexOf('fail') !== -1 || lower.indexOf('invalid') !== -1 || lower.indexOf('wrong') !== -1 || lower.indexOf('not found') !== -1 || lower.indexOf('already') !== -1) type = 'error';
+        else if (lower.indexOf('warning') !== -1) type = 'warning';
+        showPopup(msg, type);
+      });
     </script>
   {% endif %}
 {% endwith %}

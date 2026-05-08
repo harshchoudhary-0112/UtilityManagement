@@ -93,3 +93,5 @@ select * from admins;
 delete from complaintss;
 select * from complaints_history ; 
 select * from announcements;
+ALTER TABLE users ADD COLUMN profile_photo VARCHAR(255) DEFAULT NULL;
+ALTER TABLE admins ADD COLUMN profile_photo VARCHAR(255) DEFAULT NULL;

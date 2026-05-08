@@ -1,4 +1,5 @@
 import uuid
+import os
 from datetime import datetime, timedelta
 import mysql.connector
 from flask import Flask, render_template, request, redirect, flash, url_for, session, jsonify
@@ -8,7 +9,9 @@ import random
 import string
 import smtplib
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
 
@@ -19,57 +22,290 @@ serializer = URLSafeTimedSerializer(app.secret_key)
 
 
 # ================= EMAIL HELPERS =================
-def send_email(to_email, subject, body):
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+PORTAL_NAME = "Real Time Urban Utility Management & Communication Portal"
+PORTAL_SHORT = "RTUUMC Portal"
+
+
+def send_email(to_email, subject, body, is_html=False):
     sender_email = "harshchoudhar6268y@gmail.com"
     sender_password = "zikz hpnq feac menc"
+    display_name = PORTAL_NAME
 
-    msg = MIMEText(body)
-    msg['Subject'] = subject
-    msg['From'] = sender_email
-    msg['To'] = to_email
+    if is_html:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = f"{display_name} <{sender_email}>"
+        msg['To'] = to_email
+        msg.attach(MIMEText(body, 'html'))
+    else:
+        msg = MIMEText(body)
+        msg['Subject'] = subject
+        msg['From'] = f"{display_name} <{sender_email}>"
+        msg['To'] = to_email
 
     try:
         server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
         server.login(sender_email, sender_password)
         server.send_message(msg)
         server.quit()
-        print(f"✅ Email sent successfully to {to_email}")
         return True
     except Exception as e:
-        print("❌ Email error:", str(e))
+        print("Email error:", str(e))
         return False
+
+
+def email_template(title, greeting, content_html, button_text=None, button_url=None, footer_note=None):
+    button_block = ""
+    if button_text and button_url:
+        button_block = f'''
+        <tr><td style="padding:28px 36px 0;text-align:center">
+          <a href="{button_url}" style="display:inline-block;padding:16px 44px;background:linear-gradient(135deg,#0077b6,#00c853);color:#ffffff;text-decoration:none;border-radius:14px;font-weight:700;font-size:15px;letter-spacing:0.3px;box-shadow:0 10px 28px rgba(0,119,182,0.35);transition:all 0.3s ease">{button_text}</a>
+        </td></tr>'''
+    footer = footer_note or f"You are receiving this email because you are registered on {PORTAL_NAME}."
+    year = datetime.now().year
+    return f'''<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:linear-gradient(135deg,#eef2f7,#dbeafe);font-family:'Segoe UI',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#eef2f7,#dbeafe);padding:40px 16px">
+<tr><td align="center">
+
+  <!-- Main Card -->
+  <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 25px 60px rgba(15,23,42,0.12)">
+
+    <!-- Header Banner -->
+    <tr><td style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0077b6 100%);padding:36px 36px 32px;text-align:center">
+      <div style="display:inline-block;width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#0077b6,#00c853);text-align:center;line-height:56px;font-size:26px;box-shadow:0 10px 24px rgba(0,200,83,0.3);margin-bottom:16px">🏛️</div>
+      <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:0.4px;line-height:1.4">{PORTAL_NAME}</h1>
+      <div style="margin:12px auto 0;display:inline-block;padding:6px 18px;border-radius:999px;background:rgba(255,255,255,0.15);backdrop-filter:blur(8px)">
+        <span style="font-size:12px;color:rgba(255,255,255,0.9);font-weight:600;letter-spacing:0.5px">{title}</span>
+      </div>
+    </td></tr>
+
+    <!-- Body Content -->
+    <tr><td style="padding:36px 36px 16px">
+      <p style="margin:0 0 20px;font-size:17px;color:#111827;font-weight:700">{greeting}</p>
+      {content_html}
+    </td></tr>
+
+    <!-- Button -->
+    {button_block}
+
+    <!-- Footer -->
+    <tr><td style="padding:32px 36px 28px">
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:0 0 20px">
+      <p style="margin:0 0 4px;font-size:11px;color:#9ca3af;text-align:center;line-height:1.6">{footer}</p>
+      <p style="margin:0;font-size:11px;color:#b0b8c4;text-align:center">© {year} CDGI | {PORTAL_NAME}</p>
+    </td></tr>
+
+  </table>
+
+</td></tr>
+</table>
+</body></html>'''
+
+
+# ================= TWILIO CONFIGURATION =================
+TWILIO_ACCOUNT_SID = "AC7be2f06dfcb1b13a251c79ec662daeed"
+TWILIO_AUTH_TOKEN = "ad610f05fefe9cf63b3e0ff2992724d2"
+TWILIO_PHONE_NUMBER = "+1 979 202 0808"
+
+twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
+
+def sanitize_phone(n):
+    n = str(n).strip()
+
+    if n.startswith("+"):
+        return n
+
+    if n.startswith("0"):
+        n = n[1:]
+
+    if len(n) == 10:
+        n = "91" + n
+
+    if not n.startswith("+"):
+        n = "+" + n
+
+    return n
+
+
+def send_sms(to_number, message):
+    try:
+        if not to_number:
+            return False
+
+        phone = sanitize_phone(to_number)
+        msg = twilio_client.messages.create(
+            body=message,
+            from_=TWILIO_PHONE_NUMBER,
+            to=phone
+        )
+        print(f"✅ SMS sent successfully to {phone} | SID: {msg.sid}")
+        return True
+    except Exception as e:
+        print("❌ SMS error:", str(e))
+        return False
+
+
+# ================= DATABASE =================
+def get_db_connection():
+    return mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="Harsh@966933",
+        database="utility_portalll"
+    )
+
+
+def get_contact_details_by_email(email):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            SELECT name, email, mobile_number
+            FROM users
+            WHERE email = %s
+        """, (email,))
+        user = cursor.fetchone()
+
+        if user:
+            return {
+                "name": user[0],
+                "email": user[1],
+                "mobile_number": user[2],
+                "role": "user"
+            }
+
+        cursor.execute("""
+            SELECT name, email, mobile_number
+            FROM admins
+            WHERE email = %s
+        """, (email,))
+        admin = cursor.fetchone()
+
+        if admin:
+            return {
+                "name": admin[0],
+                "email": admin[1],
+                "mobile_number": admin[2],
+                "role": "admin"
+            }
+
+        return None
+
+    except Exception as e:
+        print("Contact fetch error:", str(e))
+        return None
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def send_notification(to_email, subject, email_body, sms_body=None, is_html=False):
+    email_sent = send_email(to_email, subject, email_body, is_html=is_html)
+
+    contact = get_contact_details_by_email(to_email)
+    sms_sent = False
+
+    if contact and contact.get("mobile_number"):
+        sms_text = sms_body if sms_body else subject
+        sms_sent = send_sms(contact.get("mobile_number"), sms_text)
+
+    return email_sent, sms_sent
 
 
 def send_reset_email(to_email, reset_link):
     subject = "Password Reset Request"
-    body = f"""
-Hello,
-
-Click the link below to reset your password:
-
-{reset_link}
-
-This link will expire in 15 minutes.
-
-If you did not request this, please ignore this email.
-"""
-    return send_email(to_email, subject, body)
+    content = '''
+      <p style="margin:0 0 14px;font-size:14px;color:#374151;line-height:1.7">We received a request to reset your password. Click the button below to choose a new password.</p>
+      <div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:12px;padding:14px 16px;margin:0 0 6px">
+        <p style="margin:0;font-size:13px;color:#92400e">⏱️ This link will expire in <strong>15 minutes</strong>.</p>
+      </div>
+      <p style="margin:14px 0 0;font-size:13px;color:#6b7280">If you did not request this, please ignore this email.</p>
+    '''
+    body = email_template(
+        title="Password Reset",
+        greeting="Hello,",
+        content_html=content,
+        button_text="🔐 Reset Password",
+        button_url=reset_link
+    )
+    sms_body = f"{PORTAL_NAME}: Password reset requested. Check your email for the reset link. Valid for 15 minutes."
+    return send_notification(to_email, subject, body, sms_body, is_html=True)
 
 
 def send_verification_email(to_email, verify_link, role):
     subject = "Verify Your Email"
-    body = f"""
-Hello,
+    content = f'''
+      <p style="margin:0 0 14px;font-size:14px;color:#374151;line-height:1.7">Thank you for signing up! Please verify your <strong>{role}</strong> account email to get started.</p>
+      <div style="background:#ecfdf5;border:1px solid #34d399;border-radius:12px;padding:14px 16px;margin:0 0 6px">
+        <p style="margin:0;font-size:13px;color:#065f46">⏱️ This verification link will expire in <strong>60 minutes</strong>.</p>
+      </div>
+      <p style="margin:14px 0 0;font-size:13px;color:#6b7280">If you did not create this account, please ignore this email.</p>
+    '''
+    body = email_template(
+        title="Email Verification",
+        greeting="Hello,",
+        content_html=content,
+        button_text="✅ Verify Email",
+        button_url=verify_link
+    )
+    sms_body = f"{PORTAL_NAME}: Your {role} account verification link has been sent to your email. Please verify within 60 minutes."
+    return send_notification(to_email, subject, body, sms_body, is_html=True)
 
-Click the link below to verify your {role} account email:
 
-{verify_link}
+def send_complaint_registered_email(to_email, user_name, complaint_id, category, description, status):
+    subject = f"Complaint Registered Successfully - {complaint_id}"
+    content = f'''
+      <p style="margin:0 0 18px;font-size:14px;color:#374151;line-height:1.7">Your complaint has been registered successfully. Here are the details:</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden">
+        <tr><td style="padding:14px 18px;border-bottom:1px solid #e2e8f0"><span style="font-size:12px;color:#6b7280">Complaint ID</span><br><strong style="font-size:15px;color:#0077b6">{complaint_id}</strong></td></tr>
+        <tr><td style="padding:14px 18px;border-bottom:1px solid #e2e8f0"><span style="font-size:12px;color:#6b7280">Category</span><br><strong style="font-size:14px;color:#111827">{category}</strong></td></tr>
+        <tr><td style="padding:14px 18px;border-bottom:1px solid #e2e8f0"><span style="font-size:12px;color:#6b7280">Description</span><br><span style="font-size:14px;color:#374151">{description}</span></td></tr>
+        <tr><td style="padding:14px 18px"><span style="font-size:12px;color:#6b7280">Status</span><br><span style="display:inline-block;padding:5px 14px;border-radius:999px;background:linear-gradient(135deg,#f97316,#fb923c);color:#fff;font-size:12px;font-weight:700">{status}</span></td></tr>
+      </table>
+    '''
+    body = email_template(
+        title="Complaint Registered",
+        greeting=f"Hello {user_name},",
+        content_html=content
+    )
+    sms_body = f"{PORTAL_SHORT}: Complaint {complaint_id} registered. Category: {category}. Status: {status}."
+    return send_notification(to_email, subject, body, sms_body, is_html=True)
 
-This link will expire in 60 minutes.
 
-If you did not create this account, please ignore this email.
-"""
-    return send_email(to_email, subject, body)
+def send_complaint_update_email(to_email, user_name, complaint_id, category, description, status, admin_reply):
+    subject = f"Complaint Updated - {complaint_id}"
+    status_colors = {'Pending': '#f97316', 'In Progress': '#3b82f6', 'Resolved': '#00a86b', 'Rejected': '#ef4444'}
+    s_color = status_colors.get(status, '#6b7280')
+    reply_html = f'<span style="font-size:14px;color:#374151">{admin_reply}</span>' if admin_reply else '<span style="font-size:13px;color:#9ca3af;font-style:italic">No reply provided</span>'
+    content = f'''
+      <p style="margin:0 0 18px;font-size:14px;color:#374151;line-height:1.7">Your complaint has been updated by the admin. See the latest details below:</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden">
+        <tr><td style="padding:14px 18px;border-bottom:1px solid #e2e8f0"><span style="font-size:12px;color:#6b7280">Complaint ID</span><br><strong style="font-size:15px;color:#0077b6">{complaint_id}</strong></td></tr>
+        <tr><td style="padding:14px 18px;border-bottom:1px solid #e2e8f0"><span style="font-size:12px;color:#6b7280">Category</span><br><strong style="font-size:14px;color:#111827">{category}</strong></td></tr>
+        <tr><td style="padding:14px 18px;border-bottom:1px solid #e2e8f0"><span style="font-size:12px;color:#6b7280">Description</span><br><span style="font-size:14px;color:#374151">{description}</span></td></tr>
+        <tr><td style="padding:14px 18px;border-bottom:1px solid #e2e8f0"><span style="font-size:12px;color:#6b7280">Updated Status</span><br><span style="display:inline-block;padding:5px 14px;border-radius:999px;background:{s_color};color:#fff;font-size:12px;font-weight:700">{status}</span></td></tr>
+        <tr><td style="padding:14px 18px"><span style="font-size:12px;color:#6b7280">Admin Reply</span><br>{reply_html}</td></tr>
+      </table>
+    '''
+    body = email_template(
+        title="Complaint Status Update",
+        greeting=f"Hello {user_name},",
+        content_html=content
+    )
+    sms_body = f"{PORTAL_SHORT}: Complaint {complaint_id} updated. Status: {status}. Reply: {admin_reply if admin_reply else 'No reply'}"
+    return send_notification(to_email, subject, body, sms_body, is_html=True)
 
 
 def generate_email_token(email, role):
@@ -95,70 +331,6 @@ def add_header(response):
     return response
 
 
-# ================= DATABASE =================
-def get_db_connection():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="Harsh@966933",
-        database="utility_portalll"
-    )
-
-
-# ================= TWILIO CONFIGURATION =================
-TWILIO_ACCOUNT_SID = "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-TWILIO_AUTH_TOKEN = "your_auth_token"
-TWILIO_PHONE_NUMBER = "+1234567890"
-
-twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-
-
-def sanitize_phone(n):
-    n = str(n).strip()
-    if not n.startswith("9"):
-        if n.startswith("0"):
-            n = n[1:]
-    else:
-        if len(n) == 10 and n[0] == "9":
-            n = "91" + n
-    if not n.startswith("+"):
-        n = "+" + n
-    return n
-
-
-def notify_users(ward, message):
-    if ward == "all":
-        return
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(
-            "SELECT mobile_number FROM users WHERE ward = %s AND mobile_number IS NOT NULL AND mobile_number != ''",
-            (ward,)
-        )
-        numbers = cursor.fetchall()
-        for row in numbers:
-            number = str(row[0]).strip()
-            if not number:
-                continue
-            try:
-                phone = sanitize_phone(number)
-                msg = twilio_client.messages.create(
-                    body=f"New announcement for your ward: {message}",
-                    from_=TWILIO_PHONE_NUMBER,
-                    to=phone
-                )
-                print(f"✅ SMS OK to {phone} | SID: {msg.sid}")
-            except Exception as e:
-                print(f"❌ Failed to send SMS to {number}: {str(e)}")
-    except Exception as e:
-        print(f"Database error in notify_users: {str(e)}")
-    finally:
-        cursor.close()
-        conn.close()
-
-
 def notify_users_email(ward, message):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -166,13 +338,13 @@ def notify_users_email(ward, message):
     try:
         if ward == "all":
             cursor.execute("""
-                SELECT email, name, ward
+                SELECT email, name, ward, mobile_number
                 FROM users
                 WHERE email IS NOT NULL AND email != ''
             """)
         else:
             cursor.execute("""
-                SELECT email, name, ward
+                SELECT email, name, ward, mobile_number
                 FROM users
                 WHERE ward = %s AND email IS NOT NULL AND email != ''
             """, (ward,))
@@ -183,38 +355,44 @@ def notify_users_email(ward, message):
             to_email = user[0]
             name = user[1] if user[1] else "User"
             user_ward = user[2]
+            mobile_number = user[3]
 
             if ward == "all":
                 subject = "New General Announcement"
-                body = f"""
-Hello {name},
-
-A new general announcement has been posted for all users.
-
-Announcement:
-{message}
-
-Regards,
-Utility Portal
-"""
+                content = f'''
+                  <p style="margin:0 0 14px;font-size:14px;color:#374151;line-height:1.7">A new general announcement has been posted for all users:</p>
+                  <div style="background:linear-gradient(135deg,#eef7ff,#f9fcff);border:1px solid #bfdbfe;border-radius:14px;padding:18px 20px;border-left:5px solid #0077b6">
+                    <p style="margin:0;font-size:14px;color:#1f2937;line-height:1.7">{message}</p>
+                  </div>
+                '''
+                body = email_template(
+                    title="General Announcement",
+                    greeting=f"Hello {name},",
+                    content_html=content
+                )
+                sms_body = f"{PORTAL_SHORT}: New general announcement: {message}"
             else:
                 subject = f"New Announcement for Ward {ward}"
-                body = f"""
-Hello {name},
+                content = f'''
+                  <p style="margin:0 0 14px;font-size:14px;color:#374151;line-height:1.7">A new announcement has been posted for <strong>Ward {ward}</strong>:</p>
+                  <div style="background:linear-gradient(135deg,#effff4,#fbfffd);border:1px solid #86efac;border-radius:14px;padding:18px 20px;border-left:5px solid #00a86b">
+                    <p style="margin:0;font-size:14px;color:#1f2937;line-height:1.7">{message}</p>
+                  </div>
+                '''
+                body = email_template(
+                    title=f"Ward {ward} Announcement",
+                    greeting=f"Hello {name},",
+                    content_html=content
+                )
+                sms_body = f"{PORTAL_SHORT}: New announcement for Ward {ward}: {message}"
 
-A new announcement has been posted for Ward {ward}.
+            send_email(to_email, subject, body, is_html=True)
 
-Announcement:
-{message}
-
-Regards,
-Utility Portal
-"""
-
-            send_email(to_email, subject, body)
+            if mobile_number:
+                send_sms(mobile_number, sms_body)
 
     except Exception as e:
-        print("Announcement email error:", str(e))
+        print("Announcement email/SMS error:", str(e))
     finally:
         cursor.close()
         conn.close()
@@ -241,6 +419,16 @@ def generate_complaint_id():
     date_part = datetime.now().strftime("%Y%m%d")
     random_part = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
     return f"{prefix}-{date_part}-{random_part}"
+
+
+def generate_sms_otp():
+    return ''.join(random.choices(string.digits, k=6))
+
+
+def send_otp_sms(mobile_number, otp_code):
+    message = f"{PORTAL_NAME}: Your verification code is {otp_code}. Valid for 10 minutes. Do not share this code."
+    sms_sent = send_sms(mobile_number, message)
+    return sms_sent
 
 
 # ================= CHAT BOT =================
@@ -378,6 +566,16 @@ def chatbot_reply_logic(user_message):
         cursor.close()
         conn.close()
 
+        if session.get('user_email'):
+            send_complaint_registered_email(
+                to_email=session.get('user_email'),
+                user_name=session.get('user_name') or "User",
+                complaint_id=complaint_id,
+                category=category,
+                description=description,
+                status="Pending"
+            )
+
         return {
             "reply": f"Your complaint has been registered successfully. Complaint ID: {complaint_id}. Category: {category}. Status: Pending.",
             "action": "register_complaint"
@@ -481,7 +679,7 @@ def login():
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT id, name, email, ward, password, mobile_number, is_verified
+            SELECT id, name, email, ward, password, mobile_number, is_verified, profile_photo
             FROM users
             WHERE email = %s
         """, (email,))
@@ -502,6 +700,7 @@ def login():
         session['user_email'] = user[2]
         session['user_ward'] = user[3]
         session['user_mobile'] = user[5]
+        session['user_photo'] = user[7] if user[7] else None
         flash("Login successful!")
         return redirect('/dashboard')
 
@@ -511,63 +710,137 @@ def login():
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        name = request.form['name'].strip()
-        email = request.form['email'].strip()
-        ward = request.form['ward'].strip()
-        mobile_number = request.form['mobile_number'].strip()
-        password = request.form['password']
+        form_type = request.form.get('form_type', 'signup')
 
-        if not re.fullmatch(r"[A-Za-z\s]{2,50}", name):
-            flash("Full name must contain only letters and spaces")
-            return redirect(url_for('signup'))
+        # ── Step 1: Initial signup form ──
+        if form_type == 'signup':
+            name = request.form['name'].strip()
+            email = request.form['email'].strip()
+            ward = request.form['ward'].strip()
+            mobile_number = request.form['mobile_number'].strip()
+            password = request.form['password']
 
-        if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
-            flash("Enter a valid email address")
-            return redirect(url_for('signup'))
+            if not re.fullmatch(r"[A-Za-z\s]{2,50}", name):
+                flash("Full name must contain only letters and spaces")
+                return redirect(url_for('signup'))
 
-        if not re.fullmatch(r"\d{1,4}", ward):
-            flash("Ward number must contain only 1 to 4 digits")
-            return redirect(url_for('signup'))
+            if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
+                flash("Enter a valid email address")
+                return redirect(url_for('signup'))
 
-        if not re.fullmatch(r"\d{10}", mobile_number):
-            flash("Mobile number must be exactly 10 digits")
-            return redirect(url_for('signup'))
+            if not re.fullmatch(r"\d{1,4}", ward):
+                flash("Ward number must contain only 1 to 4 digits")
+                return redirect(url_for('signup'))
 
-        if not re.fullmatch(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$", password):
-            flash("Password must be 8 to 20 characters and include uppercase, lowercase, number, and special character")
-            return redirect(url_for('signup'))
+            if not re.fullmatch(r"\d{10}", mobile_number):
+                flash("Mobile number must be exactly 10 digits")
+                return redirect(url_for('signup'))
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
+            if not re.fullmatch(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$", password):
+                flash("Password must be 8 to 20 characters and include uppercase, lowercase, number, and special character")
+                return redirect(url_for('signup'))
 
-        cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
-        existing_user = cursor.fetchone()
+            conn = get_db_connection()
+            cursor = conn.cursor()
 
-        if existing_user:
+            cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
+            existing_user = cursor.fetchone()
+
+            if existing_user:
+                cursor.close()
+                conn.close()
+                flash("Email already registered. Please login.")
+                return redirect(url_for('signup'))
+
             cursor.close()
             conn.close()
-            flash("Email already registered. Please login.")
+
+            otp = generate_sms_otp()
+            session['pending_user_signup'] = {
+                'name': name,
+                'email': email,
+                'ward': ward,
+                'mobile_number': mobile_number,
+                'password': password,
+                'otp': otp,
+                'otp_time': datetime.now().isoformat()
+            }
+
+            send_otp_sms(mobile_number, otp)
+            flash("A 6-digit verification code has been sent to your mobile number.")
             return redirect(url_for('signup'))
 
-        hashed_password = generate_password_hash(password)
+        # ── Step 2: Verify OTP ──
+        elif form_type == 'verify_otp':
+            pending = session.get('pending_user_signup')
+            if not pending:
+                flash("No pending signup found. Please start again.")
+                return redirect(url_for('signup'))
 
-        cursor.execute("""
-            INSERT INTO users (name, email, ward, mobile_number, password, is_verified)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (name, email, ward, mobile_number, hashed_password, 0))
-        conn.commit()
-        cursor.close()
-        conn.close()
+            otp_input = request.form['otp'].strip()
+            otp_time = datetime.fromisoformat(pending['otp_time'])
 
-        token = generate_email_token(email, "user")
-        verify_link = url_for('verify_email', token=token, _external=True)
-        send_verification_email(email, verify_link, "user")
+            if datetime.now() - otp_time > timedelta(minutes=10):
+                flash("Verification code has expired. Please resend.")
+                return redirect(url_for('signup'))
 
-        flash("Signup successful! Please verify your email, then login.")
-        return redirect(url_for('login'))
+            if otp_input != pending['otp']:
+                flash("Invalid verification code. Please try again.")
+                return redirect(url_for('signup'))
+
+            hashed_password = generate_password_hash(pending['password'])
+
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT * FROM users WHERE email = %s", (pending['email'],))
+            if cursor.fetchone():
+                cursor.close()
+                conn.close()
+                session.pop('pending_user_signup', None)
+                flash("Email already registered. Please login.")
+                return redirect(url_for('signup'))
+
+            cursor.execute("""
+                INSERT INTO users (name, email, ward, mobile_number, password, is_verified)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (pending['name'], pending['email'], pending['ward'],
+                  pending['mobile_number'], hashed_password, 0))
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            token = generate_email_token(pending['email'], "user")
+            verify_link = url_for('verify_email', token=token, _external=True)
+            send_verification_email(pending['email'], verify_link, "user")
+
+            session.pop('pending_user_signup', None)
+            flash("Mobile verified! Please check your email to verify your email address, then login.")
+            return redirect(url_for('login'))
+
+        # ── Step 3: Resend OTP ──
+        elif form_type == 'resend_otp':
+            pending = session.get('pending_user_signup')
+            if not pending:
+                flash("No pending signup found. Please start again.")
+                return redirect(url_for('signup'))
+
+            otp = generate_sms_otp()
+            pending['otp'] = otp
+            pending['otp_time'] = datetime.now().isoformat()
+            session['pending_user_signup'] = pending
+
+            send_otp_sms(pending['mobile_number'], otp)
+            flash("A new verification code has been sent to your mobile number.")
+            return redirect(url_for('signup'))
 
     return render_template('signup.html')
 
+
+@app.route('/signup_cancel')
+def signup_cancel():
+    session.pop('pending_user_signup', None)
+    return redirect(url_for('signup'))
 
 @app.route('/verify-email/<token>')
 def verify_email(token):
@@ -697,6 +970,16 @@ def register_complaint():
         cursor.close()
         conn.close()
 
+        if user_email:
+            send_complaint_registered_email(
+                to_email=user_email,
+                user_name=name,
+                complaint_id=complaint_id,
+                category=category,
+                description=description,
+                status="Pending"
+            )
+
         flash(f"Complaint submitted successfully! Your Complaint ID is {complaint_id}")
         return redirect('/track_complaints')
 
@@ -797,68 +1080,165 @@ def adminlogin():
         session['admin_email'] = admin[1]
         session['admin_name'] = admin[0]
         session['admin_department'] = admin[2]
+
+        conn2 = get_db_connection()
+        cursor2 = conn2.cursor()
+        cursor2.execute("SELECT profile_photo FROM admins WHERE email = %s", (admin[1],))
+        photo_row = cursor2.fetchone()
+        session['admin_photo'] = photo_row[0] if photo_row and photo_row[0] else None
+        cursor2.close()
+        conn2.close()
+
         flash('Login successful')
         return redirect(url_for('admin'))
-        
+
     return render_template('admin_login.html')
 
 
 @app.route('/admin_signup', methods=['GET', 'POST'])
 def admin_signup():
     if request.method == 'POST':
-        name = request.form['name'].strip()
-        email = request.form['email'].strip()
-        department = request.form['department'].strip()
-        mobile_number = request.form['mobile_number'].strip()
-        password = request.form['password']
-        page = request.form['page']
+        form_type = request.form.get('form_type', 'signup')
+        page = request.form.get('page', 'admin_signup')
 
-        if not re.fullmatch(r"[A-Za-z\s]{2,50}", name):
-            flash("Full name must contain only letters and spaces")
-            return redirect(url_for(f'admin_signup_{page}'))
+        # Build redirect target from page
+        def get_redirect_page():
+            if page in ('water', 'electricity'):
+                return url_for(f'admin_signup_{page}')
+            return url_for('admin_signup')
 
-        if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
-            flash("Enter a valid email address")
-            return redirect(url_for(f'admin_signup_{page}'))
+        # ── Step 1: Initial signup form ──
+        if form_type == 'signup':
+            name = request.form['name'].strip()
+            email = request.form['email'].strip()
+            department = request.form['department'].strip()
+            mobile_number = request.form['mobile_number'].strip()
+            password = request.form['password']
 
-        if not re.fullmatch(r"\d{10}", mobile_number):
-            flash("Mobile number must be exactly 10 digits")
-            return redirect(url_for(f'admin_signup_{page}'))
+            if not re.fullmatch(r"[A-Za-z\s]{2,50}", name):
+                flash("Full name must contain only letters and spaces")
+                return redirect(get_redirect_page())
 
-        if not re.fullmatch(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$", password):
-            flash("Password must be strong")
-            return redirect(url_for(f'admin_signup_{page}'))
+            if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
+                flash("Enter a valid email address")
+                return redirect(get_redirect_page())
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
+            if not re.fullmatch(r"\d{10}", mobile_number):
+                flash("Mobile number must be exactly 10 digits")
+                return redirect(get_redirect_page())
 
-        cursor.execute("SELECT * FROM admins WHERE email = %s", (email,))
-        existing_admin = cursor.fetchone()
+            if not re.fullmatch(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$", password):
+                flash("Password must be strong")
+                return redirect(get_redirect_page())
 
-        if existing_admin:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT * FROM admins WHERE email = %s", (email,))
+            existing_admin = cursor.fetchone()
+
+            if existing_admin:
+                cursor.close()
+                conn.close()
+                flash("Admin email already registered. Please login.")
+                return redirect(get_redirect_page())
+
             cursor.close()
             conn.close()
-            flash("Admin email already registered. Please login.")
-            return redirect(url_for(f'admin_signup_{page}'))
 
-        hashed_password = generate_password_hash(password)
+            otp = generate_sms_otp()
+            session['pending_admin_signup'] = {
+                'name': name,
+                'email': email,
+                'department': department,
+                'mobile_number': mobile_number,
+                'password': password,
+                'page': page,
+                'otp': otp,
+                'otp_time': datetime.now().isoformat()
+            }
 
-        cursor.execute("""
-            INSERT INTO admins (name, email, department, mobile_number, password, is_verified)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (name, email, department, mobile_number, hashed_password, 0))
-        conn.commit()
-        cursor.close()
-        conn.close()
+            send_otp_sms(mobile_number, otp)
+            flash("A 6-digit verification code has been sent to your mobile number.")
+            return redirect(get_redirect_page())
 
-        token = generate_email_token(email, "admin")
-        verify_link = url_for('verify_email', token=token, _external=True)
-        send_verification_email(email, verify_link, "admin")
+        # ── Step 2: Verify OTP ──
+        elif form_type == 'verify_otp':
+            pending = session.get('pending_admin_signup')
+            if not pending:
+                flash("No pending signup found. Please start again.")
+                return redirect(get_redirect_page())
 
-        flash("Admin signup successful! Please verify your email, then login.")
-        return redirect(url_for('adminlogin'))
+            otp_input = request.form['otp'].strip()
+            otp_time = datetime.fromisoformat(pending['otp_time'])
+
+            if datetime.now() - otp_time > timedelta(minutes=10):
+                flash("Verification code has expired. Please resend.")
+                return redirect(get_redirect_page())
+
+            if otp_input != pending['otp']:
+                flash("Invalid verification code. Please try again.")
+                return redirect(get_redirect_page())
+
+            hashed_password = generate_password_hash(pending['password'])
+
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT * FROM admins WHERE email = %s", (pending['email'],))
+            if cursor.fetchone():
+                cursor.close()
+                conn.close()
+                session.pop('pending_admin_signup', None)
+                flash("Admin email already registered. Please login.")
+                return redirect(get_redirect_page())
+
+            cursor.execute("""
+                INSERT INTO admins (name, email, department, mobile_number, password, is_verified)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (pending['name'], pending['email'], pending['department'],
+                  pending['mobile_number'], hashed_password, 0))
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            token = generate_email_token(pending['email'], "admin")
+            verify_link = url_for('verify_email', token=token, _external=True)
+            send_verification_email(pending['email'], verify_link, "admin")
+
+            session.pop('pending_admin_signup', None)
+            flash("Mobile verified! Please check your email to verify your email address, then login.")
+            return redirect(url_for('adminlogin'))
+
+        # ── Step 3: Resend OTP ──
+        elif form_type == 'resend_otp':
+            pending = session.get('pending_admin_signup')
+            if not pending:
+                flash("No pending signup found. Please start again.")
+                return redirect(get_redirect_page())
+
+            otp = generate_sms_otp()
+            pending['otp'] = otp
+            pending['otp_time'] = datetime.now().isoformat()
+            session['pending_admin_signup'] = pending
+
+            send_otp_sms(pending['mobile_number'], otp)
+            flash("A new verification code has been sent to your mobile number.")
+            return redirect(get_redirect_page())
 
     return render_template('admin_signup.html')
+
+
+@app.route('/admin_signup_cancel')
+def admin_signup_cancel():
+    page = None
+    pending = session.get('pending_admin_signup')
+    if pending:
+        page = pending.get('page')
+    session.pop('pending_admin_signup', None)
+    if page in ('water', 'electricity'):
+        return redirect(url_for(f'admin_signup_{page}'))
+    return redirect(url_for('admin_signup'))
 
 
 @app.route('/admin_signup_water')
@@ -891,6 +1271,7 @@ def adminhistory():
 
     return render_template('admin_history.html', complaints=complaints)
 
+
 @app.route('/admin')
 def admin():
     if 'admin_email' not in session:
@@ -910,6 +1291,7 @@ def admin():
     conn.close()
     return render_template('admin_dash.html', complaints=complaints)
 
+
 @app.route('/update_complaint/<int:id>', methods=['POST'])
 def update_complaint(id):
     if 'admin_email' not in session:
@@ -920,6 +1302,26 @@ def update_complaint(id):
 
     conn = get_db_connection()
     cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT complaint_id, name, user_email, category, description
+        FROM complaintss
+        WHERE id = %s
+    """, (id,))
+    complaint = cursor.fetchone()
+
+    if not complaint:
+        cursor.close()
+        conn.close()
+        flash("Complaint not found")
+        return redirect(url_for('admin'))
+
+    complaint_id = complaint[0]
+    user_name = complaint[1]
+    user_email = complaint[2]
+    category = complaint[3]
+    description = complaint[4]
+
     cursor.execute(
         "UPDATE complaintss SET status = %s, admin_reply = %s WHERE id = %s",
         (status, reply, id)
@@ -927,6 +1329,18 @@ def update_complaint(id):
     conn.commit()
     cursor.close()
     conn.close()
+
+    if user_email:
+        send_complaint_update_email(
+            to_email=user_email,
+            user_name=user_name,
+            complaint_id=complaint_id,
+            category=category,
+            description=description,
+            status=status,
+            admin_reply=reply
+        )
+
     flash("Updated successfully")
     return redirect(url_for('admin'))
 
@@ -955,9 +1369,6 @@ def admin_announcement():
         conn.close()
 
         notify_users_email(ward, message)
-
-        if ward != "all":
-            notify_users(ward, message)
 
         flash("Announcement sent successfully!")
         return redirect(url_for('admin_announcement'))
@@ -989,9 +1400,6 @@ def edit_announcement():
         conn.close()
 
         notify_users_email(ward, announcement)
-
-        if ward != "all":
-            notify_users(ward, announcement)
 
         flash("Announcement added successfully!")
         return redirect(url_for('edit_announcement'))
@@ -1197,95 +1605,230 @@ def change_details():
     conn.close()
 
     if request.method == "POST":
-        name = request.form["name"].strip()
-        email = request.form["email"].strip()
-        ward = request.form["ward"].strip()
-        mobilenumber = request.form["mobile_number"].strip()
+        form_type = request.form.get("form_type", "update")
 
-        if not name or not email or not ward or not mobilenumber:
-            flash("All fields are required")
-            return redirect(url_for("change_details"))
+        # ── Step 1: Submit details form ──
+        if form_type == "update":
+            name = request.form["name"].strip()
+            email = request.form["email"].strip()
+            ward = request.form["ward"].strip()
+            mobilenumber = request.form["mobile_number"].strip()
 
-        if not re.fullmatch(r"[A-Za-z ]{2,50}", name):
-            flash("Full name must contain only letters and spaces")
-            return redirect(url_for("change_details"))
-
-        if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
-            flash("Enter a valid email address")
-            return redirect(url_for("change_details"))
-
-        if not re.fullmatch(r"\d{1,4}", ward):
-            flash("Ward number must contain only 1 to 4 digits")
-            return redirect(url_for("change_details"))
-
-        if not re.fullmatch(r"\d{10}", mobilenumber):
-            flash("Mobile number must be exactly 10 digits")
-            return redirect(url_for("change_details"))
-
-        old_email = session["user_email"]
-        email_changed = (email.lower() != old_email.lower())
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        try:
-            cursor.execute(
-                "SELECT id FROM users WHERE email = %s AND email != %s",
-                (email, old_email)
-            )
-            existing_user = cursor.fetchone()
-
-            if existing_user:
-                flash("Email already exists with another account")
+            if not name or not email or not ward or not mobilenumber:
+                flash("All fields are required")
                 return redirect(url_for("change_details"))
 
-            if email_changed:
+            if not re.fullmatch(r"[A-Za-z ]{2,50}", name):
+                flash("Full name must contain only letters and spaces")
+                return redirect(url_for("change_details"))
+
+            if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
+                flash("Enter a valid email address")
+                return redirect(url_for("change_details"))
+
+            if not re.fullmatch(r"\d{1,4}", ward):
+                flash("Ward number must contain only 1 to 4 digits")
+                return redirect(url_for("change_details"))
+
+            if not re.fullmatch(r"\d{10}", mobilenumber):
+                flash("Mobile number must be exactly 10 digits")
+                return redirect(url_for("change_details"))
+
+            old_mobile = session.get("user_mobile", "")
+            mobile_changed = (mobilenumber != old_mobile)
+
+            # If mobile number changed, require OTP verification
+            if mobile_changed:
+                otp = generate_sms_otp()
+                session['pending_user_mobile_otp'] = {
+                    'name': name,
+                    'email': email,
+                    'ward': ward,
+                    'mobile_number': mobilenumber,
+                    'otp': otp,
+                    'otp_time': datetime.now().isoformat()
+                }
+                send_otp_sms(mobilenumber, otp)
+                flash("A verification code has been sent to your new mobile number.")
+                return redirect(url_for("change_details"))
+
+            # No mobile change — update directly
+            old_email = session["user_email"]
+            email_changed = (email.lower() != old_email.lower())
+
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            try:
                 cursor.execute(
-                    """
-                    UPDATE users
-                    SET name = %s, email = %s, ward = %s, mobile_number = %s, is_verified = 0
-                    WHERE email = %s
-                    """,
-                    (name, email, ward, mobilenumber, old_email)
+                    "SELECT id FROM users WHERE email = %s AND email != %s",
+                    (email, old_email)
                 )
-            else:
+                existing_user = cursor.fetchone()
+
+                if existing_user:
+                    flash("Email already exists with another account")
+                    return redirect(url_for("change_details"))
+
+                if email_changed:
+                    cursor.execute(
+                        """
+                        UPDATE users
+                        SET name = %s, email = %s, ward = %s, mobile_number = %s, is_verified = 0
+                        WHERE email = %s
+                        """,
+                        (name, email, ward, mobilenumber, old_email)
+                    )
+                else:
+                    cursor.execute(
+                        """
+                        UPDATE users
+                        SET name = %s, ward = %s, mobile_number = %s
+                        WHERE email = %s
+                        """,
+                        (name, ward, mobilenumber, old_email)
+                    )
+
+                conn.commit()
+
+                session["user_name"] = name
+                session["user_email"] = email
+                session["user_ward"] = ward
+                session["user_mobile"] = mobilenumber
+
+                if email_changed:
+                    token = generate_email_token(email, "user")
+                    verify_link = url_for("verify_email", token=token, _external=True)
+                    send_verification_email(email, verify_link, "user")
+                    flash("Profile updated. A verification link has been sent to your new email.")
+                else:
+                    flash("Profile details updated successfully!")
+
+                return redirect(url_for("dashboard"))
+
+            except Exception as e:
+                conn.rollback()
+                print("Change details error:", str(e))
+                flash("Something went wrong while updating profile.")
+                return redirect(url_for("change_details"))
+
+            finally:
+                cursor.close()
+                conn.close()
+
+        # ── Step 2: Verify mobile OTP ──
+        elif form_type == "verify_mobile_otp":
+            pending = session.get('pending_user_mobile_otp')
+            if not pending:
+                flash("No pending verification found. Please try again.")
+                return redirect(url_for("change_details"))
+
+            otp_input = request.form['otp'].strip()
+            otp_time = datetime.fromisoformat(pending['otp_time'])
+
+            if datetime.now() - otp_time > timedelta(minutes=10):
+                flash("Verification code has expired. Please resend.")
+                return redirect(url_for("change_details"))
+
+            if otp_input != pending['otp']:
+                flash("Invalid verification code. Please try again.")
+                return redirect(url_for("change_details"))
+
+            # OTP verified — now update the profile
+            name = pending['name']
+            email = pending['email']
+            ward = pending['ward']
+            mobilenumber = pending['mobile_number']
+            old_email = session["user_email"]
+            email_changed = (email.lower() != old_email.lower())
+
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            try:
                 cursor.execute(
-                    """
-                    UPDATE users
-                    SET name = %s, ward = %s, mobile_number = %s
-                    WHERE email = %s
-                    """,
-                    (name, ward, mobilenumber, old_email)
+                    "SELECT id FROM users WHERE email = %s AND email != %s",
+                    (email, old_email)
                 )
+                existing_user = cursor.fetchone()
 
-            conn.commit()
+                if existing_user:
+                    flash("Email already exists with another account")
+                    session.pop('pending_user_mobile_otp', None)
+                    return redirect(url_for("change_details"))
 
-            session["user_name"] = name
-            session["user_email"] = email
-            session["user_ward"] = ward
-            session["user_mobile"] = mobilenumber
+                if email_changed:
+                    cursor.execute(
+                        """
+                        UPDATE users
+                        SET name = %s, email = %s, ward = %s, mobile_number = %s, is_verified = 0
+                        WHERE email = %s
+                        """,
+                        (name, email, ward, mobilenumber, old_email)
+                    )
+                else:
+                    cursor.execute(
+                        """
+                        UPDATE users
+                        SET name = %s, ward = %s, mobile_number = %s
+                        WHERE email = %s
+                        """,
+                        (name, ward, mobilenumber, old_email)
+                    )
 
-            if email_changed:
-                token = generate_email_token(email, "user")
-                verify_link = url_for("verify_email", token=token, _external=True)
-                send_verification_email(email, verify_link, "user")
-                flash("Profile updated. A verification link has been sent to your new email.")
-            else:
-                flash("Profile details updated successfully!")
+                conn.commit()
 
-            return redirect(url_for("dashboard"))
+                session["user_name"] = name
+                session["user_email"] = email
+                session["user_ward"] = ward
+                session["user_mobile"] = mobilenumber
+                session.pop('pending_user_mobile_otp', None)
 
-        except Exception as e:
-            conn.rollback()
-            print("Change details error:", str(e))
-            flash("Something went wrong while updating profile.")
+                if email_changed:
+                    token = generate_email_token(email, "user")
+                    verify_link = url_for("verify_email", token=token, _external=True)
+                    send_verification_email(email, verify_link, "user")
+                    flash("Mobile verified & profile updated! A verification link has been sent to your new email.")
+                else:
+                    flash("Mobile number verified & profile updated successfully!")
+
+                return redirect(url_for("dashboard"))
+
+            except Exception as e:
+                conn.rollback()
+                print("Change details error:", str(e))
+                flash("Something went wrong while updating profile.")
+                return redirect(url_for("change_details"))
+
+            finally:
+                cursor.close()
+                conn.close()
+
+        # ── Step 3: Resend mobile OTP ──
+        elif form_type == "resend_mobile_otp":
+            pending = session.get('pending_user_mobile_otp')
+            if not pending:
+                flash("No pending verification found. Please try again.")
+                return redirect(url_for("change_details"))
+
+            otp = generate_sms_otp()
+            pending['otp'] = otp
+            pending['otp_time'] = datetime.now().isoformat()
+            session['pending_user_mobile_otp'] = pending
+
+            send_otp_sms(pending['mobile_number'], otp)
+            flash("A new verification code has been sent to your mobile number.")
             return redirect(url_for("change_details"))
 
-        finally:
-            cursor.close()
-            conn.close()
-
     return render_template("changedetails.html", user=current_user)
+
+
+@app.route('/change_details_cancel_otp')
+def change_details_cancel_otp():
+    session.pop('pending_user_mobile_otp', None)
+    return redirect(url_for('change_details'))
+
+
 
 # ================= ADMIN PASSWORD/DETAILS =================
 @app.route('/admin_change_password', methods=['GET', 'POST'])
@@ -1358,86 +1901,286 @@ def admin_change_details():
     conn.close()
 
     if request.method == 'POST':
-        name = request.form['name'].strip()
-        email = request.form['email'].strip()
-        department = request.form['department'].strip()
-        mobile_number = request.form['mobile_number'].strip()
+        form_type = request.form.get('form_type', 'update')
 
-        if not name or not email or not department or not mobile_number:
-            flash("All fields are required")
+        # ── Step 1: Submit details form ──
+        if form_type == 'update':
+            name = request.form['name'].strip()
+            email = request.form['email'].strip()
+            department = request.form['department'].strip()
+            mobile_number = request.form['mobile_number'].strip()
+
+            if not name or not email or not department or not mobile_number:
+                flash("All fields are required")
+                return redirect(url_for('admin_change_details'))
+
+            if not re.fullmatch(r"[A-Za-z\s]{2,50}", name):
+                flash("Full name must contain only letters and spaces")
+                return redirect(url_for('admin_change_details'))
+
+            if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
+                flash("Enter a valid email address")
+                return redirect(url_for('admin_change_details'))
+
+            if not re.fullmatch(r"\d{10}", mobile_number):
+                flash("Mobile number must be exactly 10 digits")
+                return redirect(url_for('admin_change_details'))
+
+            old_mobile = session.get('admin_mobile', '')
+            mobile_changed = (mobile_number != old_mobile)
+
+            # If mobile number changed, require OTP verification
+            if mobile_changed:
+                otp = generate_sms_otp()
+                session['pending_admin_mobile_otp'] = {
+                    'name': name,
+                    'email': email,
+                    'department': department,
+                    'mobile_number': mobile_number,
+                    'otp': otp,
+                    'otp_time': datetime.now().isoformat()
+                }
+                send_otp_sms(mobile_number, otp)
+                flash("A verification code has been sent to your new mobile number.")
+                return redirect(url_for('admin_change_details'))
+
+            # No mobile change — update directly
+            old_email = session['admin_email']
+            email_changed = (email.lower() != old_email.lower())
+
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT email FROM admins WHERE email = %s AND email != %s",
+                (email, old_email)
+            )
+            existing_admin = cursor.fetchone()
+
+            if existing_admin:
+                cursor.close()
+                conn.close()
+                flash("Email already exists with another admin account")
+                return redirect(url_for('admin_change_details'))
+
+            try:
+                if email_changed:
+                    cursor.execute("""
+                        UPDATE admins
+                        SET name = %s, email = %s, department = %s, mobile_number = %s, is_verified = 0
+                        WHERE email = %s
+                    """, (name, email, department, mobile_number, old_email))
+                else:
+                    cursor.execute("""
+                        UPDATE admins
+                        SET name = %s, email = %s, department = %s, mobile_number = %s
+                        WHERE email = %s
+                    """, (name, email, department, mobile_number, old_email))
+
+                conn.commit()
+
+                session['admin_name'] = name
+                session['admin_email'] = email
+                session['admin_department'] = department
+                session['admin_mobile'] = mobile_number
+
+                if email_changed:
+                    token = generate_email_token(email, "admin")
+                    verify_link = url_for('verify_email', token=token, _external=True)
+                    send_verification_email(email, verify_link, "admin")
+                    flash("Admin details updated! A verification link has been sent to your new email.")
+                else:
+                    flash("Admin details updated successfully!")
+
+                return redirect(url_for('admin'))
+
+            except Exception as e:
+                conn.rollback()
+                print("Admin change details error:", str(e))
+                flash("Something went wrong while updating admin details")
+                return redirect(url_for('admin_change_details'))
+
+            finally:
+                cursor.close()
+                conn.close()
+
+        # ── Step 2: Verify mobile OTP ──
+        elif form_type == 'verify_mobile_otp':
+            pending = session.get('pending_admin_mobile_otp')
+            if not pending:
+                flash("No pending verification found. Please try again.")
+                return redirect(url_for('admin_change_details'))
+
+            otp_input = request.form['otp'].strip()
+            otp_time = datetime.fromisoformat(pending['otp_time'])
+
+            if datetime.now() - otp_time > timedelta(minutes=10):
+                flash("Verification code has expired. Please resend.")
+                return redirect(url_for('admin_change_details'))
+
+            if otp_input != pending['otp']:
+                flash("Invalid verification code. Please try again.")
+                return redirect(url_for('admin_change_details'))
+
+            # OTP verified — now update the profile
+            name = pending['name']
+            email = pending['email']
+            department = pending['department']
+            mobile_number = pending['mobile_number']
+            old_email = session['admin_email']
+            email_changed = (email.lower() != old_email.lower())
+
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT email FROM admins WHERE email = %s AND email != %s",
+                (email, old_email)
+            )
+            existing_admin = cursor.fetchone()
+
+            if existing_admin:
+                cursor.close()
+                conn.close()
+                session.pop('pending_admin_mobile_otp', None)
+                flash("Email already exists with another admin account")
+                return redirect(url_for('admin_change_details'))
+
+            try:
+                if email_changed:
+                    cursor.execute("""
+                        UPDATE admins
+                        SET name = %s, email = %s, department = %s, mobile_number = %s, is_verified = 0
+                        WHERE email = %s
+                    """, (name, email, department, mobile_number, old_email))
+                else:
+                    cursor.execute("""
+                        UPDATE admins
+                        SET name = %s, email = %s, department = %s, mobile_number = %s
+                        WHERE email = %s
+                    """, (name, email, department, mobile_number, old_email))
+
+                conn.commit()
+
+                session['admin_name'] = name
+                session['admin_email'] = email
+                session['admin_department'] = department
+                session['admin_mobile'] = mobile_number
+                session.pop('pending_admin_mobile_otp', None)
+
+                if email_changed:
+                    token = generate_email_token(email, "admin")
+                    verify_link = url_for('verify_email', token=token, _external=True)
+                    send_verification_email(email, verify_link, "admin")
+                    flash("Mobile verified & admin details updated! A verification link has been sent to your new email.")
+                else:
+                    flash("Mobile number verified & admin details updated successfully!")
+
+                return redirect(url_for('admin'))
+
+            except Exception as e:
+                conn.rollback()
+                print("Admin change details error:", str(e))
+                flash("Something went wrong while updating admin details")
+                return redirect(url_for('admin_change_details'))
+
+            finally:
+                cursor.close()
+                conn.close()
+
+        # ── Step 3: Resend mobile OTP ──
+        elif form_type == 'resend_mobile_otp':
+            pending = session.get('pending_admin_mobile_otp')
+            if not pending:
+                flash("No pending verification found. Please try again.")
+                return redirect(url_for('admin_change_details'))
+
+            otp = generate_sms_otp()
+            pending['otp'] = otp
+            pending['otp_time'] = datetime.now().isoformat()
+            session['pending_admin_mobile_otp'] = pending
+
+            send_otp_sms(pending['mobile_number'], otp)
+            flash("A new verification code has been sent to your mobile number.")
             return redirect(url_for('admin_change_details'))
 
-        if not re.fullmatch(r"[A-Za-z\s]{2,50}", name):
-            flash("Full name must contain only letters and spaces")
-            return redirect(url_for('admin_change_details'))
+    return render_template('admin_change_details.html', admin=current_admin)
 
-        if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
-            flash("Enter a valid email address")
-            return redirect(url_for('admin_change_details'))
 
-        if not re.fullmatch(r"\d{10}", mobile_number):
-            flash("Mobile number must be exactly 10 digits")
-            return redirect(url_for('admin_change_details'))
+@app.route('/admin_change_details_cancel_otp')
+def admin_change_details_cancel_otp():
+    session.pop('pending_admin_mobile_otp', None)
+    return redirect(url_for('admin_change_details'))
 
-        old_email = session['admin_email']
-        email_changed = (email.lower() != old_email.lower())
+
+# ================= PROFILE PHOTO UPLOAD =================
+@app.route('/upload_profile_photo', methods=['POST'])
+def upload_profile_photo():
+    if not session.get('user_email'):
+        return jsonify({'error': 'Login required'}), 401
+
+    if 'photo' not in request.files:
+        flash('No file selected')
+        return redirect(url_for('dashboard'))
+
+    file = request.files['photo']
+    if file.filename == '':
+        flash('No file selected')
+        return redirect(url_for('dashboard'))
+
+    if file and allowed_file(file.filename):
+        ext = file.filename.rsplit('.', 1)[1].lower()
+        filename = f"user_{session['user_id']}_{uuid.uuid4().hex[:8]}.{ext}"
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(filepath)
 
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT email FROM admins WHERE email = %s AND email != %s",
-            (email, old_email)
-        )
-        existing_admin = cursor.fetchone()
+        cursor.execute("UPDATE users SET profile_photo = %s WHERE email = %s", (filename, session['user_email']))
+        conn.commit()
+        cursor.close()
+        conn.close()
 
-        if existing_admin:
-            cursor.close()
-            conn.close()
-            flash("Email already exists with another admin account")
-            return redirect(url_for('admin_change_details'))
+        session['user_photo'] = filename
+        flash('Profile photo updated!')
+    else:
+        flash('Invalid file type. Use JPG, PNG, or GIF.')
 
-        try:
-            if email_changed:
-                cursor.execute("""
-                    UPDATE admins
-                    SET name = %s, email = %s, department = %s, mobile_number = %s, is_verified = 0
-                    WHERE email = %s
-                """, (name, email, department, mobile_number, old_email))
-            else:
-                cursor.execute("""
-                    UPDATE admins
-                    SET name = %s, email = %s, department = %s, mobile_number = %s
-                    WHERE email = %s
-                """, (name, email, department, mobile_number, old_email))
+    return redirect(url_for('dashboard'))
 
-            conn.commit()
 
-            session['admin_name'] = name
-            session['admin_email'] = email
-            session['admin_department'] = department
-            session['admin_mobile'] = mobile_number
+@app.route('/admin_upload_profile_photo', methods=['POST'])
+def admin_upload_profile_photo():
+    if not session.get('admin_email'):
+        return jsonify({'error': 'Login required'}), 401
 
-            if email_changed:
-                token = generate_email_token(email, "admin")
-                verify_link = url_for('verify_email', token=token, _external=True)
-                send_verification_email(email, verify_link, "admin")
-                flash("✅ Admin details updated successfully! A verification link has been sent to your new email.")
-            else:
-                flash("✅ Admin details updated successfully!")
+    if 'photo' not in request.files:
+        flash('No file selected')
+        return redirect(url_for('admin'))
 
-            return redirect(url_for('admin'))
+    file = request.files['photo']
+    if file.filename == '':
+        flash('No file selected')
+        return redirect(url_for('admin'))
 
-        except Exception as e:
-            conn.rollback()
-            print("Admin change details error:", str(e))
-            flash("Something went wrong while updating admin details")
-            return redirect(url_for('admin_change_details'))
+    if file and allowed_file(file.filename):
+        ext = file.filename.rsplit('.', 1)[1].lower()
+        filename = f"admin_{uuid.uuid4().hex[:8]}.{ext}"
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(filepath)
 
-        finally:
-            cursor.close()
-            conn.close()
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE admins SET profile_photo = %s WHERE email = %s", (filename, session['admin_email']))
+        conn.commit()
+        cursor.close()
+        conn.close()
 
-    return render_template('admin_change_details.html', admin=current_admin)
+        session['admin_photo'] = filename
+        flash('Profile photo updated!')
+    else:
+        flash('Invalid file type. Use JPG, PNG, or GIF.')
+
+    return redirect(url_for('admin'))
+
 
 # ================= RUN =================
 if __name__ == "__main__":

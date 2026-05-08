@@ -504,10 +504,10 @@ footer.user-footer{
   <section class="panel hero-card">
     <div class="panel-inner">
       {% if session.get('pending_user_signup') %}
-        <div class="welcome-badge">📧 Email Verification</div>
-        <h2 class="hero-title">Verify your email to complete account creation.</h2>
+        <div class="welcome-badge">📱 Mobile Verification</div>
+        <h2 class="hero-title">Verify your mobile number to complete account creation.</h2>
         <p class="hero-text">
-          We have sent a 6-digit verification code to your email address. Enter that code to activate your new user account.
+          We have sent a 6-digit verification code to your mobile number. Enter that code to activate your new user account.
         </p>
       {% else %}
         <div class="welcome-badge">✨ New User Registration</div>
@@ -541,12 +541,12 @@ footer.user-footer{
     <div class="panel-inner">
       <div class="panel-head">
         <div class="panel-head-left">
-          <div class="panel-icon">{% if session.get('pending_user_signup') %}🔐{% else %}👥{% endif %}</div>
+          <div class="panel-icon">{% if session.get('pending_user_signup') %}📱{% else %}👥{% endif %}</div>
           <div>
-            <h2>{% if session.get('pending_user_signup') %}Verify Email{% else %}User Signup{% endif %}</h2>
+            <h2>{% if session.get('pending_user_signup') %}Verify Mobile{% else %}User Signup{% endif %}</h2>
             <p>
               {% if session.get('pending_user_signup') %}
-                Enter the verification code sent to your email.
+                Enter the verification code sent to your mobile number.
               {% else %}
                 Fill in your details below to create a new user account.
               {% endif %}
@@ -563,8 +563,8 @@ footer.user-footer{
 
       {% if session.get('pending_user_signup') %}
         <div class="otp-box">
-          <div class="otp-email">{{ session['pending_user_signup']['email'] }}</div>
-          <div class="otp-note">Enter the 6-digit code sent to this email address. The code is valid for 10 minutes.</div>
+          <div class="otp-email">📱 {{ session['pending_user_signup']['mobile_number'] }}</div>
+          <div class="otp-note">Enter the 6-digit code sent to this mobile number. The code is valid for 10 minutes.</div>
         </div>
 
         <form method="POST" action="{{ url_for('signup') }}">

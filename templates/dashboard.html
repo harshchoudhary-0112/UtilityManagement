@@ -504,6 +504,41 @@ header{
   color:white;
   font-size:26px;
   box-shadow:var(--shadow-soft);
+  position:relative;
+  overflow:hidden;
+  cursor:pointer;
+}
+
+.user-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.user-avatar .avatar-initials{
+  font-size:22px;
+  font-weight:700;
+  text-transform:uppercase;
+}
+
+.avatar-camera{
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+  height:22px;
+  background:rgba(0,0,0,0.55);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  color:white;
+  opacity:0;
+  transition:opacity 0.2s ease;
+}
+
+.user-avatar:hover .avatar-camera{
+  opacity:1;
 }
 
 .user-panel-top h3{
@@ -766,6 +801,150 @@ footer.user-footer{
     height:420px;
   }
 }
+
+/* ── Web Popup Modal ── */
+.popup-overlay{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  background:rgba(15,23,42,0.45);
+  backdrop-filter:blur(6px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  opacity:0;
+  visibility:hidden;
+  transition:opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.popup-overlay.active{
+  opacity:1;
+  visibility:visible;
+}
+
+.popup-box{
+  width:min(420px, calc(100vw - 32px));
+  background:rgba(255,255,255,0.96);
+  backdrop-filter:blur(20px);
+  border-radius:24px;
+  border:1px solid rgba(255,255,255,0.5);
+  box-shadow:0 25px 60px rgba(15,23,42,0.22), 0 0 0 1px rgba(17,24,39,0.04);
+  padding:32px 28px 24px;
+  text-align:center;
+  transform:scale(0.9) translateY(20px);
+  transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.popup-overlay.active .popup-box{
+  transform:scale(1) translateY(0);
+}
+
+.popup-icon{
+  width:64px;
+  height:64px;
+  margin:0 auto 16px;
+  border-radius:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
+  background:linear-gradient(135deg,var(--blue),var(--green));
+  box-shadow:0 12px 28px rgba(0,119,182,0.25);
+  color:white;
+}
+
+.popup-icon.error{
+  background:linear-gradient(135deg,#ef4444,#fb7185);
+  box-shadow:0 12px 28px rgba(239,68,68,0.25);
+}
+
+.popup-icon.warning{
+  background:linear-gradient(135deg,#f97316,#fbbf24);
+  box-shadow:0 12px 28px rgba(249,115,22,0.25);
+}
+
+.popup-title{
+  font-size:20px;
+  font-weight:700;
+  color:#111827;
+  margin-bottom:8px;
+}
+
+.popup-message{
+  font-size:14px;
+  line-height:1.65;
+  color:#6b7280;
+  margin-bottom:24px;
+  word-break:break-word;
+}
+
+.popup-actions{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+}
+
+.popup-btn{
+  border:none;
+  border-radius:14px;
+  padding:12px 28px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all 0.25s ease;
+}
+
+.popup-btn.primary{
+  background:linear-gradient(135deg,var(--blue),var(--green));
+  color:white;
+  box-shadow:0 8px 20px rgba(0,119,182,0.25);
+}
+
+.popup-btn.primary:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 28px rgba(0,119,182,0.3);
+}
+
+.popup-btn.cancel{
+  background:rgba(17,24,39,0.06);
+  color:#374151;
+}
+
+.popup-btn.cancel:hover{
+  background:rgba(17,24,39,0.1);
+}
+
+.popup-btn.danger{
+  background:linear-gradient(135deg,#ef4444,#fb7185);
+  color:white;
+  box-shadow:0 8px 20px rgba(239,68,68,0.25);
+}
+
+.popup-btn.danger:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 28px rgba(239,68,68,0.3);
+}
+
+.popup-progress{
+  width:100%;
+  height:4px;
+  background:rgba(17,24,39,0.06);
+  border-radius:999px;
+  margin-top:16px;
+  overflow:hidden;
+}
+
+.popup-progress-bar{
+  height:100%;
+  border-radius:999px;
+  background:linear-gradient(135deg,var(--blue),var(--green));
+  animation:popupTimer 4s linear forwards;
+}
+
+@keyframes popupTimer{
+  from{ width:100%; }
+  to{ width:0%; }
+}
 </style>
 </head>
 
@@ -809,8 +988,8 @@ footer.user-footer{
   </div>
 
   <div class="header-actions">
-    <a href="/" class="nav-btn">Home</a>
-    <a href="/logout" class="nav-btn secondary">Logout</a>
+    <a href="/" class="nav-btn">🏠 Home</a>
+    <a href="/logout" class="nav-btn secondary">🚪 Logout</a>
     <button class="user-trigger" onclick="toggleUserPanel()">👤</button>
   </div>
 </header>
@@ -819,12 +998,23 @@ footer.user-footer{
   <span class="panel-close" onclick="toggleUserPanel()">×</span>
 
   <div class="user-panel-top">
-    <div class="user-avatar">👤</div>
+    <div class="user-avatar" onclick="document.getElementById('photoInput').click()">
+      {% if session.get('user_photo') %}
+        <img src="{{ url_for('static', filename='uploads/' + session['user_photo']) }}" alt="Profile">
+      {% else %}
+        <span class="avatar-initials">{{ session['user_name'][0] }}</span>
+      {% endif %}
+      <div class="avatar-camera">📷</div>
+    </div>
     <div>
       <h3>{{ session['user_name'] }}</h3>
-      <p>User information panel</p>
+      <p>Click photo to change</p>
     </div>
   </div>
+
+  <form id="photoForm" action="/upload_profile_photo" method="POST" enctype="multipart/form-data" style="display:none">
+    <input type="file" id="photoInput" name="photo" accept="image/*" onchange="document.getElementById('photoForm').submit()">
+  </form>
 
   <div class="detail-list">
     <div class="detail-item">
@@ -848,11 +1038,11 @@ footer.user-footer{
     </div>
 
     <button type="button" class="nav-btn secondary" onclick="goToChangePassword()" style="width:100%; margin-top:12px;">
-      Change Password
+      🔐 Change Password
     </button>
 
     <button type="button" class="nav-btn" onclick="goToChangeDetails()" style="width:100%;">
-      Change Details
+      ✏️ Change Details
     </button>
   </div>
 </div>
@@ -1057,12 +1247,77 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 </script>
+<!-- Web Popup Modal -->
+<div class="popup-overlay" id="popupOverlay">
+  <div class="popup-box">
+    <div class="popup-icon" id="popupIcon">✅</div>
+    <div class="popup-title" id="popupTitle">Notification</div>
+    <div class="popup-message" id="popupMessage"></div>
+    <div class="popup-actions">
+      <button class="popup-btn primary" onclick="closePopup()">Got it</button>
+    </div>
+    <div class="popup-progress"><div class="popup-progress-bar" id="popupProgressBar"></div></div>
+  </div>
+</div>
+
+<script>
+function showPopup(message, type) {
+  const overlay = document.getElementById('popupOverlay');
+  const icon = document.getElementById('popupIcon');
+  const title = document.getElementById('popupTitle');
+  const msg = document.getElementById('popupMessage');
+  const bar = document.getElementById('popupProgressBar');
+
+  msg.textContent = message;
+
+  if (type === 'error') {
+    icon.textContent = '❌';
+    icon.className = 'popup-icon error';
+    title.textContent = 'Error';
+  } else if (type === 'warning') {
+    icon.textContent = '⚠️';
+    icon.className = 'popup-icon warning';
+    title.textContent = 'Warning';
+  } else {
+    icon.textContent = '✅';
+    icon.className = 'popup-icon';
+    title.textContent = 'Success';
+  }
+
+  bar.style.animation = 'none';
+  bar.offsetHeight;
+  bar.style.animation = 'popupTimer 4s linear forwards';
+
+  overlay.classList.add('active');
+
+  clearTimeout(window._popupTimer);
+  window._popupTimer = setTimeout(function() { closePopup(); }, 4000);
+}
+
+function closePopup() {
+  document.getElementById('popupOverlay').classList.remove('active');
+  clearTimeout(window._popupTimer);
+}
+
+document.getElementById('popupOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closePopup();
+});
+</script>
+
 {% with messages = get_flashed_messages() %}
   {% if messages %}
     <script>
-      window.onload = function() {
-        alert({{ messages[0] | tojson }});
-      };
+      window.addEventListener('DOMContentLoaded', function() {
+        var msg = {{ messages[0] | tojson }};
+        var type = 'success';
+        var lower = msg.toLowerCase();
+        if (lower.indexOf('error') !== -1 || lower.indexOf('fail') !== -1 || lower.indexOf('invalid') !== -1 || lower.indexOf('wrong') !== -1 || lower.indexOf('not found') !== -1 || lower.indexOf('already') !== -1) {
+          type = 'error';
+        } else if (lower.indexOf('warning') !== -1) {
+          type = 'warning';
+        }
+        showPopup(msg, type);
+      });
     </script>
   {% endif %}
 {% endwith %}

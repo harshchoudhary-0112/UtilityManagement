@@ -428,6 +428,21 @@ footer.user-footer{
     padding:18px;
   }
 }
+
+.popup-overlay{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.45);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity 0.3s ease,visibility 0.3s ease;}
+.popup-overlay.active{opacity:1;visibility:visible;}
+.popup-box{width:min(420px,calc(100vw - 32px));background:rgba(255,255,255,0.96);backdrop-filter:blur(20px);border-radius:24px;border:1px solid rgba(255,255,255,0.5);box-shadow:0 25px 60px rgba(15,23,42,0.22);padding:32px 28px 24px;text-align:center;transform:scale(0.9) translateY(20px);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);}
+.popup-overlay.active .popup-box{transform:scale(1) translateY(0);}
+.popup-icon{width:64px;height:64px;margin:0 auto 16px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:30px;background:linear-gradient(135deg,var(--blue),var(--green));box-shadow:0 12px 28px rgba(0,119,182,0.25);color:white;}
+.popup-icon.warning{background:linear-gradient(135deg,#f97316,#fbbf24);box-shadow:0 12px 28px rgba(249,115,22,0.25);}
+.popup-title{font-size:20px;font-weight:700;color:#111827;margin-bottom:8px;}
+.popup-message{font-size:14px;line-height:1.65;color:#6b7280;margin-bottom:24px;word-break:break-word;}
+.popup-actions{display:flex;gap:10px;justify-content:center;}
+.popup-btn{border:none;border-radius:14px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.25s ease;}
+.popup-btn.cancel{background:rgba(17,24,39,0.06);color:#374151;}
+.popup-btn.cancel:hover{background:rgba(17,24,39,0.1);}
+.popup-btn.danger{background:linear-gradient(135deg,#ef4444,#fb7185);color:white;box-shadow:0 8px 20px rgba(239,68,68,0.25);}
+.popup-btn.danger:hover{transform:translateY(-2px);}
 </style>
 </head>
 
@@ -516,11 +531,10 @@ footer.user-footer{
               <td style="font-size:13px; color:var(--muted);">{{ complaint[8] }}</td> <!-- Created -->
               <td>
                 {% if complaint[6] and complaint[6]|lower == 'resolved' %}
-                  <form action="{{ url_for('delete_complaint', id=complaint[1]) }}" 
+                  <form id="deleteForm_{{ complaint[1] }}" action="{{ url_for('delete_complaint', id=complaint[1]) }}" 
                         method="POST" 
-                        style="display:inline;" 
-                        onsubmit="return confirm('Do you want to remove this complaint from your track page?');">
-                    <button type="submit" class="delete-btn">Delete</button>
+                        style="display:inline;">
+                    <button type="button" class="delete-btn" onclick="showConfirm('Do you want to remove this complaint from your track page?', 'deleteForm_{{ complaint[1] }}')">Delete</button>
                   </form>
                 {% else %}
                   <span style="color:var(--muted); font-size:12px; font-style:italic;">—</span>
@@ -547,6 +561,23 @@ footer.user-footer{
 <footer class="user-footer">
   <div>© 2026 CDGI | Track Complaints</div>
 </footer>
+<!-- Web Confirm Modal -->
+<div class="popup-overlay" id="confirmOverlay">
+  <div class="popup-box">
+    <div class="popup-icon warning">⚠️</div>
+    <div class="popup-title">Confirm</div>
+    <div class="popup-message" id="confirmMessage"></div>
+    <div class="popup-actions">
+      <button class="popup-btn cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="popup-btn danger" id="confirmYesBtn">Delete</button>
+    </div>
+  </div>
+</div>
+<script>
+function showConfirm(msg, formId){document.getElementById('confirmMessage').textContent=msg;document.getElementById('confirmOverlay').classList.add('active');var btn=document.getElementById('confirmYesBtn');var nb=btn.cloneNode(true);btn.parentNode.replaceChild(nb,btn);nb.addEventListener('click',function(){closeConfirm();document.getElementById(formId).submit();});}
+function closeConfirm(){document.getElementById('confirmOverlay').classList.remove('active');}
+document.getElementById('confirmOverlay').addEventListener('click',function(e){if(e.target===this)closeConfirm();});
+</script>
 
 </body>
 </html>
