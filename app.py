@@ -117,9 +117,7 @@ def email_template(title, greeting, content_html, button_text=None, button_url=N
 
 
 # ================= TWILIO CONFIGURATION =================
-TWILIO_ACCOUNT_SID = "AC7be2f06dfcb1b13a251c79ec662daeed"
-TWILIO_AUTH_TOKEN = "ad610f05fefe9cf63b3e0ff2992724d2"
-TWILIO_PHONE_NUMBER = "+1 979 202 0808"
+
 
 twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
