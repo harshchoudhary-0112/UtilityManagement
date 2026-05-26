@@ -135,11 +135,23 @@ header{
   cursor:pointer;
   backdrop-filter:blur(10px);
   transition:0.3s ease;
+  padding:0;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
 .user-trigger:hover{
   background:rgba(255,255,255,0.18);
   transform:translateY(-2px);
+}
+
+.user-trigger img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:14px;
 }
 
 .main{
@@ -672,6 +684,7 @@ footer.user-footer{
   
   .table-container{
     min-width:100%;
+    
   }
   
   table{
@@ -711,6 +724,56 @@ footer.user-footer{
 .popup-progress{width:100%;height:4px;background:rgba(17,24,39,0.06);border-radius:999px;margin-top:16px;overflow:hidden;}
 .popup-progress-bar{height:100%;border-radius:999px;background:linear-gradient(135deg,var(--blue),var(--green));animation:popupTimer 4s linear forwards;}
 @keyframes popupTimer{from{width:100%;}to{width:0%;}}
+
+.report-date-form{
+  margin-top:4px;
+}
+
+.date-row{
+  display:flex;
+  align-items:flex-end;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.date-field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  flex:1;
+  min-width:140px;
+}
+
+.date-field label{
+  font-size:12px;
+  font-weight:700;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+}
+
+.date-field .input-field{
+  padding:10px 14px;
+  border-radius:12px;
+  border:1px solid rgba(17,24,39,0.12);
+  background:rgba(255,255,255,0.9);
+  font-size:14px;
+  color:var(--text);
+  outline:none;
+  transition:0.3s ease;
+}
+
+.date-field .input-field:focus{
+  border-color:var(--green);
+  box-shadow:0 0 0 4px rgba(0,200,83,0.12);
+}
+
+.date-hint{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:8px;
+  font-style:italic;
+}
 </style>
 
 <script>
@@ -725,6 +788,26 @@ function goToChangePassword() {
 
 function goToChangeDetails() {
   window.location.href = "{{ url_for('admin_change_details') }}";
+}
+
+function downloadCSV(e) {
+  e.preventDefault();
+  var fromDate = document.getElementById('from_date').value;
+  var toDate = document.getElementById('to_date').value;
+
+  if (fromDate && toDate && fromDate > toDate) {
+    showPopup('"From" date cannot be after "To" date.', 'error');
+    return false;
+  }
+
+  var url = '/download_complaints_csv?';
+  var params = [];
+  if (fromDate) params.push('from_date=' + fromDate);
+  if (toDate) params.push('to_date=' + toDate);
+  url += params.join('&');
+
+  window.location.href = url;
+  return false;
 }
 </script>
 </head>
@@ -759,6 +842,26 @@ document.getElementById('popupOverlay').addEventListener('click',function(e){if(
 function showConfirm(msg, onYes){document.getElementById('confirmMessage').textContent=msg;document.getElementById('confirmOverlay').classList.add('active');var btn=document.getElementById('confirmYesBtn');var nb=btn.cloneNode(true);btn.parentNode.replaceChild(nb,btn);nb.addEventListener('click',function(){closeConfirm();onYes();});}
 function closeConfirm(){document.getElementById('confirmOverlay').classList.remove('active');}
 document.getElementById('confirmOverlay').addEventListener('click',function(e){if(e.target===this)closeConfirm();});
+function openProfilePhoto(src){
+    document.getElementById('profilePhotoPreview').src = src;
+    document.getElementById('profilePhotoModal').style.display = 'flex';
+}
+
+function closeProfilePhoto(){
+    document.getElementById('profilePhotoModal').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('profilePhotoModal');
+
+    if(modal){
+        modal.addEventListener('click', function(e){
+            if(e.target === this){
+                closeProfilePhoto();
+            }
+        });
+    }
+});
 </script>
 {% with messages = get_flashed_messages() %}
   {% if messages %}
@@ -780,8 +883,16 @@ document.getElementById('confirmOverlay').addEventListener('click',function(e){i
     <a href="{{ url_for('adminhistory') }}" class="nav-btn">📋 History</a>
     <a href="/edit_announcement" class="nav-btn purple">📢 General</a>
     <a href="{{ url_for('admin_announcement') }}" class="nav-btn secondary">🏨 Ward</a>
+    <a href="{{ url_for('admin_workers') }}" class="nav-btn" style="background:linear-gradient(135deg,#00897b,#26a69a);box-shadow:0 10px 20px rgba(0,137,123,0.2);">👷 Workers</a>
+    <a href="{{ url_for('admin_worker_updates') }}" class="nav-btn" style="background:linear-gradient(135deg,#1565c0,#42a5f5);box-shadow:0 10px 20px rgba(21,101,192,0.2);">📝 Updates</a>
     <a href="{{ url_for('logout') }}" class="nav-btn secondary">🚪 Logout</a>
-    <button class="user-trigger" onclick="toggleUserPanel()">👤</button>
+    <button class="user-trigger" onclick="toggleUserPanel()">
+      {% if session.get('admin_photo') %}
+        <img src="{{ url_for('static', filename='uploads/' + session['admin_photo']) }}" alt="Profile">
+      {% else %}
+        👤
+      {% endif %}
+    </button>
   </div>
 </header>
 
@@ -800,7 +911,37 @@ document.getElementById('confirmOverlay').addEventListener('click',function(e){i
     </div>
     <div>
       <h3>{{ session['admin_name'] or 'Admin' }}</h3>
-      <p>Click photo to change</p>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+
+  <button type="button"
+          onclick="document.getElementById('adminPhotoInput').click()"
+          style="border:none;
+                 background:linear-gradient(135deg,#0077b6,#00b4d8);
+                 color:white;
+                 padding:8px 12px;
+                 border-radius:10px;
+                 cursor:pointer;
+                 font-size:12px;
+                 font-weight:600;">
+      📷 Change Photo
+  </button>
+
+  {% if session.get('admin_photo') %}
+  <button type="button"
+          onclick="openProfilePhoto('{{ url_for('static', filename='uploads/' + session['admin_photo']) }}')"
+          style="border:none;
+                 background:linear-gradient(135deg,#00a86b,#00c853);
+                 color:white;
+                 padding:8px 12px;
+                 border-radius:10px;
+                 cursor:pointer;
+                 font-size:12px;
+                 font-weight:600;">
+      👁 View Photo
+  </button>
+  {% endif %}
+
+</div>
     </div>
   </div>
 
@@ -858,6 +999,28 @@ document.getElementById('confirmOverlay').addEventListener('click',function(e){i
           </div>
           <div class="action-arrow">→</div>
         </a>
+
+        <div class="action-card" style="cursor:default;">
+          <div class="action-icon green">📥</div>
+          <div class="action-body" style="flex:1;">
+            <h3>Download CSV Report</h3>
+            <p style="margin-bottom:12px;">Select a date range to export complaint records for your department</p>
+            <form id="csvDownloadForm" class="report-date-form" onsubmit="return downloadCSV(event)">
+              <div class="date-row">
+                <div class="date-field">
+                  <label for="from_date">From</label>
+                  <input type="date" id="from_date" name="from_date" class="input-field">
+                </div>
+                <div class="date-field">
+                  <label for="to_date">To</label>
+                  <input type="date" id="to_date" name="to_date" class="input-field">
+                </div>
+                <button type="submit" class="btn btn-update" style="align-self:flex-end; padding:12px 20px;">📥 Download</button>
+              </div>
+              <p class="date-hint">Leave both empty to download all records</p>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -873,8 +1036,7 @@ document.getElementById('confirmOverlay').addEventListener('click',function(e){i
           </div>
         </div>
       </div>
-
-      {% if complaints %}
+     {% if complaints %}
       <div class="table-container">
         <table id="complaints-table">
           <thead>
@@ -915,6 +1077,9 @@ document.getElementById('confirmOverlay').addEventListener('click',function(e){i
                 <td>
                   <div class="actions">
                     <button type="submit" class="btn btn-update">Update</button>
+                    {% if complaint[6] == 'In Progress' %}
+                    <a href="/admin_assign_worker/{{ complaint[0] }}" class="btn btn-update" style="background:linear-gradient(135deg,#00897b,#26a69a);box-shadow:0 8px 20px rgba(0,137,123,0.25);text-decoration:none;">👷 Assign</a>
+                    {% endif %}
                     <button
                       type="button"
                       class="btn btn-delete"
@@ -944,6 +1109,31 @@ document.getElementById('confirmOverlay').addEventListener('click',function(e){i
   <div>© 2026 CDGI | Admin Dashboard</div>
 
 </footer>
+<!-- Profile Photo Modal -->
+<div id="profilePhotoModal" 
+     style="display:none;
+            position:fixed;
+            z-index:99999;
+            inset:0;
+            background:rgba(0,0,0,0.85);
+            justify-content:center;
+            align-items:center;
+            padding:20px;">
 
+    <span onclick="closeProfilePhoto()"
+          style="position:absolute;
+                 top:20px;
+                 right:30px;
+                 font-size:40px;
+                 color:white;
+                 cursor:pointer;">×</span>
+
+    <img id="profilePhotoPreview"
+         src=""
+         style="max-width:90%;
+                max-height:90vh;
+                border-radius:20px;
+                box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+</div>
 </body>
 </html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Worker Change Details</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+:root{
+  --bg-1:#eef2f7;--bg-2:#dbeafe;--text:#1f2937;--muted:#6b7280;
+  --white:rgba(255,255,255,0.88);--border:rgba(255,255,255,0.35);
+  --shadow:0 20px 45px rgba(15,23,42,0.12);--shadow-soft:0 10px 25px rgba(15,23,42,0.08);
+  --green:#00c853;--green-dark:#00a86b;--blue:#0077b6;--blue-light:#00b4d8;--red:#ff4d4d;
+}
+body{
+  min-height:100vh;color:var(--text);
+  background:radial-gradient(circle at top left,rgba(13,148,136,0.18),transparent 30%),
+             radial-gradient(circle at bottom right,rgba(0,200,83,0.15),transparent 28%),
+             linear-gradient(135deg,var(--bg-1),var(--bg-2));
+  display:flex;flex-direction:column;
+}
+header{
+  position:sticky;top:0;z-index:1000;background:rgba(31,32,39,0.82);color:white;
+  padding:16px 28px;display:flex;justify-content:space-between;align-items:center;
+  backdrop-filter:blur(16px);box-shadow:0 8px 24px rgba(0,0,0,0.16);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-mark{
+  width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--blue),var(--green));font-size:20px;
+}
+.brand-text h1{font-size:18px;font-weight:700;}
+.brand-text p{font-size:12px;color:rgba(255,255,255,0.72);margin-top:2px;}
+.nav-btn{
+  padding:10px 16px;background:linear-gradient(135deg,var(--green-dark),var(--green));color:white;
+  border-radius:999px;text-decoration:none;font-size:14px;font-weight:600;transition:0.3s ease;
+}
+.nav-btn:hover{transform:translateY(-2px);}
+.main{
+  flex:1;width:min(1100px,calc(100% - 32px));margin:28px auto;
+  display:grid;grid-template-columns:380px 1fr;gap:22px;align-items:start;
+}
+.panel{
+  background:var(--white);border:1px solid var(--border);backdrop-filter:blur(16px);
+  border-radius:24px;box-shadow:var(--shadow);overflow:hidden;
+}
+.panel-inner{padding:24px;}
+.hero-card{position:relative;}
+.hero-card::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(13,148,136,0.08),rgba(0,200,83,0.08));
+  pointer-events:none;
+}
+.welcome-badge{
+  display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;
+  background:rgba(255,255,255,0.8);color:var(--blue);font-size:13px;font-weight:700;
+  box-shadow:var(--shadow-soft);margin-bottom:18px;
+}
+.hero-title{font-size:28px;line-height:1.2;color:#111827;margin-bottom:10px;}
+.hero-text{font-size:14px;line-height:1.7;color:var(--muted);margin-bottom:22px;max-width:38ch;}
+.info-list{display:grid;gap:14px;}
+.info-card{
+  display:flex;align-items:flex-start;gap:14px;padding:16px;border-radius:18px;
+  background:linear-gradient(135deg,#ffffff,#f8fbff);border:1px solid rgba(17,24,39,0.06);
+  box-shadow:var(--shadow-soft);
+}
+.info-icon{
+  width:48px;height:48px;border-radius:16px;display:flex;align-items:center;justify-content:center;
+  color:white;font-size:22px;flex-shrink:0;background:linear-gradient(135deg,var(--blue),var(--green));
+}
+.info-body h3{font-size:15px;margin-bottom:4px;color:#111827;}
+.info-body p{font-size:13px;color:var(--muted);line-height:1.5;}
+.panel-head{display:flex;align-items:flex-start;margin-bottom:18px;}
+.panel-head-left{display:flex;gap:14px;}
+.panel-icon{
+  width:54px;height:54px;border-radius:18px;display:flex;align-items:center;justify-content:center;
+  color:white;font-size:24px;background:linear-gradient(135deg,var(--blue),var(--green));
+}
+.panel-head h2{font-size:24px;color:#111827;margin-bottom:4px;}
+.panel-head p{font-size:14px;color:var(--muted);line-height:1.6;}
+.flash-box{
+  background:rgba(34,197,94,0.10);border:1px solid rgba(34,197,94,0.16);color:#15803d;
+  padding:12px 14px;border-radius:14px;font-size:14px;margin-bottom:14px;
+}
+.form-grid{display:grid;gap:16px;}
+.form-group{display:grid;gap:8px;}
+.form-group label{font-size:14px;font-weight:600;color:#1f2937;}
+.input-field{
+  width:100%;border:1px solid rgba(17,24,39,0.12);border-radius:16px;
+  background:rgba(255,255,255,0.88);padding:14px 16px;font-size:14px;
+  color:var(--text);outline:none;transition:0.3s ease;
+}
+.input-field:focus{
+  border-color:var(--blue);box-shadow:0 0 0 4px rgba(0,119,182,0.12);
+  transform:translateY(-1px);
+}
+.input-field[readonly]{background:#eef2f7;color:#6b7280;cursor:not-allowed;}
+.submit-btn{
+  width:100%;border:none;border-radius:14px;padding:14px 22px;margin-top:14px;
+  background:linear-gradient(135deg,var(--blue),var(--green));color:white;font-size:14px;
+  font-weight:700;cursor:pointer;transition:0.3s ease;
+}
+.submit-btn:hover{transform:translateY(-2px);}
+.alt-link{
+  display:block;margin-top:18px;text-align:center;text-decoration:none;font-size:14px;
+  font-weight:600;color:var(--blue);
+}
+footer{
+  margin-top:auto;width:100%;padding:14px 24px;background:rgba(31,32,39,0.88);
+  color:white;text-align:center;
+}
+@media(max-width:980px){.main{grid-template-columns:1fr;}}
+@media(max-width:640px){
+  header{padding:14px 16px;align-items:flex-start;gap:14px;flex-direction:column;}
+  .main{width:min(100% - 20px,1100px);margin:18px auto;}
+  .panel-inner{padding:18px;}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">👷</div>
+    <div class="brand-text">
+      <h1>Worker Details</h1>
+      <p>Update your worker account information</p>
+    </div>
+  </div>
+
+  <div class="header-actions">
+    <a href="{{ url_for('worker_dashboard') }}" class="nav-btn">Worker Dashboard</a>
+  </div>
+</header>
+
+<div class="main">
+  <section class="panel hero-card">
+    <div class="panel-inner">
+      <div class="welcome-badge">👷 Worker Panel</div>
+      <h2 class="hero-title">Keep your worker profile details updated.</h2>
+      <p class="hero-text">
+        Update your name and mobile number so admins and users can contact you correctly.
+      </p>
+
+      <div class="info-list">
+        <div class="info-card">
+          <div class="info-icon">📱</div>
+          <div class="info-body">
+            <h3>Contact Details</h3>
+            <p>Keep your mobile number correct for complaint assignment alerts.</p>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-icon">🏢</div>
+          <div class="info-body">
+            <h3>Worker Information</h3>
+            <p>Your department and ward are managed by admin/super admin.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-inner">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-icon">⚙️</div>
+          <div>
+            <h2>Update Worker Details</h2>
+            <p>Modify your worker account information below.</p>
+          </div>
+        </div>
+      </div>
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="flash-box">{{ messages[0] }}</div>
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('worker_change_details') }}">
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label for="name">Worker Full Name</label>
+            <input type="text" id="name" name="name" class="input-field"
+                   value="{{ worker[0] if worker else session.get('worker_name', '') }}"
+                   placeholder="Enter worker full name" required>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Worker Email</label>
+            <input type="email" id="email" name="email" class="input-field"
+                   value="{{ worker[1] if worker else session.get('worker_email', '') }}"
+                   readonly>
+          </div>
+
+          <div class="form-group">
+            <label for="mobile_number">Mobile Number</label>
+            <input type="text" id="mobile_number" name="mobile_number" class="input-field"
+                   value="{{ worker[2] if worker and worker[2] else session.get('worker_mobile', '') }}"
+                   placeholder="Enter 10-digit mobile number"
+                   pattern="[0-9]{10}"
+                   maxlength="10"
+                   inputmode="numeric"
+                   required>
+          </div>
+
+          <div class="form-group">
+            <label for="department">Department</label>
+            <input type="text" id="department" class="input-field"
+                   value="{{ worker[3] if worker else session.get('worker_department', '') }}"
+                   readonly>
+          </div>
+
+          <div class="form-group">
+            <label for="ward">Ward</label>
+            <input type="text" id="ward" class="input-field"
+                   value="{{ worker[4] if worker else session.get('worker_ward', '') }}"
+                   readonly>
+          </div>
+
+        </div>
+
+        <button type="submit" class="submit-btn">✅ Update Worker Details</button>
+      </form>
+
+      <a href="{{ url_for('worker_dashboard') }}" class="alt-link">← Back to Worker Dashboard</a>
+    </div>
+  </section>
+</div>
+
+<footer>
+  © 2026 CDGI | Worker Panel
+</footer>
+
+</body>
+</html>

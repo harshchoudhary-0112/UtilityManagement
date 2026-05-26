@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Worker Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+:root{--bg-1:#eef2f7;--bg-2:#dbeafe;--text:#1f2937;--muted:#6b7280;--white:rgba(255,255,255,0.88);--border:rgba(255,255,255,0.35);--shadow:0 20px 45px rgba(15,23,42,0.12);--shadow-soft:0 10px 25px rgba(15,23,42,0.08);--green:#00c853;--green-dark:#00a86b;--blue:#0077b6;--blue-light:#00b4d8;--red:#ff4d4d;--orange:#f97316;--teal:#0d9488;--teal-dark:#0f766e;--dark:#1f2027;}
+body{min-height:100vh;color:var(--text);background:radial-gradient(circle at top left,rgba(13,148,136,0.18),transparent 30%),radial-gradient(circle at bottom right,rgba(0,200,83,0.15),transparent 28%),linear-gradient(135deg,var(--bg-1),var(--bg-2));display:flex;flex-direction:column;}
+header{position:sticky;top:0;z-index:1000;background:rgba(31,32,39,0.82);color:white;padding:16px 28px;display:flex;justify-content:space-between;align-items:center;backdrop-filter:blur(16px);box-shadow:0 8px 24px rgba(0,0,0,0.16);border-bottom:1px solid rgba(255,255,255,0.08);}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-mark{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--teal),var(--green));box-shadow:0 8px 16px rgba(0,0,0,0.18);font-size:20px;}
+.brand-text h1{font-size:18px;font-weight:700;}
+.brand-text p{font-size:12px;color:rgba(255,255,255,0.72);margin-top:2px;}
+.header-actions{display:flex;align-items:center;gap:10px;}
+.nav-btn{padding:10px 16px;background:linear-gradient(135deg,var(--green-dark),var(--green));color:white;border-radius:999px;text-decoration:none;font-size:14px;font-weight:600;transition:0.3s ease;box-shadow:0 10px 20px rgba(0,200,83,0.2);border:none;cursor:pointer;}
+.nav-btn.secondary{background:linear-gradient(135deg,var(--red),#fb7185);box-shadow:0 10px 20px rgba(255,77,77,0.18);}
+.nav-btn:hover{transform:translateY(-2px);}
+.user-trigger{width:44px;height:44px;border:none;border-radius:14px;background:rgba(255,255,255,0.12);color:white;font-size:20px;cursor:pointer;backdrop-filter:blur(10px);transition:0.3s ease;padding:0;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.user-trigger:hover{background:rgba(255,255,255,0.18);transform:translateY(-2px);}
+.user-trigger img{width:100%;height:100%;object-fit:cover;border-radius:14px;}
+.main{flex:1;width:min(1400px,calc(100% - 32px));margin:28px auto;display:grid;gap:22px;}
+.panel{background:var(--white);border:1px solid var(--border);backdrop-filter:blur(16px);border-radius:24px;box-shadow:var(--shadow);overflow:hidden;}
+.panel-inner{padding:24px;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:22px;}
+.stat-card{padding:20px;border-radius:18px;background:linear-gradient(135deg,#ffffff,#f0fdfa);border:1px solid rgba(17,24,39,0.06);box-shadow:var(--shadow-soft);text-align:center;}
+.stat-value{font-size:32px;font-weight:800;background:linear-gradient(135deg,var(--teal),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.stat-label{font-size:13px;color:var(--muted);margin-top:4px;font-weight:600;}
+.welcome-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,0.8);color:var(--teal);font-size:13px;font-weight:700;box-shadow:var(--shadow-soft);margin-bottom:18px;}
+.hero-title{font-size:26px;line-height:1.2;color:#111827;margin-bottom:10px;}
+.hero-text{font-size:14px;line-height:1.7;color:var(--muted);margin-bottom:8px;}
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px;}
+.panel-head-left{display:flex;gap:14px;}
+.panel-icon{width:54px;height:54px;border-radius:18px;display:flex;align-items:center;justify-content:center;color:white;font-size:24px;background:linear-gradient(135deg,var(--teal),var(--blue));box-shadow:0 14px 24px rgba(13,148,136,0.18);}
+.panel-head h2{font-size:24px;color:#111827;margin-bottom:4px;}
+.panel-head p{font-size:14px;color:var(--muted);line-height:1.6;}
+.table-container{width:100%;overflow-x:auto;border-radius:18px;border:1px solid rgba(17,24,39,0.05);background:#fafbff;}
+table{width:100%;min-width:900px;border-collapse:separate;border-spacing:0;}
+thead th{background:linear-gradient(135deg,#f0fdfa,#ecfdf5);color:#1f2937;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:18px 16px;border-bottom:2px solid rgba(17,24,39,0.08);white-space:nowrap;}
+tbody td{padding:18px 16px;border-bottom:1px solid rgba(17,24,39,0.04);vertical-align:middle;font-size:14px;color:#1f2937;}
+tbody tr:hover{background:rgba(13,148,136,0.03);}
+tbody tr:last-child td{border-bottom:none;}
+.id-badge{display:inline-flex;align-items:center;justify-content:center;min-width:42px;height:32px;padding:0 12px;border-radius:999px;background:linear-gradient(135deg,rgba(13,148,136,0.12),rgba(13,148,136,0.08));color:var(--teal);font-weight:700;font-size:13px;}
+.status-badge{display:inline-block;padding:5px 14px;border-radius:999px;font-size:12px;font-weight:700;color:white;}
+.status-badge.assigned{background:linear-gradient(135deg,var(--orange),#fb923c);}
+.status-badge.in-progress{background:linear-gradient(135deg,var(--blue),var(--blue-light));}
+.status-badge.completed{background:linear-gradient(135deg,var(--green-dark),var(--green));}
+.btn{border:none;border-radius:12px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;transition:0.3s ease;display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:white;}
+.btn-view{background:linear-gradient(135deg,var(--teal),var(--green));box-shadow:0 8px 20px rgba(13,148,136,0.25);}
+.btn-view:hover{transform:translateY(-2px);}
+.empty-state{text-align:center;padding:48px 24px;color:var(--muted);}
+.empty-icon{font-size:64px;display:block;margin-bottom:16px;opacity:0.4;}
+/* User Panel */
+.user-panel{position:fixed;top:0;right:-360px;width:340px;max-width:92vw;height:100%;background:rgba(255,255,255,0.96);backdrop-filter:blur(18px);box-shadow:-18px 0 40px rgba(15,23,42,0.16);z-index:2000;padding:24px;transition:right 0.35s ease;overflow-y:auto;}
+.user-panel.active{right:0;}
+.panel-close{position:absolute;top:16px;right:18px;font-size:28px;cursor:pointer;color:#ef4444;}
+.user-panel-top{display:flex;align-items:center;gap:14px;margin-bottom:22px;padding-right:28px;}
+.user-avatar{width:58px;height:58px;border-radius:18px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--teal),var(--blue));color:white;font-size:26px;box-shadow:var(--shadow-soft);position:relative;overflow:hidden;cursor:pointer;}
+.user-avatar img{width:100%;height:100%;object-fit:cover;}
+.user-avatar .avatar-initials{font-size:22px;font-weight:700;text-transform:uppercase;}
+.avatar-camera{position:absolute;bottom:0;left:0;right:0;height:22px;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;font-size:12px;color:white;opacity:0;transition:opacity 0.2s ease;}
+.user-avatar:hover .avatar-camera{opacity:1;}
+.user-panel-top h3{font-size:20px;color:#111827;}
+.user-panel-top p{font-size:13px;color:var(--muted);margin-top:4px;}
+.detail-list{display:grid;gap:12px;}
+.detail-item{background:#f8fafc;border:1px solid rgba(17,24,39,0.06);border-radius:16px;padding:14px 15px;}
+.detail-item span{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;}
+.detail-item strong{color:#111827;font-size:14px;word-break:break-word;}
+footer.user-footer{margin-top:auto;width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 24px;background:rgba(31,32,39,0.88);color:white;backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,0.08);flex-shrink:0;}
+.footer-links{display:flex;align-items:center;gap:10px;}
+.footer-link{text-decoration:none;color:white;padding:8px 13px;border-radius:10px;font-size:13px;font-weight:600;}
+.footer-link.home{background:linear-gradient(135deg,var(--green-dark),var(--green));}
+.footer-link.logout{background:linear-gradient(135deg,var(--red),#fb7185);}
+/* Popup */
+.popup-overlay{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.45);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity 0.3s ease,visibility 0.3s ease;}
+.popup-overlay.active{opacity:1;visibility:visible;}
+.popup-box{width:min(420px,calc(100vw - 32px));background:rgba(255,255,255,0.96);backdrop-filter:blur(20px);border-radius:24px;border:1px solid rgba(255,255,255,0.5);box-shadow:0 25px 60px rgba(15,23,42,0.22);padding:32px 28px 24px;text-align:center;transform:scale(0.9) translateY(20px);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);}
+.popup-overlay.active .popup-box{transform:scale(1) translateY(0);}
+.popup-icon{width:64px;height:64px;margin:0 auto 16px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:30px;background:linear-gradient(135deg,var(--teal),var(--green));box-shadow:0 12px 28px rgba(13,148,136,0.25);color:white;}
+.popup-icon.error{background:linear-gradient(135deg,#ef4444,#fb7185);box-shadow:0 12px 28px rgba(239,68,68,0.25);}
+.popup-title{font-size:20px;font-weight:700;color:#111827;margin-bottom:8px;}
+.popup-message{font-size:14px;line-height:1.65;color:#6b7280;margin-bottom:24px;word-break:break-word;}
+.popup-actions{display:flex;gap:10px;justify-content:center;}
+.popup-btn{border:none;border-radius:14px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.25s ease;}
+.popup-btn.primary{background:linear-gradient(135deg,var(--teal),var(--green));color:white;box-shadow:0 8px 20px rgba(13,148,136,0.25);}
+.popup-btn.primary:hover{transform:translateY(-2px);}
+.popup-progress{width:100%;height:4px;background:rgba(17,24,39,0.06);border-radius:999px;margin-top:16px;overflow:hidden;}
+.popup-progress-bar{height:100%;border-radius:999px;background:linear-gradient(135deg,var(--teal),var(--green));animation:popupTimer 4s linear forwards;}
+@keyframes popupTimer{from{width:100%;}to{width:0%;}}
+@media (max-width:980px){.main{width:min(100% - 20px,1400px);margin:18px auto;}.stats-grid{grid-template-columns:repeat(3,1fr);}}
+@media (max-width:640px){header{padding:14px 16px;align-items:flex-start;gap:14px;flex-direction:column;}.header-actions{width:100%;justify-content:space-between;}.main{width:min(100% - 20px,1400px);margin:18px auto;}.panel-inner{padding:18px;}.stats-grid{grid-template-columns:1fr 1fr;}footer.user-footer{padding:12px 14px;flex-direction:column;align-items:flex-start;}}
+</style>
+<script>
+function toggleUserPanel(){document.getElementById('userPanel').classList.toggle('active');}
+function showPopup(m,t){var o=document.getElementById('popupOverlay'),i=document.getElementById('popupIcon'),tt=document.getElementById('popupTitle'),mg=document.getElementById('popupMessage'),b=document.getElementById('popupProgressBar');mg.textContent=m;if(t==='error'){i.textContent='❌';i.className='popup-icon error';tt.textContent='Error';}else{i.textContent='✅';i.className='popup-icon';tt.textContent='Success';}b.style.animation='none';b.offsetHeight;b.style.animation='popupTimer 4s linear forwards';o.classList.add('active');clearTimeout(window._pt);window._pt=setTimeout(function(){closePopup();},4000);}
+function closePopup(){document.getElementById('popupOverlay').classList.remove('active');clearTimeout(window._pt);}
+document.addEventListener('DOMContentLoaded',function(){document.getElementById('popupOverlay').addEventListener('click',function(e){if(e.target===this)closePopup();});});
+</script>
+</head>
+<body>
+<!-- Popup Modal -->
+<div class="popup-overlay" id="popupOverlay">
+  <div class="popup-box">
+    <div class="popup-icon" id="popupIcon">✅</div>
+    <div class="popup-title" id="popupTitle">Notification</div>
+    <div class="popup-message" id="popupMessage"></div>
+    <div class="popup-actions"><button class="popup-btn primary" onclick="closePopup()">Got it</button></div>
+    <div class="popup-progress"><div class="popup-progress-bar" id="popupProgressBar"></div></div>
+  </div>
+</div>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <script>document.addEventListener('DOMContentLoaded',function(){var m={{ messages[0] | tojson }},t='success',l=m.toLowerCase();if(l.indexOf('error')!==-1||l.indexOf('fail')!==-1||l.indexOf('invalid')!==-1||l.indexOf('wrong')!==-1||l.indexOf('not found')!==-1||l.indexOf('denied')!==-1)t='error';showPopup(m,t);});</script>
+  {% endif %}
+{% endwith %}
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">👷</div>
+    <div class="brand-text">
+      <h1>Worker Dashboard</h1>
+      <p>{{ session.get('worker_department', '') }} Department</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <a href="/" class="nav-btn">🏠 Home</a>
+    <a href="{{ url_for('worker_logout') }}" class="nav-btn secondary">🚪 Logout</a>
+    <button class="user-trigger" onclick="toggleUserPanel()">
+      {% if session.get('worker_photo') %}
+        <img src="{{ url_for('static', filename='uploads/' + session['worker_photo']) }}" alt="Profile" >
+      {% else %}
+        👤
+      {% endif %}
+    </button>
+  </div>
+</header>
+
+<!-- Side Panel -->
+<div class="user-panel" id="userPanel">
+  <span class="panel-close" onclick="toggleUserPanel()">×</span>
+  <div class="user-panel-top">
+    <div class="user-avatar" onclick="document.getElementById('workerPhotoInput').click()">
+      {% if session.get('worker_photo') %}
+        <img src="{{ url_for('static', filename='uploads/' + session['worker_photo']) }}" alt="Profile">
+      {% else %}
+        <span class="avatar-initials">{{ (session['worker_name'] or 'W')[0] }}</span>
+      {% endif %}
+      <div class="avatar-camera">📷</div>
+    </div>
+    <div>
+      <h3>{{ session['worker_name'] or 'Worker' }}</h3>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+
+  <button type="button"
+          onclick="document.getElementById('workerPhotoInput').click()"
+          style="border:none;
+                 background:linear-gradient(135deg,#0077b6,#00b4d8);
+                 color:white;
+                 padding:8px 12px;
+                 border-radius:10px;
+                 cursor:pointer;
+                 font-size:12px;
+                 font-weight:600;">
+      📷 Change Photo
+  </button>
+
+  {% if session.get('worker_photo') %}
+  <button type="button"
+          onclick="openProfilePhoto('{{ url_for('static', filename='uploads/' + session['worker_photo']) }}')"
+          style="border:none;
+                 background:linear-gradient(135deg,#00a86b,#00c853);
+                 color:white;
+                 padding:8px 12px;
+                 border-radius:10px;
+                 cursor:pointer;
+                 font-size:12px;
+                 font-weight:600;">
+      👁 View Photo
+  </button>
+  {% endif %}
+
+</div>
+    </div>
+  </div>
+  <form id="workerPhotoForm" action="/worker_upload_profile_photo" method="POST" enctype="multipart/form-data" style="display:none">
+    <input type="file" id="workerPhotoInput" name="photo" accept="image/*" onchange="document.getElementById('workerPhotoForm').submit()">
+  </form>
+  <div class="detail-list">
+    <div class="detail-item"><span>Full Name</span><strong>{{ session['worker_name'] or 'Worker' }}</strong></div>
+    <div class="detail-item"><span>Email</span><strong>{{ session['worker_email'] }}</strong></div>
+    <div class="detail-item"><span>Department</span><strong>{{ session['worker_department'] }}</strong></div>
+    <div class="detail-item"><span>Ward</span><strong>{{ session['worker_ward'] }}</strong></div>
+    <div class="detail-item"><span>Status</span><strong>{{ session['worker_status'] or 'Available' }}</strong></div>
+    <div class="detail-item"><span>Mobile</span><strong>{{ session['worker_mobile'] or 'N/A' }}</strong></div>
+    <button type="button" class="nav-btn secondary" onclick="goToWorkerChangePassword()" style="width:100%; margin-top:12px;">
+  🔐 Change Password
+</button>
+
+<button type="button" class="nav-btn" onclick="goToWorkerChangeDetails()" style="width:100%;">
+  ✏️ Change Details
+</button>
+  </div>
+</div>
+
+<div class="main">
+  <!-- Stats -->
+  <section class="panel">
+    <div class="panel-inner">
+      <div class="welcome-badge">👋 Welcome, {{ session['worker_name'] or 'Worker' }}</div>
+      <h2 class="hero-title">Your Complaint Assignments</h2>
+      <p class="hero-text">View and update complaints assigned to you by your department admin.</p>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value">{{ stats.assigned }}</div>
+          <div class="stat-label">Assigned</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ stats.in_progress }}</div>
+          <div class="stat-label">In Progress</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ stats.completed }}</div>
+          <div class="stat-label">Completed</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Assignments Table -->
+  <section class="panel">
+    <div class="panel-inner">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-icon">📋</div>
+          <div>
+            <h2>Assigned Complaints</h2>
+            <p>Click "View Details" to submit progress updates</p>
+          </div>
+        </div>
+      </div>
+      {% if assignments %}
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Complaint ID</th>
+              <th>Citizen</th>
+              <th>Ward</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Assignment Status</th>
+              <th>Assigned On</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in assignments %}
+            <tr>
+              <td><span class="id-badge">{{ a[4] }}</span></td>
+              <td>{{ a[5] }}</td>
+              <td>{{ a[6] }}</td>
+              <td>{{ a[7] }}</td>
+              <td style="max-width:220px;color:var(--muted);line-height:1.5;">{{ a[8][:80] }}{% if a[8]|length > 80 %}...{% endif %}</td>
+              <td>
+                {% if a[2] == 'Assigned' %}
+                  <span class="status-badge assigned">Assigned</span>
+                {% elif a[2] == 'In Progress' %}
+                  <span class="status-badge in-progress">In Progress</span>
+                {% elif a[2] == 'Completed' %}
+                  <span class="status-badge completed">Completed</span>
+                {% else %}
+                  <span class="status-badge" style="background:#6b7280;">{{ a[2] }}</span>
+                {% endif %}
+              </td>
+              <td>{{ a[3].strftime('%d %b %Y') if a[3] else 'N/A' }}</td>
+              <td><a href="{{ url_for('worker_complaint_detail', assignment_id=a[0]) }}" class="btn btn-view">📄 View</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <h3>No assignments yet</h3>
+        <p style="max-width:32ch;margin:0 auto;">No complaints have been assigned to you. Your department admin will assign complaints when available.</p>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+</div>
+
+<footer class="user-footer">
+  <div>© 2026 CDGI | Worker Dashboard</div>
+  <div class="footer-links">
+    <a href="/" class="footer-link home">🏠 Home</a>
+    <a href="{{ url_for('worker_logout') }}" class="footer-link logout">🚪 Logout</a>
+  </div>
+</footer>
+<!-- Profile Photo Modal -->
+<div id="profilePhotoModal" 
+     style="display:none;
+            position:fixed;
+            z-index:99999;
+            inset:0;
+            background:rgba(0,0,0,0.85);
+            justify-content:center;
+            align-items:center;
+            padding:20px;">
+
+    <span onclick="closeProfilePhoto()"
+          style="position:absolute;
+                 top:20px;
+                 right:30px;
+                 font-size:40px;
+                 color:white;
+                 cursor:pointer;">×</span>
+
+    <img id="profilePhotoPreview"
+         src=""
+         style="max-width:90%;
+                max-height:90vh;
+                border-radius:20px;
+                box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+</div>
+<script>
+function goToWorkerChangePassword() {
+  window.location.href = "{{ url_for('worker_change_password') }}";
+}
+
+function goToWorkerChangeDetails() {
+  window.location.href = "{{ url_for('worker_change_details') }}";
+}
+function openProfilePhoto(src){
+    document.getElementById('profilePhotoPreview').src = src;
+    document.getElementById('profilePhotoModal').style.display = 'flex';
+}
+
+function closeProfilePhoto(){
+    document.getElementById('profilePhotoModal').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('profilePhotoModal');
+
+    if(modal){
+        modal.addEventListener('click', function(e){
+            if(e.target === this){
+                closeProfilePhoto();
+            }
+        });
+    }
+});
+</script>
+</body>
+</html>

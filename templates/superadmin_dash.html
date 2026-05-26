@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>Super Admin Dashboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="{{ url_for('static',filename='superadmin.css') }}">
+</head>
+<body>
+<div class="popup-overlay" id="popupO"><div class="popup-box"><div class="popup-icon" id="pI">🛡️</div><div class="popup-title" id="pT">Notice</div><div class="popup-message" id="pM"></div><div class="popup-actions"><button class="popup-btn primary" onclick="closeP()">OK</button></div><div class="popup-bar"><div class="popup-bar-fill" id="pB"></div></div></div></div>
+<div class="popup-overlay" id="confirmO"><div class="popup-box"><div class="popup-icon warning">⚠️</div><div class="popup-title">Confirm Action</div><div class="popup-message" id="cM">Are you sure?</div><div class="popup-actions"><button class="popup-btn cancel" onclick="closeC()">Cancel</button><button class="popup-btn danger" id="cY">Confirm</button></div></div></div>
+<script>
+function showP(m,t){var o=document.getElementById('popupO'),i=document.getElementById('pI'),tt=document.getElementById('pT'),mg=document.getElementById('pM'),b=document.getElementById('pB');mg.textContent=m;if(t==='error'){i.textContent='❌';i.className='popup-icon error';tt.textContent='Error';}else{i.textContent='✅';i.className='popup-icon';tt.textContent='Success';}b.style.animation='none';b.offsetHeight;b.style.animation='pbar 4s linear forwards';o.classList.add('active');clearTimeout(window._pt);window._pt=setTimeout(closeP,4000);}
+function closeP(){document.getElementById('popupO').classList.remove('active');clearTimeout(window._pt);}
+document.getElementById('popupO').addEventListener('click',function(e){if(e.target===this)closeP();});
+function showC(msg,fn){document.getElementById('cM').textContent=msg;document.getElementById('confirmO').classList.add('active');var b=document.getElementById('cY'),nb=b.cloneNode(true);b.parentNode.replaceChild(nb,b);nb.addEventListener('click',function(){closeC();fn();});}
+function closeC(){document.getElementById('confirmO').classList.remove('active');}
+document.getElementById('confirmO').addEventListener('click',function(e){if(e.target===this)closeC();});
+</script>
+{% with messages = get_flashed_messages() %}{% if messages %}<script>document.addEventListener('DOMContentLoaded',function(){var m={{ messages[0] | tojson }},t='success',l=m.toLowerCase();if(l.indexOf('error')!==-1||l.indexOf('fail')!==-1||l.indexOf('invalid')!==-1||l.indexOf('not found')!==-1||l.indexOf('denied')!==-1||l.indexOf('empty')!==-1)t='error';showP(m,t);});</script>{% endif %}{% endwith %}
+
+<header>
+<div class="brand"><div class="brand-mark">🛡️</div><div><h1>Super Admin Control Center</h1><p>Full system access • All departments</p></div></div>
+<div class="hdr-actions">
+<a href="{{ url_for('home') }}" class="hdr-btn home">🏠 Home</a>
+<a href="{{ url_for('superadmin_logout') }}" class="hdr-btn logout">🚪 Logout</a>
+</div>
+</header>
+
+<div class="main">
+<!-- STATS -->
+<div class="stats">
+<div class="stat"><div class="icon" style="background:linear-gradient(135deg,#3b82f6,#60a5fa)">👥</div><div class="val">{{stats.total_users}}</div><div class="lbl">Total Users ({{stats.verified_users}} verified)</div></div>
+<div class="stat"><div class="icon" style="background:linear-gradient(135deg,#7c3aed,#a78bfa)">🛡️</div><div class="val">{{stats.total_admins}}</div><div class="lbl">Total Admins ({{stats.verified_admins}} verified)</div></div>
+<div class="stat"><div class="icon" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)">📋</div><div class="val">{{stats.total_complaints}}</div><div class="lbl">Total Complaints</div></div>
+<div class="stat"><div class="icon" style="background:linear-gradient(135deg,#f97316,#fb923c)">⏳</div><div class="val">{{stats.pending_complaints}}</div><div class="lbl">Pending</div></div>
+<div class="stat"><div class="icon" style="background:linear-gradient(135deg,#3b82f6,#60a5fa)">🔄</div><div class="val">{{stats.inprogress_complaints}}</div><div class="lbl">In Progress</div></div>
+<div class="stat"><div class="icon" style="background:linear-gradient(135deg,#059669,#34d399)">✅</div><div class="val">{{stats.resolved_complaints}}</div><div class="lbl">Resolved</div></div>
+<div class="stat"><div class="icon" style="background:linear-gradient(135deg,#ef4444,#f87171)">❌</div><div class="val">{{stats.rejected_complaints}}</div><div class="lbl">Rejected</div></div>
+<div class="stat"><div class="icon" style="background:linear-gradient(135deg,#06b6d4,#22d3ee)">📢</div><div class="val">{{stats.total_announcements}}</div><div class="lbl">Announcements</div></div>
+<div class="stat"><div class="icon" style="background:linear-gradient(135deg,#00897b,#26a69a)">👷</div><div class="val">{{stats.total_workers|default(0)}}</div><div class="lbl">Total Workers</div></div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+<div class="tab active" onclick="switchTab('users',this)">👥 Users ({{stats.total_users}})</div>
+<div class="tab" onclick="switchTab('admins',this)">🛡️ Admins ({{stats.total_admins}})</div>
+<div class="tab" onclick="switchTab('complaints',this)">📋 Complaints ({{stats.total_complaints}})</div>
+<div class="tab" onclick="switchTab('announcements',this)">📢 Announcements ({{stats.total_announcements}})</div>
+<div class="tab" onclick="switchTab('reports',this)">📥 Reports</div>
+<div class="tab" onclick="switchTab('workers',this)">👷 Workers</div>
+</div>
+
+<!-- USERS PANEL -->
+<div class="panel active" id="users">
+<div class="card"><div class="card-hd"><h2>👥 All Registered Users</h2><input type="text" class="search" placeholder="🔍 Search users..." onkeyup="filterTable('usersTable',this.value)"></div>
+<div class="card-bd">
+{% if users %}
+<table id="usersTable"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Ward</th><th>Mobile</th><th>Status</th><th>Actions</th></tr></thead>
+<tbody>{% for u in users %}<tr>
+<td>{{u[0]}}</td><td>{{u[1] or 'N/A'}}</td><td>{{u[2]}}</td><td>{{u[3]}}</td><td>{{u[4] or 'N/A'}}</td>
+<td>{% if u[5]==1 %}<span class="badge ok">Verified</span>{% else %}<span class="badge no">Unverified</span>{% endif %}</td>
+<td><div class="actions">
+<form action="/superadmin_toggle_user_verify/{{u[0]}}" method="POST" style="display:inline"><button class="btn toggle" type="submit">{% if u[5]==1 %}🚫 Unverify{% else %}✅ Verify{% endif %}</button></form>
+<form class="rst-form" action="/superadmin_reset_user_password/{{u[0]}}" method="POST"><input type="password" name="new_password" placeholder="New pass" required><button class="btn rst" type="submit">🔑</button></form>
+<button class="btn del" onclick="showC('Delete this user permanently?',function(){var f=document.createElement('form');f.method='POST';f.action='/superadmin_delete_user/{{u[0]}}';document.body.appendChild(f);f.submit();})">🗑️ Delete</button>
+</div></td>
+</tr>{% endfor %}</tbody></table>
+{% else %}<div class="empty"><div class="em-icon">👥</div><p>No users registered yet</p></div>{% endif %}
+</div></div></div>
+
+<!-- ADMINS PANEL -->
+<div class="panel" id="admins">
+<div class="card"><div class="card-hd"><h2>🛡️ All Admins</h2><input type="text" class="search" placeholder="🔍 Search admins..." onkeyup="filterTable('adminsTable',this.value)"></div>
+<div class="card-bd">
+{% if admins %}
+<table id="adminsTable"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Department</th><th>Mobile</th><th>Status</th><th>Actions</th></tr></thead>
+<tbody>{% for a in admins %}<tr>
+<td>{{a[0]}}</td><td>{{a[1] or 'N/A'}}</td><td>{{a[2]}}</td><td><span class="badge dept">{{a[3]}}</span></td><td>{{a[4] or 'N/A'}}</td>
+<td>{% if a[5]==1 %}<span class="badge ok">Verified</span>{% else %}<span class="badge no">Unverified</span>{% endif %}</td>
+<td><div class="actions">
+<form action="/superadmin_toggle_admin_verify/{{a[0]}}" method="POST" style="display:inline"><button class="btn toggle" type="submit">{% if a[5]==1 %}🚫 Unverify{% else %}✅ Verify{% endif %}</button></form>
+<form class="rst-form" action="/superadmin_reset_admin_password/{{a[0]}}" method="POST"><input type="password" name="new_password" placeholder="New pass" required><button class="btn rst" type="submit">🔑</button></form>
+<button class="btn del" onclick="showC('Delete this admin permanently?',function(){var f=document.createElement('form');f.method='POST';f.action='/superadmin_delete_admin/{{a[0]}}';document.body.appendChild(f);f.submit();})">🗑️ Delete</button>
+</div></td>
+</tr>{% endfor %}</tbody></table>
+{% else %}<div class="empty"><div class="em-icon">🛡️</div><p>No admins registered yet</p></div>{% endif %}
+</div></div></div>
+
+<!-- COMPLAINTS PANEL -->
+<div class="panel" id="complaints">
+<div class="card"><div class="card-hd"><h2>📋 All Complaints</h2>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+<select class="search" style="min-width:150px" onchange="filterByDept(this.value)"><option value="">All Departments</option><option value="Water">Water</option><option value="Electricity">Electricity</option><option value="Gas">Gas</option><option value="Waste">Waste</option><option value="Sewage">Sewage</option></select>
+<input type="text" class="search" placeholder="🔍 Search..." onkeyup="filterTable('complaintsTable',this.value)">
+</div></div>
+<div class="card-bd">
+{% if complaints %}
+<table id="complaintsTable"><thead><tr><th>CID</th><th>Name</th><th>Ward</th><th>Dept</th><th>Category</th><th>Description</th><th>Status</th><th>Reply</th><th>Actions</th></tr></thead>
+<tbody>{% for c in complaints %}<tr data-dept="{{c[8]}}">
+<td style="font-size:11px;font-weight:700;color:var(--gold)">{{c[1] or c[0]}}</td>
+<td>{{c[2] or 'N/A'}}</td><td>{{c[3]}}</td>
+<td><span class="badge dept">{{c[8] or 'N/A'}}</span></td><td>{{c[4]}}</td>
+<td class="desc">{{c[5][:80]}}{% if c[5]|length > 80 %}...{% endif %}</td>
+<form action="/superadmin_update_complaint/{{c[0]}}" method="POST">
+<td><select name="status" class="sel" style="min-width:120px">
+<option value="Pending" {{'selected' if c[6]=='Pending'}}>Pending</option>
+<option value="In Progress" {{'selected' if c[6]=='In Progress'}}>In Progress</option>
+<option value="Resolved" {{'selected' if c[6]=='Resolved'}}>Resolved</option>
+<option value="Rejected" {{'selected' if c[6]=='Rejected'}}>Rejected</option>
+</select></td>
+<td><textarea name="admin_reply" class="ta" rows="2" style="min-width:140px" placeholder="Reply...">{{c[7] or ''}}</textarea></td>
+<td><div class="actions">
+<button type="submit" class="btn upd">✏️ Update</button>
+<button type="button" class="btn del" onclick="showC('Permanently delete this complaint?',function(){var f=document.createElement('form');f.method='POST';f.action='/superadmin_delete_complaint/{{c[0]}}';document.body.appendChild(f);f.submit();})">🗑️</button>
+</div></td></form>
+</tr>{% endfor %}</tbody></table>
+{% else %}<div class="empty"><div class="em-icon">📋</div><p>No complaints yet</p></div>{% endif %}
+</div></div></div>
+
+<!-- ANNOUNCEMENTS PANEL -->
+<div class="panel" id="announcements">
+<div class="card" style="margin-bottom:18px"><div class="card-hd"><h2>➕ Post New Announcement</h2></div>
+<div class="card-bd">
+<form action="/superadmin_add_announcement" method="POST">
+<div class="form-row">
+<div class="fg"><label>Ward</label><input type="text" name="ward" class="inp" placeholder="all (or ward number)" value="all"></div>
+<div class="fg"><label>Department</label><select name="department" class="sel"><option value="">General</option><option value="Water">Water</option><option value="Electricity">Electricity</option><option value="Gas">Gas</option><option value="Waste">Waste</option><option value="Sewage">Sewage</option></select></div>
+</div>
+<div style="margin-top:12px"><label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">Message</label><textarea name="message" class="ta" rows="3" placeholder="Write announcement..." required></textarea></div>
+<button type="submit" class="btn upd" style="margin-top:12px;padding:12px 24px">📢 Post Announcement</button>
+</form></div></div>
+
+<div class="card"><div class="card-hd"><h2>📢 All Announcements</h2><input type="text" class="search" placeholder="🔍 Search..." onkeyup="filterTable('annTable',this.value)"></div>
+<div class="card-bd">
+{% if announcements %}
+<table id="annTable"><thead><tr><th>ID</th><th>Ward</th><th>Department</th><th>Message</th><th>Date</th><th>Actions</th></tr></thead>
+<tbody>{% for a in announcements %}<tr>
+<td>{{a[0]}}</td><td><span class="badge ok">{{a[1]}}</span></td><td><span class="badge dept">{{a[3] or 'General'}}</span></td>
+<td class="desc">{{a[2][:100]}}{% if a[2]|length > 100 %}...{% endif %}</td>
+<td style="font-size:12px;color:var(--muted);white-space:nowrap">{{a[4].strftime('%d %b %Y %H:%M') if a[4] else 'N/A'}}</td>
+<td><button class="btn del" onclick="showC('Delete this announcement?',function(){var f=document.createElement('form');f.method='POST';f.action='/superadmin_delete_announcement/{{a[0]}}';document.body.appendChild(f);f.submit();})">🗑️ Delete</button></td>
+</tr>{% endfor %}</tbody></table>
+{% else %}<div class="empty"><div class="em-icon">📢</div><p>No announcements yet</p></div>{% endif %}
+</div></div></div>
+
+<!-- REPORTS PANEL -->
+<div class="panel" id="reports">
+<div class="card"><div class="card-hd"><h2>📥 Export Complaint Reports</h2></div>
+<div class="card-bd">
+<form onsubmit="return downloadCSV(event)">
+<div class="form-row">
+<div class="fg"><label>Department</label><select id="csv_dept" class="sel"><option value="">All Departments</option><option value="Water">Water</option><option value="Electricity">Electricity</option><option value="Gas">Gas</option><option value="Waste">Waste</option><option value="Sewage">Sewage</option></select></div>
+<div class="fg"><label>From Date</label><input type="date" id="csv_from" class="inp"></div>
+<div class="fg"><label>To Date</label><input type="date" id="csv_to" class="inp"></div>
+<div class="fg"><label>&nbsp;</label><button type="submit" class="btn dl" style="padding:12px 24px;width:100%">📥 Download CSV</button></div>
+</div>
+<p style="margin-top:10px;font-size:12px;color:var(--muted);font-style:italic">Leave fields empty to download all records</p>
+</form>
+</div></div></div>
+
+<!-- WORKERS PANEL -->
+<div class="panel" id="workers">
+<div class="card"><div class="card-hd"><h2>👷 Worker Management</h2></div>
+<div class="card-bd">
+<p style="color:var(--muted);margin-bottom:16px;font-size:14px;line-height:1.6">Manage all field workers across departments. Create, edit, delete workers and view assignment histories.</p>
+<a href="{{ url_for('superadmin_workers') }}" class="btn upd" style="display:inline-flex;align-items:center;gap:8px;padding:14px 28px;font-size:15px;text-decoration:none;">👷 Open Worker Management →</a>
+</div></div></div>
+</div>
+
+<footer>© 2026 CDGI | Super Admin Control Center • All Rights Reserved</footer>
+
+<script>
+function switchTab(id,el){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById(id).classList.add('active');el.classList.add('active');window.location.hash=id;}
+function filterTable(tid,q){var t=document.getElementById(tid);if(!t)return;var rows=t.querySelectorAll('tbody tr');q=q.toLowerCase();rows.forEach(function(r){r.style.display=r.textContent.toLowerCase().indexOf(q)>-1?'':'none';});}
+function filterByDept(d){var rows=document.querySelectorAll('#complaintsTable tbody tr');rows.forEach(function(r){if(!d||r.getAttribute('data-dept')===d)r.style.display='';else r.style.display='none';});}
+function downloadCSV(e){e.preventDefault();var d=document.getElementById('csv_dept').value,f=document.getElementById('csv_from').value,t=document.getElementById('csv_to').value;if(f&&t&&f>t){showP('"From" date cannot be after "To" date.','error');return false;}var url='/superadmin_download_csv?',p=[];if(d)p.push('department='+d);if(f)p.push('from_date='+f);if(t)p.push('to_date='+t);window.location.href=url+p.join('&');return false;}
+// Handle hash-based tab persistence
+document.addEventListener('DOMContentLoaded',function(){var h=window.location.hash.replace('#','');if(h){var panel=document.getElementById(h);if(panel){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));panel.classList.add('active');document.querySelectorAll('.tab').forEach(function(t){if(t.textContent.toLowerCase().indexOf(h)>-1||t.getAttribute('onclick').indexOf("'"+h+"'")>-1)t.classList.add('active');});}}});
+</script>
+</body>
+</html>

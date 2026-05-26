@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Manage Workers - Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+:root {
+  --bg-1: #eef2f7;
+  --bg-2: #dbeafe;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --white: rgba(255,255,255,0.88);
+  --border: rgba(255,255,255,0.35);
+  --shadow: 0 20px 45px rgba(15,23,42,0.12);
+  --shadow-soft: 0 10px 25px rgba(15,23,42,0.08);
+  --green: #00c853;
+  --green-dark: #00a86b;
+  --blue: #0077b6;
+  --blue-light: #00b4d8;
+  --red: #ff4d4d;
+  --orange: #f97316;
+  --purple: #7c3aed;
+  --purple-dark: #6d28d9;
+  --dark: #1f2027;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(0,180,216,0.18), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(0,200,83,0.15), transparent 28%),
+    linear-gradient(135deg, var(--bg-1), var(--bg-2));
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(31,32,39,0.82);
+  color: white;
+  padding: 16px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.16);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-mark {
+  width: 42px; height: 42px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  font-size: 20px;
+}
+.brand-text h1 { font-size: 18px; font-weight: 700; }
+.brand-text p { font-size: 12px; color: rgba(255,255,255,0.72); margin-top: 2px; }
+.header-actions { display: flex; align-items: center; gap: 10px; }
+
+.nav-btn {
+  padding: 10px 16px;
+  background: linear-gradient(135deg, var(--green-dark), var(--green));
+  color: white; border-radius: 999px; text-decoration: none;
+  font-size: 14px; font-weight: 600; transition: 0.3s ease;
+  border: none; cursor: pointer;
+}
+.nav-btn.secondary { background: linear-gradient(135deg, var(--red), #fb7185); }
+.nav-btn.purple { background: linear-gradient(135deg, var(--purple-dark), var(--purple)); }
+.nav-btn:hover { transform: translateY(-2px); }
+
+.main {
+  flex: 1;
+  width: min(1400px, calc(100% - 32px));
+  margin: 28px auto;
+  display: grid;
+  gap: 22px;
+}
+
+.panel {
+  background: var(--white);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.panel-inner { padding: 24px; }
+
+.panel-head {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 14px;
+  margin-bottom: 18px;
+}
+.panel-head-left { display: flex; gap: 14px; }
+.panel-icon {
+  width: 54px; height: 54px; border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 24px;
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  box-shadow: 0 14px 24px rgba(124,58,237,0.18);
+}
+.panel-head h2 { font-size: 22px; color: #111827; margin-bottom: 4px; }
+.panel-head p { font-size: 14px; color: var(--muted); }
+
+/* ── Create Worker Form ── */
+.create-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.form-group { display: grid; gap: 6px; }
+.form-group label {
+  font-size: 12px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+
+.input-field, .select-field {
+  width: 100%;
+  border: 1px solid rgba(17,24,39,0.12);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.9);
+  padding: 11px 14px;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: 0.3s ease;
+}
+.input-field:focus, .select-field:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 4px rgba(124,58,237,0.12);
+}
+
+.field-hint {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.form-actions-row {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+.btn {
+  border: none; border-radius: 12px;
+  padding: 11px 18px; font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: 0.3s ease;
+  display: inline-flex; align-items: center; gap: 6px;
+  text-decoration: none; color: white;
+}
+.btn-create {
+  background: linear-gradient(135deg, var(--green-dark), var(--green));
+  box-shadow: 0 8px 20px rgba(0,200,83,0.25);
+  padding: 13px 32px; font-size: 14px;
+}
+.btn-update {
+  background: linear-gradient(135deg, var(--blue), var(--blue-light));
+  box-shadow: 0 8px 20px rgba(0,119,182,0.2);
+}
+.btn-delete {
+  background: linear-gradient(135deg, var(--red), #fb7185);
+  box-shadow: 0 8px 20px rgba(255,77,77,0.25);
+}
+.btn:hover { transform: translateY(-2px); }
+
+/* ── Table ── */
+.table-container {
+  width: 100%; overflow-x: auto;
+  border-radius: 18px;
+  border: 1px solid rgba(17,24,39,0.05);
+  background: #fafbff;
+}
+table { width: 100%; min-width: 1100px; border-collapse: separate; border-spacing: 0; }
+thead th {
+  background: linear-gradient(135deg, #f8fbff, #f0f7ff);
+  color: #1f2937; font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  padding: 16px 14px;
+  border-bottom: 2px solid rgba(17,24,39,0.08);
+  white-space: nowrap;
+}
+tbody td {
+  padding: 14px;
+  border-bottom: 1px solid rgba(17,24,39,0.04);
+  vertical-align: middle; font-size: 14px; color: #1f2937;
+}
+tbody tr:hover { background: rgba(124,58,237,0.03); }
+tbody tr:last-child td { border-bottom: none; }
+
+.status-badge {
+  display: inline-block; padding: 4px 12px;
+  border-radius: 999px; font-size: 11px; font-weight: 700; color: white;
+}
+.status-badge.available { background: linear-gradient(135deg, var(--green-dark), var(--green)); }
+.status-badge.busy { background: linear-gradient(135deg, var(--orange), #fb923c); }
+.status-badge.on-leave { background: linear-gradient(135deg, var(--blue), var(--blue-light)); }
+.status-badge.inactive { background: linear-gradient(135deg, #6b7280, #9ca3af); }
+
+.empty-state { text-align: center; padding: 48px 24px; color: var(--muted); }
+.empty-icon { font-size: 64px; display: block; margin-bottom: 16px; opacity: 0.4; }
+
+/* ── Popup ── */
+.popup-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(15,23,42,0.45); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.popup-overlay.active { opacity: 1; visibility: visible; }
+.popup-box {
+  width: min(420px, calc(100vw - 32px));
+  background: rgba(255,255,255,0.96); backdrop-filter: blur(20px);
+  border-radius: 24px; box-shadow: 0 25px 60px rgba(15,23,42,0.22);
+  padding: 32px 28px 24px; text-align: center;
+  transform: scale(0.9) translateY(20px);
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+.popup-overlay.active .popup-box { transform: scale(1) translateY(0); }
+.popup-icon {
+  width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px;
+  background: linear-gradient(135deg, var(--blue), var(--green));
+  box-shadow: 0 12px 28px rgba(0,119,182,0.25); color: white;
+}
+.popup-icon.error { background: linear-gradient(135deg, #ef4444, #fb7185); }
+.popup-icon.warning { background: linear-gradient(135deg, var(--orange), #fbbf24); }
+.popup-title { font-size: 20px; font-weight: 700; color: #111827; margin-bottom: 8px; }
+.popup-message { font-size: 14px; line-height: 1.65; color: #6b7280; margin-bottom: 24px; }
+.popup-actions { display: flex; gap: 10px; justify-content: center; }
+.popup-btn {
+  border: none; border-radius: 14px; padding: 12px 28px;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: all 0.25s ease;
+}
+.popup-btn.primary { background: linear-gradient(135deg, var(--blue), var(--green)); color: white; }
+.popup-btn.primary:hover { transform: translateY(-2px); }
+.popup-btn.cancel { background: rgba(17,24,39,0.06); color: #374151; }
+.popup-btn.danger { background: linear-gradient(135deg, #ef4444, #fb7185); color: white; }
+.popup-btn.danger:hover { transform: translateY(-2px); }
+.popup-progress {
+  width: 100%; height: 4px;
+  background: rgba(17,24,39,0.06); border-radius: 999px;
+  margin-top: 16px; overflow: hidden;
+}
+.popup-progress-bar {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(135deg, var(--blue), var(--green));
+  animation: popupTimer 4s linear forwards;
+}
+@keyframes popupTimer { from { width: 100%; } to { width: 0%; } }
+
+/* ── Edit Modal ── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 5000;
+  background: rgba(15,23,42,0.5); backdrop-filter: blur(6px);
+  display: none; align-items: center; justify-content: center;
+}
+.modal-overlay.active { display: flex; }
+.modal-box {
+  width: min(520px, calc(100vw - 32px));
+  background: white; border-radius: 24px;
+  box-shadow: 0 25px 60px rgba(15,23,42,0.22);
+  padding: 28px; max-height: 90vh; overflow-y: auto;
+}
+.modal-box h3 { font-size: 20px; margin-bottom: 18px; color: #111827; }
+.modal-form-grid { display: grid; gap: 14px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+
+footer.user-footer {
+  margin-top: auto; width: 100%;
+  padding: 14px 24px;
+  background: rgba(31,32,39,0.88);
+  color: white; text-align: center;
+}
+
+@media (max-width: 900px) {
+  .create-form-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  header { padding: 14px 16px; flex-direction: column; gap: 14px; }
+  .main { width: min(100% - 20px, 1400px); margin: 18px auto; }
+  .panel-inner { padding: 18px; }
+  .create-form-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+<script>
+function showPopup(m, t) {
+  var o = document.getElementById('popupOverlay'),
+      i = document.getElementById('popupIcon'),
+      tt = document.getElementById('popupTitle'),
+      mg = document.getElementById('popupMessage'),
+      b = document.getElementById('popupProgressBar');
+  mg.textContent = m;
+  if (t === 'error') {
+    i.textContent = '❌'; i.className = 'popup-icon error'; tt.textContent = 'Error';
+  } else {
+    i.textContent = '✅'; i.className = 'popup-icon'; tt.textContent = 'Success';
+  }
+  b.style.animation = 'none'; b.offsetHeight; b.style.animation = 'popupTimer 4s linear forwards';
+  o.classList.add('active');
+  clearTimeout(window._pt);
+  window._pt = setTimeout(function () { closePopup(); }, 4000);
+}
+function closePopup() { document.getElementById('popupOverlay').classList.remove('active'); clearTimeout(window._pt); }
+function showConfirm(msg, onYes) {
+  document.getElementById('confirmMessage').textContent = msg;
+  document.getElementById('confirmOverlay').classList.add('active');
+  var btn = document.getElementById('confirmYesBtn');
+  var nb = btn.cloneNode(true);
+  btn.parentNode.replaceChild(nb, btn);
+  nb.addEventListener('click', function () { closeConfirm(); onYes(); });
+}
+function closeConfirm() { document.getElementById('confirmOverlay').classList.remove('active'); }
+function openEditModal(id, name, email, mobile, ward, status) {
+  document.getElementById('editModal').classList.add('active');
+  document.getElementById('editForm').action = '/admin_edit_worker/' + id;
+  document.getElementById('edit_name').value = name;
+  document.getElementById('edit_email').value = email;
+  document.getElementById('edit_mobile').value = mobile;
+  document.getElementById('edit_ward').value = ward;
+  document.getElementById('edit_status').value = status;
+}
+function closeEditModal() { document.getElementById('editModal').classList.remove('active'); }
+</script>
+</head>
+
+<body>
+
+<!-- ══════ Notification Popup ══════ -->
+<div class="popup-overlay" id="popupOverlay">
+  <div class="popup-box">
+    <div class="popup-icon" id="popupIcon">✅</div>
+    <div class="popup-title" id="popupTitle">Notification</div>
+    <div class="popup-message" id="popupMessage"></div>
+    <div class="popup-actions"><button class="popup-btn primary" onclick="closePopup()">Got it</button></div>
+    <div class="popup-progress"><div class="popup-progress-bar" id="popupProgressBar"></div></div>
+  </div>
+</div>
+
+<!-- ══════ Delete Confirm Popup ══════ -->
+<div class="popup-overlay" id="confirmOverlay">
+  <div class="popup-box">
+    <div class="popup-icon warning">⚠️</div>
+    <div class="popup-title">Confirm Delete</div>
+    <div class="popup-message" id="confirmMessage">Are you sure?</div>
+    <div class="popup-actions">
+      <button class="popup-btn cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="popup-btn danger" id="confirmYesBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ Edit Worker Modal ══════ -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <h3>✏️ Edit Worker</h3>
+    <form id="editForm" method="POST">
+      <div class="modal-form-grid">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" id="edit_name" name="name" class="input-field" required>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="edit_email" name="email" class="input-field" required>
+        </div>
+        <div class="form-group">
+          <label>Mobile</label>
+          <input type="text" id="edit_mobile" name="mobile_number" class="input-field" required>
+        </div>
+        <div class="form-group">
+          <label>Ward</label>
+          <select id="edit_ward" name="ward" class="select-field">
+            {% for i in range(1, 101) %}
+            <option value="Ward {{ i }}">Ward {{ i }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="edit_status" name="status" class="select-field">
+            <option value="Available">Available</option>
+            <option value="Busy">Busy</option>
+            <option value="On Leave">On Leave</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-update">💾 Save Changes</button>
+        <button type="button" class="btn" style="background:#6b7280;" onclick="closeEditModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══════ Overlay Click Handlers ══════ -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.getElementById('popupOverlay').addEventListener('click', function (e) { if (e.target === this) closePopup(); });
+  document.getElementById('confirmOverlay').addEventListener('click', function (e) { if (e.target === this) closeConfirm(); });
+  document.getElementById('editModal').addEventListener('click', function (e) { if (e.target === this) closeEditModal(); });
+});
+</script>
+
+<!-- ══════ Flash Messages ══════ -->
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var m = {{ messages[0] | tojson }},
+            t = 'success',
+            l = m.toLowerCase();
+        if (l.indexOf('error') !== -1 || l.indexOf('fail') !== -1 || l.indexOf('already') !== -1 || l.indexOf('denied') !== -1) t = 'error';
+        showPopup(m, t);
+      });
+    </script>
+  {% endif %}
+{% endwith %}
+
+<!-- ══════ Header ══════ -->
+<header>
+  <div class="brand">
+    <div class="brand-mark">👷</div>
+    <div class="brand-text">
+      <h1>Worker Management</h1>
+      <p>{{ department }} Department</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <a href="{{ url_for('admin') }}" class="nav-btn">← Dashboard</a>
+    <a href="{{ url_for('admin_worker_updates') }}" class="nav-btn purple">📝 Worker Updates</a>
+  </div>
+</header>
+
+<!-- ══════ Main Content ══════ -->
+<div class="main">
+
+  <!-- ── Add New Worker Form ── -->
+  <section class="panel">
+    <div class="panel-inner">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-icon">➕</div>
+          <div>
+            <h2>Add New Worker</h2>
+            <p>Create a worker for the {{ department }} department</p>
+          </div>
+        </div>
+      </div>
+
+      <form method="POST" action="{{ url_for('admin_create_worker') }}">
+        <div class="create-form-grid">
+
+          <!-- Row 1 -->
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" name="name" class="input-field" placeholder="Worker name" required>
+          </div>
+
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" name="email" class="input-field" placeholder="worker@email.com" required>
+          </div>
+
+          <div class="form-group">
+            <label>Mobile Number</label>
+            <input type="text" name="mobile_number" class="input-field" placeholder="10-digit number"
+              pattern="[0-9]{10}" maxlength="10" inputmode="numeric"
+              title="Mobile number must be exactly 10 digits" required>
+            <span class="field-hint">Exactly 10 digits</span>
+          </div>
+
+          <!-- Row 2 -->
+          <div class="form-group">
+            <label>Ward</label>
+            <select name="ward" class="select-field" required>
+              <option value="">Select Ward</option>
+              {% for i in range(1, 101) %}
+              <option value="Ward {{ i }}">Ward {{ i }}</option>
+              {% endfor %}
+            </select>
+            <span class="field-hint">Wards 1 – 100</span>
+          </div>
+
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" name="password" class="input-field"
+              placeholder="Create a strong password"
+              pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$"
+              title="Password must be 8 to 20 characters and include uppercase, lowercase, number, and special character"
+              required>
+            <span class="field-hint">8–20 chars · uppercase · lowercase · number · special (@$!%*?&)</span>
+          </div>
+
+          <div class="form-group" style="display:flex;align-items:flex-end;">
+            <button type="submit" class="btn btn-create" style="width:100%;justify-content:center;padding:13px;">
+              ➕ Create Worker
+            </button>
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ── Workers Table ── -->
+  <section class="panel">
+    <div class="panel-inner">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-icon">📋</div>
+          <div>
+            <h2>Department Workers</h2>
+            <p>{{ workers|length }} worker(s) in {{ department }} department</p>
+          </div>
+        </div>
+      </div>
+
+      {% if workers %}
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Mobile</th>
+              <th>Ward</th>
+              <th>Status</th>
+              <th>Verified</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for w in workers %}
+            <tr>
+              <td>{{ w[0] }}</td>
+              <td><strong>{{ w[1] }}</strong></td>
+              <td>{{ w[2] }}</td>
+              <td>{{ w[3] }}</td>
+              <td>{{ w[5] }}</td>
+              <td>
+                {% if w[6] == 'Available' %}<span class="status-badge available">Available</span>
+                {% elif w[6] == 'Busy' %}<span class="status-badge busy">Busy</span>
+                {% elif w[6] == 'On Leave' %}<span class="status-badge on-leave">On Leave</span>
+                {% else %}<span class="status-badge inactive">Inactive</span>{% endif %}
+              </td>
+              <td>{{ '✅' if w[7] else '❌' }}</td>
+              <td>
+                <div style="display:flex;gap:6px;">
+                  <button class="btn btn-update"
+                    onclick="openEditModal({{ w[0] }},'{{ w[1] }}','{{ w[2] }}','{{ w[3] }}','{{ w[5] }}','{{ w[6] }}')">
+                    ✏️ Edit
+                  </button>
+                  <button class="btn btn-delete"
+                    onclick="showConfirm('Delete worker {{ w[1] }}?', function(){
+                      var f=document.createElement('form');f.method='POST';
+                      f.action='/admin_delete_worker/{{ w[0] }}';
+                      document.body.appendChild(f);f.submit();
+                    })">
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">👷</div>
+        <h3>No workers yet</h3>
+        <p>Use the form above to add workers to your department.</p>
+      </div>
+      {% endif %}
+
+    </div>
+  </section>
+
+</div>
+
+<footer class="user-footer">
+  <div>© 2026 CDGI | Admin - Worker Management</div>
+</footer>
+
+</body>
+</html>

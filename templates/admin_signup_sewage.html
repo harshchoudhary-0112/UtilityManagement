@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sewage &amp; Drainage Admin Signup</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI', sans-serif;}
+:root{--bg-1:#eef2f7;--bg-2:#dbeafe;--text:#1f2937;--muted:#6b7280;--white:rgba(255,255,255,0.88);--border:rgba(255,255,255,0.35);--shadow:0 20px 45px rgba(15,23,42,0.12);--shadow-soft:0 10px 25px rgba(15,23,42,0.08);--green:#00c853;--green-dark:#00a86b;--blue:#0077b6;--blue-light:#00b4d8;--red:#ff4d4d;--indigo:#4f46e5;--indigo-dark:#4338ca;}
+body{min-height:100vh;color:var(--text);background:radial-gradient(circle at top left,rgba(79,70,229,0.18),transparent 30%),radial-gradient(circle at bottom right,rgba(67,56,202,0.15),transparent 28%),linear-gradient(135deg,var(--bg-1),var(--bg-2));display:flex;flex-direction:column;}
+header{position:sticky;top:0;z-index:1000;background:rgba(31,32,39,0.82);color:white;padding:16px 28px;display:flex;justify-content:space-between;align-items:center;backdrop-filter:blur(16px);box-shadow:0 8px 24px rgba(0,0,0,0.16);border-bottom:1px solid rgba(255,255,255,0.08);}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-mark{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--indigo),var(--indigo-dark));box-shadow:0 8px 16px rgba(0,0,0,0.18);font-size:20px;}
+.brand-text h1{font-size:18px;font-weight:700;}
+.brand-text p{font-size:12px;color:rgba(255,255,255,0.72);margin-top:2px;}
+.header-actions{display:flex;align-items:center;gap:10px;}
+.nav-btn{padding:10px 16px;background:linear-gradient(135deg,var(--indigo-dark),var(--indigo));color:white;border-radius:999px;text-decoration:none;font-size:14px;font-weight:600;transition:0.3s ease;box-shadow:0 10px 20px rgba(79,70,229,0.2);}
+.nav-btn:hover{transform:translateY(-2px);}
+.main{flex:1;width:min(1100px,calc(100% - 32px));margin:28px auto;display:grid;grid-template-columns:380px 1fr;gap:22px;align-items:start;}
+.panel{background:var(--white);border:1px solid var(--border);backdrop-filter:blur(16px);border-radius:24px;box-shadow:var(--shadow);overflow:hidden;}
+.panel-inner{padding:24px;}
+.hero-card{position:relative;}
+.hero-card::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(79,70,229,0.08),rgba(67,56,202,0.08));pointer-events:none;}
+.welcome-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,0.8);color:var(--indigo);font-size:13px;font-weight:700;box-shadow:var(--shadow-soft);margin-bottom:18px;}
+.hero-title{font-size:28px;line-height:1.2;color:#111827;margin-bottom:10px;}
+.hero-text{font-size:14px;line-height:1.7;color:var(--muted);margin-bottom:22px;max-width:38ch;}
+.info-list{display:grid;gap:14px;}
+.info-card{display:flex;align-items:flex-start;gap:14px;padding:16px;border-radius:18px;background:linear-gradient(135deg,#ffffff,#eef2ff);border:1px solid rgba(17,24,39,0.06);box-shadow:var(--shadow-soft);}
+.info-icon{width:48px;height:48px;border-radius:16px;display:flex;align-items:center;justify-content:center;color:white;font-size:22px;flex-shrink:0;background:linear-gradient(135deg,var(--indigo),var(--indigo-dark));}
+.info-body h3{font-size:15px;margin-bottom:4px;color:#111827;}
+.info-body p{font-size:13px;color:var(--muted);line-height:1.5;}
+.form-panel .panel-inner{padding:24px;}
+.panel-head{display:flex;align-items:flex-start;margin-bottom:18px;}
+.panel-head-left{display:flex;gap:14px;}
+.panel-icon{width:54px;height:54px;border-radius:18px;display:flex;align-items:center;justify-content:center;color:white;font-size:24px;background:linear-gradient(135deg,var(--indigo),var(--indigo-dark));box-shadow:0 14px 24px rgba(79,70,229,0.18);}
+.panel-head h2{font-size:24px;color:#111827;margin-bottom:4px;}
+.panel-head p{font-size:14px;color:var(--muted);line-height:1.6;}
+.flash-box{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.14);color:#b91c1c;padding:12px 14px;border-radius:14px;font-size:14px;margin-bottom:14px;}
+.form-grid{display:grid;gap:16px;}
+.form-group{display:grid;gap:8px;}
+.form-group label{font-size:14px;font-weight:600;color:#1f2937;}
+.input-field{width:100%;border:1px solid rgba(17,24,39,0.12);border-radius:16px;background:rgba(255,255,255,0.88);padding:14px 16px;font-size:14px;color:var(--text);outline:none;transition:0.3s ease;backdrop-filter:blur(8px);}
+.input-field:focus{border-color:var(--indigo);box-shadow:0 0 0 4px rgba(79,70,229,0.12);transform:translateY(-1px);}
+.input-field:invalid:focus{border-color:var(--red);box-shadow:0 0 0 4px rgba(239,68,68,0.12);}
+.input-field:valid:focus{border-color:var(--green);box-shadow:0 0 0 4px rgba(0,200,83,0.12);}
+.field-note{font-size:12px;color:var(--muted);margin-top:-2px;line-height:1.5;}
+.submit-btn{width:100%;border:none;border-radius:14px;padding:14px 22px;margin-top:14px;background:linear-gradient(135deg,var(--indigo),var(--indigo-dark));color:white;font-size:14px;font-weight:700;cursor:pointer;transition:0.3s ease;box-shadow:0 12px 24px rgba(79,70,229,0.2);}
+.submit-btn:hover{transform:translateY(-2px);}
+.resend-btn{width:100%;border:none;border-radius:14px;padding:14px 22px;margin-top:10px;background:linear-gradient(135deg,#64748b,#334155);color:white;font-size:14px;font-weight:700;cursor:pointer;transition:0.3s ease;}
+.alt-link{display:block;margin-top:18px;text-align:center;text-decoration:none;font-size:14px;font-weight:600;color:var(--indigo);}
+.alt-link:hover{text-decoration:underline;}
+footer.user-footer{margin-top:auto;width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 24px;background:rgba(31,32,39,0.88);color:white;backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,0.08);flex-shrink:0;}
+.footer-links{display:flex;align-items:center;gap:10px;}
+.footer-link{text-decoration:none;color:white;padding:8px 13px;border-radius:10px;font-size:13px;font-weight:600;}
+.footer-link.home{background:linear-gradient(135deg,var(--indigo-dark),var(--indigo));}
+@media(max-width:980px){.main{grid-template-columns:1fr;}}
+@media(max-width:640px){header{padding:14px 16px;align-items:flex-start;gap:14px;flex-direction:column;}.header-actions{width:100%;justify-content:space-between;flex-wrap:wrap;}.main{width:min(100% - 20px,1100px);margin:18px auto;}.panel-inner{padding:18px;}footer.user-footer{padding:12px 14px;flex-direction:column;align-items:flex-start;}.footer-links{width:100%;flex-wrap:wrap;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">🚰</div>
+    <div class="brand-text">
+      <h1>Sewage &amp; Drainage Admin Signup</h1>
+      <p>Create your admin account to manage sewage and drainage services</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <a href="/" class="nav-btn">Home</a>
+  </div>
+</header>
+
+<div class="main">
+  <section class="panel hero-card">
+    <div class="panel-inner">
+      {% if session.get('pending_admin_signup') %}
+        <div class="welcome-badge">📱 Mobile Verification</div>
+        <h2 class="hero-title">Verify your mobile number to complete sewage admin account creation.</h2>
+        <p class="hero-text">We have sent a 6-digit verification code to your mobile number. Enter that code to activate your new sewage &amp; drainage admin account.</p>
+      {% else %}
+        <div class="welcome-badge">🚰 Sewage &amp; Drainage Access</div>
+        <h2 class="hero-title">Create your sewage &amp; drainage admin account.</h2>
+        <p class="hero-text">Register to manage drainage blockages, sewage overflows, and maintenance tracking. Your mobile and email will be verified after signup.</p>
+      {% endif %}
+
+      <div class="info-list">
+        <article class="info-card">
+          <div class="info-icon">🚧</div>
+          <div class="info-body"><h3>Blockage Complaints</h3><p>Respond to drain and sewer blockage reports, dispatch maintenance crews, and track resolution.</p></div>
+        </article>
+        <article class="info-card">
+          <div class="info-icon">🌊</div>
+          <div class="info-body"><h3>Overflow Reporting</h3><p>Handle sewage overflow incidents, coordinate emergency response, and update affected residents.</p></div>
+        </article>
+        <article class="info-card">
+          <div class="info-icon">🔧</div>
+          <div class="info-body"><h3>Maintenance Tracking</h3><p>Track scheduled maintenance, inspect drainage infrastructure, and manage service requests.</p></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel form-panel">
+    <div class="panel-inner">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-icon">{% if session.get('pending_admin_signup') %}📱{% else %}🚰{% endif %}</div>
+          <div>
+            <h2>{% if session.get('pending_admin_signup') %}Verify Mobile{% else %}Sewage Admin Signup{% endif %}</h2>
+            <p>{% if session.get('pending_admin_signup') %}Enter the verification code sent to your mobile number.{% else %}Fill in your details below to create a new sewage &amp; drainage admin account.{% endif %}</p>
+          </div>
+        </div>
+      </div>
+
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}<div class="flash-box">{{ messages[0] }}</div>{% endif %}
+      {% endwith %}
+
+      {% if session.get('pending_admin_signup') %}
+        <div style="text-align:center;padding:8px 0 4px;">
+          <div style="font-size:14px;color:#111827;margin-bottom:6px;font-weight:600;">📱 {{ session['pending_admin_signup']['mobile_number'] }}</div>
+          <div style="font-size:13px;color:#6b7280;line-height:1.6;margin-bottom:16px;">Enter the 6-digit code sent to this mobile number. Valid for 10 minutes.</div>
+        </div>
+        <form method="POST" action="{{ url_for('admin_signup') }}">
+          <input type="hidden" name="form_type" value="verify_otp">
+          <input type="hidden" name="page" value="sewage">
+          <div class="form-grid"><div class="form-group">
+            <label for="otp">Verification Code</label>
+            <input type="text" id="otp" name="otp" class="input-field" style="text-align:center;font-size:20px;letter-spacing:6px;font-weight:700;" placeholder="000000" pattern="\d{6}" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required>
+            <small class="field-note">Only numbers allowed, exactly 6 digits.</small>
+          </div></div>
+          <button type="submit" class="submit-btn">Verify &amp; Create Account</button>
+        </form>
+        <form method="POST" action="{{ url_for('admin_signup') }}">
+          <input type="hidden" name="form_type" value="resend_otp">
+          <input type="hidden" name="page" value="sewage">
+          <button type="submit" class="resend-btn">Resend Code</button>
+        </form>
+        <a href="{{ url_for('admin_signup_cancel') }}" class="alt-link">Use different details / Start again</a>
+      {% else %}
+        <form method="POST" action="{{ url_for('admin_signup') }}" id="sewageSignupForm">
+          <input type="hidden" name="form_type" value="signup">
+          <input type="hidden" name="page" value="sewage">
+          <input type="hidden" name="department" value="Sewage">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="sewage-name">Full Name</label>
+              <input id="sewage-name" class="input-field" type="text" name="name" placeholder="Enter full name" pattern="[A-Za-z\s]{2,50}" title="Only letters and spaces, 2 to 50 characters" required>
+              <p class="field-note">Only letters and spaces allowed, 2 to 50 characters.</p>
+            </div>
+            <div class="form-group">
+              <label for="sewage-email">Email Address</label>
+              <input id="sewage-email" class="input-field" type="email" name="email" placeholder="Enter email address" maxlength="100" required>
+              <p class="field-note">Enter a valid email address.</p>
+            </div>
+            <div class="form-group">
+              <label for="sewage-mobile">Mobile Number</label>
+              <input id="sewage-mobile" class="input-field" type="text" name="mobile_number" placeholder="Enter 10-digit mobile number" pattern="[0-9]{10}" maxlength="10" inputmode="numeric" required>
+              <p class="field-note">Only numbers allowed, exactly 10 digits.</p>
+            </div>
+            <div class="form-group">
+              <label for="sewage-password">Password</label>
+              <input id="sewage-password" class="input-field" type="password" name="password" placeholder="Create password" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$" title="8-20 chars with uppercase, lowercase, number, special char" required>
+              <p class="field-note">8 to 20 characters, include uppercase, lowercase, number, and special character.</p>
+            </div>
+          </div>
+          <button type="submit" class="submit-btn">Create Sewage Admin Account</button>
+        </form>
+        <a href="{{ url_for('adminlogin') }}" class="alt-link">Already have a sewage admin account? Login</a>
+      {% endif %}
+    </div>
+  </section>
+</div>
+
+<footer class="user-footer">
+  <div>Sewage &amp; drainage admin portal access</div>
+  <div class="footer-links"><a href="/" class="footer-link home">Back to Home</a></div>
+</footer>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  var n=document.getElementById("sewage-name"),m=document.getElementById("sewage-mobile"),o=document.getElementById("otp");
+  if(n)n.addEventListener("input",function(){this.value=this.value.replace(/[^A-Za-z\s]/g,"");});
+  if(m)m.addEventListener("input",function(){this.value=this.value.replace(/[^0-9]/g,"").slice(0,10);});
+  if(o)o.addEventListener("input",function(){this.value=this.value.replace(/[^0-9]/g,"").slice(0,6);});
+});
+</script>
+
+</body>
+</html>

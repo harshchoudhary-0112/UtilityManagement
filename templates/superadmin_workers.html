@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>All Workers - Super Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='superadmin.css') }}">
+<style>
+.worker-section{margin-top:22px;}
+.add-worker-form{background:linear-gradient(135deg,#f8fbff,#f0f7ff);border:1px solid rgba(17,24,39,0.06);border-radius:18px;padding:22px;margin-bottom:22px;}
+.add-worker-form h3{font-size:18px;color:#111827;margin-bottom:16px;}
+.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;align-items:end;}
+.form-group{display:grid;gap:6px;}
+.form-group label{font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;}
+.form-input{width:100%;border:1px solid rgba(17,24,39,0.12);border-radius:12px;background:rgba(255,255,255,0.9);padding:10px 14px;font-size:14px;color:#1f2937;outline:none;transition:0.3s ease;}
+.form-input:focus{border-color:#0077b6;box-shadow:0 0 0 3px rgba(0,119,182,0.1);}
+.btn-add{border:none;border-radius:12px;padding:10px 20px;background:linear-gradient(135deg,#00a86b,#00c853);color:white;font-size:13px;font-weight:700;cursor:pointer;transition:0.3s ease;}
+.btn-add:hover{transform:translateY(-2px);}
+.workers-table{width:100%;overflow-x:auto;border-radius:16px;border:1px solid rgba(17,24,39,0.05);background:#fafbff;}
+.workers-table table{width:100%;min-width:1000px;border-collapse:separate;border-spacing:0;}
+.workers-table thead th{background:linear-gradient(135deg,#f8fbff,#f0f7ff);color:#1f2937;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:14px 12px;border-bottom:2px solid rgba(17,24,39,0.08);white-space:nowrap;}
+.workers-table tbody td{padding:12px;border-bottom:1px solid rgba(17,24,39,0.04);font-size:14px;color:#1f2937;vertical-align:middle;}
+.workers-table tbody tr:hover{background:rgba(0,119,182,0.03);}
+.status-badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:700;color:white;}
+.status-badge.available{background:linear-gradient(135deg,#00a86b,#00c853);}
+.status-badge.busy{background:linear-gradient(135deg,#f97316,#fb923c);}
+.status-badge.on-leave{background:linear-gradient(135deg,#0077b6,#00b4d8);}
+.status-badge.inactive{background:linear-gradient(135deg,#6b7280,#9ca3af);}
+.btn-sm{border:none;border-radius:10px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:0.3s ease;color:white;}
+.btn-sm.delete{background:linear-gradient(135deg,#ef4444,#fb7185);}
+.btn-sm:hover{transform:translateY(-1px);}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="brand-mark">🛡️</div>
+    <div class="brand-text">
+      <h1>Workers Management</h1>
+      <p>Super Admin — All Department Workers</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <a href="{{ url_for('superadmin_dashboard') }}" class="nav-btn">← Dashboard</a>
+    <a href="{{ url_for('superadmin_logout') }}" class="nav-btn secondary">🚪 Logout</a>
+  </div>
+</header>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <script>document.addEventListener('DOMContentLoaded',function(){
+      var m={{ messages[0] | tojson }};
+      if(typeof showPopup==='function'){var t='success',l=m.toLowerCase();if(l.indexOf('error')!==-1||l.indexOf('fail')!==-1)t='error';showPopup(m,t);}
+      else{alert(m);}
+    });</script>
+  {% endif %}
+{% endwith %}
+
+<div class="main">
+  <section class="panel active">
+    <div class="panel-inner">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-icon" style="background:linear-gradient(135deg,#0077b6,#00c853);">👷</div>
+          <div>
+            <h2>All Workers ({{ workers|length }})</h2>
+            <p>View and manage workers across all departments</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Worker Form -->
+      <div class="add-worker-form">
+        <h3>➕ Add New Worker</h3>
+        <form method="POST" action="{{ url_for('superadmin_add_worker') }}">
+          <div class="form-row">
+            <div class="form-group"><label>Name</label><input type="text" name="name" class="form-input" required></div>
+            <div class="form-group"><label>Email</label><input type="email" name="email" class="form-input" required></div>
+            <div class="form-group"><label>Mobile</label><input type="text" name="mobile_number" class="form-input" maxlength="10" required></div>
+            <div class="form-group"><label>Department</label>
+              <select name="department" class="form-input" required>
+                <option value="">Select</option>
+                <option value="Water">Water</option>
+                <option value="Electricity">Electricity</option>
+                <option value="Gas">Gas</option>
+                <option value="Waste">Waste</option>
+                <option value="Sewage">Sewage</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Ward</label>
+              <select name="ward" class="form-input" required>
+                <option value="">Select</option>
+                {% for i in range(1, 11) %}<option value="Ward {{ i }}">Ward {{ i }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="form-group"><label>Password</label><input type="password" name="password" class="form-input" required></div>
+            <div class="form-group" style="align-self:end;"><button type="submit" class="btn-add" style="width:100%;">➕ Add Worker</button></div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Workers Table -->
+      {% if workers %}
+      <div class="workers-table">
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Name</th><th>Email</th><th>Mobile</th><th>Department</th><th>Ward</th><th>Status</th><th>Verified</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            {% for w in workers %}
+            <tr>
+              <td>{{ w[0] }}</td>
+              <td><strong>{{ w[1] }}</strong></td>
+              <td>{{ w[2] }}</td>
+              <td>{{ w[3] }}</td>
+              <td>{{ w[4] }}</td>
+              <td>{{ w[5] }}</td>
+              <td>
+                {% if w[6] == 'Available' %}<span class="status-badge available">Available</span>
+                {% elif w[6] == 'Busy' %}<span class="status-badge busy">Busy</span>
+                {% elif w[6] == 'On Leave' %}<span class="status-badge on-leave">On Leave</span>
+                {% else %}<span class="status-badge inactive">Inactive</span>{% endif %}
+              </td>
+              <td>{{ '✅' if w[7] else '❌' }}</td>
+              <td>
+                <form method="POST" action="{{ url_for('superadmin_delete_worker', id=w[0]) }}" style="display:inline;" onsubmit="return confirm('Delete worker {{ w[1] }}?');">
+                  <button type="submit" class="btn-sm delete">🗑️ Delete</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:40px;color:#6b7280;">
+        <div style="font-size:50px;margin-bottom:12px;opacity:0.4;">👷</div>
+        <h3>No workers registered</h3>
+        <p>Use the form above to add workers.</p>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+</div>
+
+<footer class="user-footer"><div>© 2026 CDGI | Super Admin Panel</div></footer>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Assign Worker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+:root{--bg-1:#eef2f7;--bg-2:#dbeafe;--text:#1f2937;--muted:#6b7280;--white:rgba(255,255,255,0.88);--border:rgba(255,255,255,0.35);--shadow:0 20px 45px rgba(15,23,42,0.12);--shadow-soft:0 10px 25px rgba(15,23,42,0.08);--green:#00c853;--green-dark:#00a86b;--blue:#0077b6;--red:#ff4d4d;--orange:#f97316;--purple:#7c3aed;--purple-dark:#6d28d9;}
+body{min-height:100vh;color:var(--text);background:radial-gradient(circle at top left,rgba(0,180,216,0.18),transparent 30%),radial-gradient(circle at bottom right,rgba(0,200,83,0.15),transparent 28%),linear-gradient(135deg,var(--bg-1),var(--bg-2));display:flex;flex-direction:column;}
+header{position:sticky;top:0;z-index:1000;background:rgba(31,32,39,0.82);color:white;padding:16px 28px;display:flex;justify-content:space-between;align-items:center;backdrop-filter:blur(16px);box-shadow:0 8px 24px rgba(0,0,0,0.16);}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-mark{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--blue),var(--purple));font-size:20px;}
+.brand-text h1{font-size:18px;font-weight:700;}
+.brand-text p{font-size:12px;color:rgba(255,255,255,0.72);margin-top:2px;}
+.nav-btn{padding:10px 16px;background:linear-gradient(135deg,var(--green-dark),var(--green));color:white;border-radius:999px;text-decoration:none;font-size:14px;font-weight:600;transition:0.3s ease;}
+.nav-btn:hover{transform:translateY(-2px);}
+.main{flex:1;width:min(800px,calc(100% - 32px));margin:28px auto;display:grid;gap:22px;}
+.panel{background:var(--white);border:1px solid var(--border);backdrop-filter:blur(16px);border-radius:24px;box-shadow:var(--shadow);overflow:hidden;}
+.panel-inner{padding:28px;}
+.panel-head{display:flex;align-items:flex-start;margin-bottom:22px;}
+.panel-head-left{display:flex;gap:14px;}
+.panel-icon{width:54px;height:54px;border-radius:18px;display:flex;align-items:center;justify-content:center;color:white;font-size:24px;background:linear-gradient(135deg,var(--purple),var(--blue));box-shadow:0 14px 24px rgba(124,58,237,0.18);}
+.panel-head h2{font-size:22px;color:#111827;margin-bottom:4px;}
+.panel-head p{font-size:14px;color:var(--muted);}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px;}
+.detail-item{background:#f8fafc;border:1px solid rgba(17,24,39,0.06);border-radius:16px;padding:14px 16px;}
+.detail-item span{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;}
+.detail-item strong{color:#111827;font-size:14px;}
+.detail-item.full{grid-column:1/-1;}
+.worker-card{display:flex;align-items:center;gap:16px;padding:18px;border-radius:18px;background:linear-gradient(135deg,#ffffff,#f8fbff);border:1px solid rgba(17,24,39,0.06);box-shadow:var(--shadow-soft);margin-bottom:12px;cursor:pointer;transition:0.3s ease;}
+.worker-card:hover{transform:translateY(-3px);box-shadow:0 16px 30px rgba(15,23,42,0.12);}
+.worker-card.selected{border:2px solid var(--purple);background:linear-gradient(135deg,#f5f3ff,#ede9fe);}
+.worker-icon{width:50px;height:50px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--purple),var(--blue));color:white;font-size:22px;flex-shrink:0;}
+.worker-info h3{font-size:16px;color:#111827;margin-bottom:2px;}
+.worker-info p{font-size:13px;color:var(--muted);}
+.worker-meta{margin-left:auto;text-align:right;}
+.worker-meta .ward-badge{display:inline-block;padding:4px 12px;border-radius:999px;background:rgba(124,58,237,0.1);color:var(--purple);font-size:12px;font-weight:700;}
+.submit-btn{border:none;border-radius:14px;padding:14px 28px;background:linear-gradient(135deg,var(--purple-dark),var(--purple));color:white;font-size:14px;font-weight:700;cursor:pointer;transition:0.3s ease;box-shadow:0 12px 24px rgba(124,58,237,0.25);width:100%;margin-top:16px;}
+.submit-btn:hover{transform:translateY(-2px);}
+.empty-state{text-align:center;padding:40px;color:var(--muted);}
+.empty-icon{font-size:50px;display:block;margin-bottom:12px;opacity:0.4;}
+.flash-box{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.14);color:#dc2626;padding:12px 14px;border-radius:14px;font-size:14px;margin-bottom:18px;}
+footer.user-footer{margin-top:auto;width:100%;padding:14px 24px;background:rgba(31,32,39,0.88);color:white;text-align:center;}
+@media (max-width:640px){header{padding:14px 16px;flex-direction:column;gap:14px;}.main{width:min(100% - 20px,800px);margin:18px auto;}.panel-inner{padding:20px;}.detail-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="brand-mark">👷</div>
+    <div class="brand-text">
+      <h1>Assign Worker</h1>
+      <p>Complaint {{ complaint[1] }}</p>
+    </div>
+  </div>
+  <div><a href="{{ url_for('admin') }}" class="nav-btn">← Back to Dashboard</a></div>
+</header>
+
+<div class="main">
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}<div class="flash-box">{{ messages[0] }}</div>{% endif %}
+  {% endwith %}
+
+  <!-- Complaint Info -->
+  <section class="panel">
+    <div class="panel-inner">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-icon">📋</div>
+          <div><h2>Complaint Details</h2><p>Select a worker to assign</p></div>
+        </div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-item"><span>Complaint ID</span><strong>{{ complaint[1] }}</strong></div>
+        <div class="detail-item"><span>Citizen</span><strong>{{ complaint[2] }}</strong></div>
+        <div class="detail-item"><span>Ward</span><strong>{{ complaint[3] }}</strong></div>
+        <div class="detail-item"><span>Category</span><strong>{{ complaint[4] }}</strong></div>
+        <div class="detail-item full"><span>Description</span><strong>{{ complaint[5] }}</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Available Workers -->
+  <section class="panel">
+    <div class="panel-inner">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-icon">👥</div>
+          <div><h2>Available Workers</h2><p>Workers not currently assigned to active complaints</p></div>
+        </div>
+      </div>
+
+      {% if workers %}
+      <form method="POST" action="{{ url_for('admin_assign_worker', complaint_id=complaint[0]) }}">
+        {% for w in workers %}
+        <label class="worker-card" for="worker_{{ w[0] }}" id="card_{{ w[0] }}" onclick="document.querySelectorAll('.worker-card').forEach(c=>c.classList.remove('selected'));this.classList.add('selected');">
+          <input type="radio" name="worker_id" value="{{ w[0] }}" id="worker_{{ w[0] }}" style="display:none;" required>
+          <div class="worker-icon">👷</div>
+          <div class="worker-info">
+            <h3>{{ w[1] }}</h3>
+            <p>{{ w[2] }} · {{ w[5] }}</p>
+          </div>
+          <div class="worker-meta">
+            <div class="ward-badge">{{ w[3] }}</div>
+          </div>
+        </label>
+        {% endfor %}
+        <button type="submit" class="submit-btn">✅ Assign Selected Worker</button>
+      </form>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">😕</div>
+        <h3>No available workers</h3>
+        <p>All workers in this department are currently busy with other complaints. Try again later or create new workers.</p>
+        <a href="{{ url_for('admin_workers') }}" class="nav-btn" style="display:inline-block;margin-top:16px;">👷 Manage Workers</a>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+</div>
+
+<footer class="user-footer"><div>© 2026 CDGI | Admin Panel</div></footer>
+</body>
+</html>

@@ -340,6 +340,10 @@
                 <a href="/dashboard" class="nav-btn secondary">User Dashboard</a>
                 <a href="/logout" class="nav-btn orange">Logout</a>
 
+            {% elif session.get('worker_id') %}
+                <a href="/worker_dashboard" class="nav-btn secondary">Worker Dashboard</a>
+                <a href="/worker_logout" class="nav-btn orange">Logout</a>
+
             {% else %}
                 <a href="/login" class="nav-btn secondary">User Login</a>
                 <a href="/signup" class="nav-btn">Register</a>
@@ -348,7 +352,7 @@
     </header>
 
     <section class="hero">
-        <h2>Smart City Utility Portal</h2>
+        <h2>Your City, Your Voice — Report, Track &amp; Resolve Instantly</h2>
         <p>Manage complaints, track urban services, and stay updated with the latest ward and city announcements.</p>
 
         <div class="cta-group">
@@ -360,9 +364,13 @@
                 <a href="/admin" class="cta">Open Admin Panel</a>
                 <a href="/admin/announcement" class="cta alt">Post Announcement</a>
 
+            {% elif session.get('worker_id') %}
+                <a href="/worker_dashboard" class="cta">Worker Dashboard</a>
+
             {% else %}
                 <a href="/login" class="cta">Login to Continue</a>
                 <a href="/signup" class="cta alt">Create Account</a>
+                <a href="/worker_login" class="cta alt">👷 Worker Login</a>
             {% endif %}
         </div>
     </section>
@@ -378,6 +386,24 @@
             <div class="icon">⚡</div>
             <h3>Electricity Services</h3>
             <p>Report outages, monitor updates, and stay informed about power supply issues.</p>
+        </div>
+
+        <div class="card">
+            <div class="icon">🔥</div>
+            <h3>Gas Services</h3>
+            <p>Book LPG cylinders, pay PNG bills, and report gas leakage incidents instantly.</p>
+        </div>
+
+        <div class="card">
+            <div class="icon">🗑️</div>
+            <h3>Waste Management</h3>
+            <p>Schedule pickups, report missed collections, and submit recycling requests.</p>
+        </div>
+
+        <div class="card">
+            <div class="icon">🚰</div>
+            <h3>Sewage &amp; Drainage</h3>
+            <p>Report blockages, overflow issues, and track drainage maintenance status.</p>
         </div>
 
         <div class="card">
@@ -418,8 +444,14 @@
                 <a href="/dashboard" class="footer-link dashboard">Dashboard</a>
                 <a href="/logout" class="footer-link logout">Logout</a>
 
+            {% elif session.get('worker_id') %}
+                <span class="mode-badge">Worker: {{ session.get('worker_name', 'Worker') }}</span>
+                <a href="/worker_dashboard" class="footer-link dashboard">Dashboard</a>
+                <a href="/worker_logout" class="footer-link logout">Logout</a>
+
             {% else %}
                 <a href="/adminpage" class="footer-link login">Admin Login</a>
+                <a href="/worker_login" class="footer-link login" style="background:#00897b;">Worker Login</a>
             {% endif %}
         </div>
     </footer>

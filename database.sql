@@ -25,7 +25,10 @@ CREATE TABLE admins (
 INSERT INTO admins (email, password, department)
 VALUES
 ('wateradmin@gmail.com', 'admin123', 'Water'),
-('electricadmin@gmail.com', 'admin123', 'Electricity');
+('electricadmin@gmail.com', 'admin123', 'Electricity'),
+('gasadmin@gmail.com', 'admin123', 'Gas'),
+('wasteadmin@gmail.com', 'admin123', 'Waste'),
+('sewageadmin@gmail.com', 'admin123', 'Sewage');
 
 CREATE TABLE complaintss (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -95,3 +98,4 @@ select * from complaints_history ;
 select * from announcements;
 ALTER TABLE users ADD COLUMN profile_photo VARCHAR(255) DEFAULT NULL;
 ALTER TABLE admins ADD COLUMN profile_photo VARCHAR(255) DEFAULT NULL;
+ALTER TABLE announcements ADD COLUMN department VARCHAR(50) DEFAULT NULL;

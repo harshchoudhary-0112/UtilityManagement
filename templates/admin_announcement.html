@@ -5,7 +5,6 @@
 <title>Admin - Send Announcement</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-
 <style>
 *{
   margin:0;
@@ -13,7 +12,6 @@
   box-sizing:border-box;
   font-family:'Segoe UI', sans-serif;
 }
-
 
 :root{
   --bg-1:#eef2f7;
@@ -32,7 +30,6 @@
   --orange-light:#fb7185;
 }
 
-
 body{
   min-height:100vh;
   color:var(--text);
@@ -43,7 +40,6 @@ body{
   display:flex;
   flex-direction:column;
 }
-
 
 header{
   position:sticky;
@@ -60,13 +56,11 @@ header{
   border-bottom:1px solid rgba(255,255,255,0.08);
 }
 
-
 .brand{
   display:flex;
   align-items:center;
   gap:12px;
 }
-
 
 .brand-mark{
   width:42px;
@@ -80,12 +74,10 @@ header{
   font-size:20px;
 }
 
-
 .brand-text h1{
   font-size:18px;
   font-weight:700;
 }
-
 
 .brand-text p{
   font-size:12px;
@@ -93,13 +85,11 @@ header{
   margin-top:2px;
 }
 
-
 .header-actions{
   display:flex;
   align-items:center;
   gap:10px;
 }
-
 
 .nav-btn{
   padding:10px 16px;
@@ -113,17 +103,14 @@ header{
   box-shadow:0 10px 20px rgba(0,200,83,0.2);
 }
 
-
 .nav-btn.secondary{
   background:linear-gradient(135deg,var(--red),var(--orange-light));
   box-shadow:0 10px 20px rgba(255,77,77,0.18);
 }
 
-
 .nav-btn:hover{
   transform:translateY(-2px);
 }
-
 
 .main{
   flex:1;
@@ -135,7 +122,6 @@ header{
   align-items:start;
 }
 
-
 .panel{
   background:rgba(255,255,255,0.88);
   border:1px solid rgba(255,255,255,0.35);
@@ -145,16 +131,13 @@ header{
   overflow:hidden;
 }
 
-
 .panel-inner{
   padding:24px;
 }
 
-
 .hero-card{
   position:relative;
 }
-
 
 .hero-card::before{
   content:"";
@@ -163,7 +146,6 @@ header{
   background:linear-gradient(135deg, rgba(0,119,182,0.08), rgba(0,200,83,0.08));
   pointer-events:none;
 }
-
 
 .welcome-badge{
   display:inline-flex;
@@ -179,14 +161,12 @@ header{
   margin-bottom:18px;
 }
 
-
 .hero-title{
   font-size:28px;
   line-height:1.2;
   color:#111827;
   margin-bottom:10px;
 }
-
 
 .hero-text{
   font-size:14px;
@@ -196,12 +176,10 @@ header{
   max-width:38ch;
 }
 
-
 .info-list{
   display:grid;
   gap:14px;
 }
-
 
 .info-card{
   display:flex;
@@ -213,7 +191,6 @@ header{
   border:1px solid rgba(17,24,39,0.06);
   box-shadow:var(--shadow-soft);
 }
-
 
 .info-icon{
   width:48px;
@@ -228,13 +205,11 @@ header{
   background:linear-gradient(135deg,var(--blue),var(--blue-light));
 }
 
-
 .info-body h3{
   font-size:15px;
   margin-bottom:4px;
   color:#111827;
 }
-
 
 .info-body p{
   font-size:13px;
@@ -242,19 +217,16 @@ header{
   line-height:1.5;
 }
 
-
 .panel-head{
   display:flex;
   align-items:flex-start;
   margin-bottom:18px;
 }
 
-
 .panel-head-left{
   display:flex;
   gap:14px;
 }
-
 
 .panel-icon{
   width:54px;
@@ -269,13 +241,11 @@ header{
   box-shadow:0 14px 24px rgba(0,119,182,0.18);
 }
 
-
 .panel-head h2{
   font-size:24px;
   color:#111827;
   margin-bottom:4px;
 }
-
 
 .panel-head p{
   font-size:14px;
@@ -283,36 +253,21 @@ header{
   line-height:1.6;
 }
 
-
-.flash-message{
-  background:rgba(0,200,83,0.12);
-  border:1px solid rgba(0,200,83,0.2);
-  color:#0f7a43;
-  padding:12px 14px;
-  border-radius:14px;
-  font-size:14px;
-  margin-bottom:16px;
-}
-
-
 .form-grid{
   display:grid;
   gap:16px;
 }
-
 
 .form-group{
   display:grid;
   gap:8px;
 }
 
-
 .form-group label{
   font-size:14px;
   font-weight:600;
   color:#1f2937;
 }
-
 
 .select-field,
 .textarea-field{
@@ -328,7 +283,6 @@ header{
   backdrop-filter:blur(8px);
 }
 
-
 .select-field:focus,
 .textarea-field:focus{
   border-color:var(--blue);
@@ -336,12 +290,10 @@ header{
   transform:translateY(-1px);
 }
 
-
 .textarea-field{
   min-height:140px;
   resize:vertical;
 }
-
 
 .form-actions{
   display:flex;
@@ -349,7 +301,6 @@ header{
   gap:12px;
   margin-top:12px;
 }
-
 
 .submit-btn{
   border:none;
@@ -364,11 +315,9 @@ header{
   box-shadow:0 12px 24px rgba(0,119,182,0.2);
 }
 
-
 .submit-btn:hover{
   transform:translateY(-2px);
 }
-
 
 .back-link{
   display:inline-flex;
@@ -384,6 +333,16 @@ header{
   border:1px solid rgba(0,119,182,0.12);
 }
 
+.dept-badge{
+  display:inline-block;
+  padding:4px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+  color:white;
+  background:linear-gradient(135deg,var(--blue),var(--green));
+  box-shadow:0 4px 12px rgba(0,119,182,0.2);
+}
 
 footer.admin-footer{
   margin-top:auto;
@@ -400,13 +359,11 @@ footer.admin-footer{
   flex-shrink:0;
 }
 
-
 .footer-links{
   display:flex;
   align-items:center;
   gap:10px;
 }
-
 
 .footer-link{
   text-decoration:none;
@@ -417,23 +374,36 @@ footer.admin-footer{
   font-weight:600;
 }
 
-
 .footer-link.home{
   background:linear-gradient(135deg,var(--green-dark),var(--green));
 }
-
 
 .footer-link.logout{
   background:linear-gradient(135deg,var(--red),var(--orange-light));
 }
 
+.popup-overlay{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.45);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity 0.3s ease,visibility 0.3s ease;}
+.popup-overlay.active{opacity:1;visibility:visible;}
+.popup-box{width:min(420px,calc(100vw - 32px));background:rgba(255,255,255,0.96);backdrop-filter:blur(20px);border-radius:24px;border:1px solid rgba(255,255,255,0.5);box-shadow:0 25px 60px rgba(15,23,42,0.22);padding:32px 28px 24px;text-align:center;transform:scale(0.9) translateY(20px);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);}
+.popup-overlay.active .popup-box{transform:scale(1) translateY(0);}
+.popup-icon{width:64px;height:64px;margin:0 auto 16px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:30px;background:linear-gradient(135deg,var(--blue),var(--green));box-shadow:0 12px 28px rgba(0,119,182,0.25);color:white;}
+.popup-icon.error{background:linear-gradient(135deg,#ef4444,#fb7185);box-shadow:0 12px 28px rgba(239,68,68,0.25);}
+.popup-icon.warning{background:linear-gradient(135deg,#f97316,#fbbf24);box-shadow:0 12px 28px rgba(249,115,22,0.25);}
+.popup-title{font-size:20px;font-weight:700;color:#111827;margin-bottom:8px;}
+.popup-message{font-size:14px;line-height:1.65;color:#6b7280;margin-bottom:24px;word-break:break-word;}
+.popup-actions{display:flex;gap:10px;justify-content:center;}
+.popup-btn{border:none;border-radius:14px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.25s ease;}
+.popup-btn.primary{background:linear-gradient(135deg,var(--blue),var(--green));color:white;box-shadow:0 8px 20px rgba(0,119,182,0.25);}
+.popup-btn.primary:hover{transform:translateY(-2px);}
+.popup-progress{width:100%;height:4px;background:rgba(17,24,39,0.06);border-radius:999px;margin-top:16px;overflow:hidden;}
+.popup-progress-bar{height:100%;border-radius:999px;background:linear-gradient(135deg,var(--blue),var(--green));animation:popupTimer 4s linear forwards;}
+@keyframes popupTimer{from{width:100%;}to{width:0%;}}
 
 @media (max-width:980px){
   .main{
     grid-template-columns:1fr;
   }
 }
-
 
 @media (max-width:640px){
   header{
@@ -443,42 +413,35 @@ footer.admin-footer{
     flex-direction:column;
   }
 
-
   .header-actions{
     width:100%;
     justify-content:space-between;
     flex-wrap:wrap;
   }
 
-
   .main{
     width:min(100% - 20px,1100px);
     margin:18px auto;
   }
 
-
   .panel-inner{
     padding:18px;
   }
 
-
   .form-actions{
     flex-direction:column;
   }
-
 
   .submit-btn,
   .back-link{
     width:100%;
   }
 
-
   footer.admin-footer{
     padding:12px 14px;
     flex-direction:column;
     align-items:flex-start;
   }
-
 
   .footer-links{
     width:100%;
@@ -488,9 +451,29 @@ footer.admin-footer{
 </style>
 </head>
 
-
 <body>
 
+<!-- Popup Modal -->
+<div class="popup-overlay" id="popupOverlay">
+  <div class="popup-box">
+    <div class="popup-icon" id="popupIcon">✅</div>
+    <div class="popup-title" id="popupTitle">Notification</div>
+    <div class="popup-message" id="popupMessage"></div>
+    <div class="popup-actions"><button class="popup-btn primary" onclick="closePopup()">Got it</button></div>
+    <div class="popup-progress"><div class="popup-progress-bar" id="popupProgressBar"></div></div>
+  </div>
+</div>
+<script>
+function showPopup(m,t){var o=document.getElementById('popupOverlay'),i=document.getElementById('popupIcon'),tt=document.getElementById('popupTitle'),mg=document.getElementById('popupMessage'),b=document.getElementById('popupProgressBar');mg.textContent=m;if(t==='error'){i.textContent='❌';i.className='popup-icon error';tt.textContent='Access Denied';}else if(t==='warning'){i.textContent='⚠️';i.className='popup-icon warning';tt.textContent='Warning';}else{i.textContent='✅';i.className='popup-icon';tt.textContent='Success';}b.style.animation='none';b.offsetHeight;b.style.animation='popupTimer 4s linear forwards';o.classList.add('active');clearTimeout(window._pt);window._pt=setTimeout(function(){closePopup();},4000);}
+function closePopup(){document.getElementById('popupOverlay').classList.remove('active');clearTimeout(window._pt);}
+document.getElementById('popupOverlay').addEventListener('click',function(e){if(e.target===this)closePopup();});
+</script>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <script>document.addEventListener('DOMContentLoaded',function(){var m={{ messages[0] | tojson }},t='success',l=m.toLowerCase();if(l.indexOf('error')!==-1||l.indexOf('not authorized')!==-1||l.indexOf('only')!==-1||l.indexOf('fail')!==-1||l.indexOf('invalid')!==-1)t='error';else if(l.indexOf('warning')!==-1)t='warning';showPopup(m,t);});</script>
+  {% endif %}
+{% endwith %}
 
 <header>
   <div class="brand">
@@ -501,13 +484,11 @@ footer.admin-footer{
     </div>
   </div>
 
-
   <div class="header-actions">
     <a href="/admin" class="nav-btn">Dashboard</a>
     <a href="/logout" class="nav-btn secondary">Logout</a>
   </div>
 </header>
-
 
 <div class="main">
   <section class="panel hero-card">
@@ -518,7 +499,6 @@ footer.admin-footer{
         Use this page to notify residents about water supply, maintenance work, electricity issues, local events, and urgent civic updates.
       </p>
 
-
       <div class="info-list">
         <div class="info-card">
           <div class="info-icon">🏘️</div>
@@ -528,18 +508,16 @@ footer.admin-footer{
           </div>
         </div>
 
-
         <div class="info-card">
-          <div class="info-icon">⚡</div>
+          <div class="info-icon">🔒</div>
           <div class="info-body">
-            <h3>Fast Communication</h3>
-            <p>Share urgent updates quickly so residents receive clear administrative instructions on time.</p>
+            <h3>Department Restricted</h3>
+            <p>You can only send announcements for your assigned department: <span class="dept-badge">{{ session['admin_department'] }}</span></p>
           </div>
         </div>
       </div>
     </div>
   </section>
-
 
   <section class="panel">
     <div class="panel-inner">
@@ -553,16 +531,17 @@ footer.admin-footer{
         </div>
       </div>
 
-
-      {% with messages = get_flashed_messages() %}
-        {% if messages %}
-          <div class="flash-message">{{ messages[0] }}</div>
-        {% endif %}
-      {% endwith %}
-
-
-      <form method="POST">
+      <form method="POST" id="announcementForm" onsubmit="return validateDepartment()">
         <div class="form-grid">
+          <div class="form-group">
+            <label for="department">Department</label>
+            <select name="department" id="department" class="select-field" required>
+              <option value="Water" {% if session.get('admin_department') == 'Water' %}selected{% endif %}>Water</option>
+              <option value="Electricity" {% if session.get('admin_department') == 'Electricity' %}selected{% endif %}>Electricity</option>
+              <option value="General" {% if session.get('admin_department') == 'General' %}selected{% endif %}>General</option>
+            </select>
+          </div>
+
           <div class="form-group">
             <label for="ward">Select Ward</label>
             <select name="ward" id="ward" class="select-field" required>
@@ -572,13 +551,11 @@ footer.admin-footer{
             </select>
           </div>
 
-
           <div class="form-group">
             <label for="message">Announcement Message</label>
             <textarea name="message" id="message" class="textarea-field" placeholder="Type your announcement here..." required></textarea>
           </div>
         </div>
-
 
         <div class="form-actions">
           <button type="submit" class="submit-btn">Send Announcement</button>
@@ -589,11 +566,29 @@ footer.admin-footer{
   </section>
 </div>
 
-
 <footer class="admin-footer">
   <div>© 2026 CDGI | Admin Panel</div>
 </footer>
 
+<script>
+var adminDept = {{ session['admin_department'] | tojson }};
+
+function validateDepartment() {
+  var selectedDept = document.getElementById('department').value;
+  if (selectedDept !== adminDept) {
+    showPopup('You are not authorized to send announcements for the ' + selectedDept + ' department. You can only send announcements for your department: ' + adminDept + '.', 'error');
+    return false;
+  }
+  return true;
+}
+
+document.getElementById('department').addEventListener('change', function() {
+  if (this.value !== adminDept) {
+    showPopup('You are not authorized to send announcements for the ' + this.value + ' department. Your department is: ' + adminDept + '.', 'error');
+    this.value = adminDept;
+  }
+});
+</script>
 
 </body>
 </html>

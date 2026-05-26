@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Complaint Details - Worker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+:root{--bg-1:#eef2f7;--bg-2:#dbeafe;--text:#1f2937;--muted:#6b7280;--white:rgba(255,255,255,0.88);--border:rgba(255,255,255,0.35);--shadow:0 20px 45px rgba(15,23,42,0.12);--shadow-soft:0 10px 25px rgba(15,23,42,0.08);--green:#00c853;--green-dark:#00a86b;--blue:#0077b6;--red:#ff4d4d;--orange:#f97316;--teal:#0d9488;--teal-dark:#0f766e;}
+body{min-height:100vh;color:var(--text);background:radial-gradient(circle at top left,rgba(13,148,136,0.18),transparent 30%),radial-gradient(circle at bottom right,rgba(0,200,83,0.15),transparent 28%),linear-gradient(135deg,var(--bg-1),var(--bg-2));display:flex;flex-direction:column;}
+header{position:sticky;top:0;z-index:1000;background:rgba(31,32,39,0.82);color:white;padding:16px 28px;display:flex;justify-content:space-between;align-items:center;backdrop-filter:blur(16px);box-shadow:0 8px 24px rgba(0,0,0,0.16);border-bottom:1px solid rgba(255,255,255,0.08);}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-mark{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--teal),var(--green));font-size:20px;}
+.brand-text h1{font-size:18px;font-weight:700;}
+.brand-text p{font-size:12px;color:rgba(255,255,255,0.72);margin-top:2px;}
+.nav-btn{padding:10px 16px;background:linear-gradient(135deg,var(--green-dark),var(--green));color:white;border-radius:999px;text-decoration:none;font-size:14px;font-weight:600;transition:0.3s ease;}
+.nav-btn:hover{transform:translateY(-2px);}
+.main{flex:1;width:min(900px,calc(100% - 32px));margin:28px auto;display:grid;gap:22px;}
+.panel{background:var(--white);border:1px solid var(--border);backdrop-filter:blur(16px);border-radius:24px;box-shadow:var(--shadow);overflow:hidden;}
+.panel-inner{padding:28px;}
+.panel-head{display:flex;align-items:flex-start;margin-bottom:22px;}
+.panel-head-left{display:flex;gap:14px;}
+.panel-icon{width:54px;height:54px;border-radius:18px;display:flex;align-items:center;justify-content:center;color:white;font-size:24px;background:linear-gradient(135deg,var(--teal),var(--blue));box-shadow:0 14px 24px rgba(13,148,136,0.18);}
+.panel-head h2{font-size:22px;color:#111827;margin-bottom:4px;}
+.panel-head p{font-size:14px;color:var(--muted);}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px;}
+.detail-item{background:#f8fafc;border:1px solid rgba(17,24,39,0.06);border-radius:16px;padding:14px 16px;}
+.detail-item span{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;}
+.detail-item strong{color:#111827;font-size:14px;word-break:break-word;}
+.detail-item.full{grid-column:1/-1;}
+.status-badge{display:inline-block;padding:5px 14px;border-radius:999px;font-size:12px;font-weight:700;color:white;}
+.status-badge.assigned{background:linear-gradient(135deg,var(--orange),#fb923c);}
+.status-badge.in-progress{background:linear-gradient(135deg,var(--blue),#00b4d8);}
+.status-badge.completed{background:linear-gradient(135deg,var(--green-dark),var(--green));}
+.status-badge.pending{background:linear-gradient(135deg,var(--orange),#fbbf24);}
+.status-badge.resolved{background:linear-gradient(135deg,var(--green-dark),var(--green));}
+.status-badge.rejected{background:linear-gradient(135deg,var(--red),#fb7185);}
+.update-form{background:linear-gradient(135deg,#f0fdfa,#ecfdf5);border:1px solid rgba(13,148,136,0.15);border-radius:18px;padding:22px;}
+.update-form h3{font-size:18px;color:var(--teal-dark);margin-bottom:16px;}
+.form-group{display:grid;gap:8px;margin-bottom:16px;}
+.form-group label{font-size:14px;font-weight:600;color:#1f2937;}
+.input-field,.select-field{width:100%;border:1px solid rgba(17,24,39,0.12);border-radius:14px;background:rgba(255,255,255,0.9);padding:12px 16px;font-size:14px;color:var(--text);outline:none;transition:0.3s ease;font-family:inherit;}
+.input-field:focus,.select-field:focus{border-color:var(--teal);box-shadow:0 0 0 4px rgba(13,148,136,0.12);}
+textarea.input-field{min-height:100px;resize:vertical;}
+.submit-btn{border:none;border-radius:14px;padding:14px 28px;background:linear-gradient(135deg,var(--teal),var(--green));color:white;font-size:14px;font-weight:700;cursor:pointer;transition:0.3s ease;box-shadow:0 12px 24px rgba(13,148,136,0.2);}
+.submit-btn:hover{transform:translateY(-2px);}
+.update-history{margin-top:22px;}
+.update-card{background:white;border:1px solid rgba(17,24,39,0.06);border-radius:16px;padding:18px;margin-bottom:12px;box-shadow:var(--shadow-soft);}
+.update-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.update-card-header .date{font-size:12px;color:var(--muted);}
+.update-text{font-size:14px;color:var(--text);line-height:1.6;margin-bottom:8px;}
+.review-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:700;}
+.review-badge.pending{background:rgba(249,115,22,0.1);color:var(--orange);}
+.review-badge.approved{background:rgba(0,168,107,0.1);color:var(--green-dark);}
+.review-badge.rejected{background:rgba(239,68,68,0.1);color:var(--red);}
+.admin-remarks{margin-top:8px;padding:10px 14px;background:#fefce8;border-radius:12px;font-size:13px;color:#92400e;}
+/* Flash popup */
+.flash-box{background:rgba(13,148,136,0.08);border:1px solid rgba(13,148,136,0.14);color:#0f766e;padding:12px 14px;border-radius:14px;font-size:14px;margin-bottom:18px;}
+footer.user-footer{margin-top:auto;width:100%;padding:14px 24px;background:rgba(31,32,39,0.88);color:white;text-align:center;backdrop-filter:blur(16px);}
+@media (max-width:640px){header{padding:14px 16px;flex-direction:column;gap:14px;}.main{width:min(100% - 20px,900px);margin:18px auto;}.panel-inner{padding:20px;}.detail-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="brand-mark">📄</div>
+    <div class="brand-text">
+      <h1>Complaint Details</h1>
+      <p>Assignment #{{ assignment[0] }}</p>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;">
+    <a href="{{ url_for('worker_dashboard') }}" class="nav-btn">← Back to Dashboard</a>
+  </div>
+</header>
+
+<div class="main">
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div class="flash-box">{{ messages[0] }}</div>
+  {% endif %}
+  {% endwith %}
+
+  <!-- Complaint Info -->
+  <section class="panel">
+    <div class="panel-inner">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-icon">📋</div>
+          <div>
+            <h2>{{ assignment[4] }}</h2>
+            <p>Complaint assigned to you</p>
+          </div>
+        </div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-item"><span>Citizen Name</span><strong>{{ assignment[5] }}</strong></div>
+        <div class="detail-item"><span>Ward</span><strong>{{ assignment[6] }}</strong></div>
+        <div class="detail-item"><span>Category</span><strong>{{ assignment[7] }}</strong></div>
+        <div class="detail-item">
+          <span>Assignment Status</span>
+          <strong>
+            {% if assignment[2] == 'Assigned' %}<span class="status-badge assigned">Assigned</span>
+            {% elif assignment[2] == 'In Progress' %}<span class="status-badge in-progress">In Progress</span>
+            {% elif assignment[2] == 'Completed' %}<span class="status-badge completed">Completed</span>
+            {% else %}<span class="status-badge" style="background:#6b7280;">{{ assignment[2] }}</span>{% endif %}
+          </strong>
+        </div>
+        <div class="detail-item">
+          <span>Complaint Status</span>
+          <strong>
+            {% if assignment[9] == 'Pending' %}<span class="status-badge pending">Pending</span>
+            {% elif assignment[9] == 'In Progress' %}<span class="status-badge in-progress">In Progress</span>
+            {% elif assignment[9] == 'Resolved' %}<span class="status-badge resolved">Resolved</span>
+            {% elif assignment[9] == 'Rejected' %}<span class="status-badge rejected">Rejected</span>
+            {% else %}<span class="status-badge" style="background:#6b7280;">{{ assignment[9] }}</span>{% endif %}
+          </strong>
+        </div>
+        <div class="detail-item"><span>Assigned On</span><strong>{{ assignment[3].strftime('%d %b %Y, %I:%M %p') if assignment[3] else 'N/A' }}</strong></div>
+        <div class="detail-item full"><span>Description</span><strong>{{ assignment[8] }}</strong></div>
+        {% if assignment[10] %}
+        <div class="detail-item full"><span>Admin Reply</span><strong>{{ assignment[10] }}</strong></div>
+        {% endif %}
+      </div>
+
+      <!-- Update Form -->
+      {% if assignment[2] != 'Completed' %}
+      <div class="update-form">
+        <h3>📝 Submit Progress Update</h3>
+        <form method="POST" action="{{ url_for('worker_update_complaint', assignment_id=assignment[0]) }}">
+          <div class="form-group">
+            <label for="update_text">Update Details</label>
+            <textarea id="update_text" name="update_text" class="input-field" placeholder="Describe your progress, actions taken, or findings..." required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="proposed_status">Propose Status Change</label>
+            <select id="proposed_status" name="proposed_status" class="select-field">
+              <option value="">No status change</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved (Mark as completed)</option>
+            </select>
+          </div>
+          <button type="submit" class="submit-btn">📤 Submit Update</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- Update History -->
+  {% if updates %}
+  <section class="panel">
+    <div class="panel-inner">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-icon">📜</div>
+          <div>
+            <h2>Update History</h2>
+            <p>Your submitted updates and admin reviews</p>
+          </div>
+        </div>
+      </div>
+      <div class="update-history">
+        {% for u in updates %}
+        <div class="update-card">
+          <div class="update-card-header">
+            <div>
+              {% if u[2] %}<span class="status-badge" style="background:var(--blue);font-size:11px;">Proposed: {{ u[2] }}</span>{% endif %}
+            </div>
+            <span class="date">{{ u[6].strftime('%d %b %Y, %I:%M %p') if u[6] else '' }}</span>
+          </div>
+          <div class="update-text">{{ u[1] }}</div>
+          {% if u[3] == 0 %}
+            <span class="review-badge pending">⏳ Pending Review</span>
+          {% elif u[4] == 1 %}
+            <span class="review-badge approved">✅ Approved</span>
+          {% else %}
+            <span class="review-badge rejected">❌ Rejected</span>
+          {% endif %}
+          {% if u[5] %}
+            <div class="admin-remarks"><strong>Admin Remarks:</strong> {{ u[5] }}</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+</div>
+
+<footer class="user-footer">
+  <div>© 2026 CDGI | Worker Panel</div>
+</footer>
+</body>
+</html>

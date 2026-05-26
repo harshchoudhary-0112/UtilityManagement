@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Worker Signup</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+html{height:100%;}
+:root{--bg-1:#eef2f7;--bg-2:#dbeafe;--text:#1f2937;--muted:#6b7280;--white:rgba(255,255,255,0.88);--border:rgba(255,255,255,0.35);--shadow:0 20px 45px rgba(15,23,42,0.12);--shadow-soft:0 10px 25px rgba(15,23,42,0.08);--green:#00c853;--green-dark:#00a86b;--blue:#0077b6;--red:#ff4d4d;--teal:#0d9488;--teal-dark:#0f766e;}
+body{min-height:100vh;height:100%;display:flex;flex-direction:column;color:var(--text);background:radial-gradient(circle at top left,rgba(13,148,136,0.18),transparent 30%),radial-gradient(circle at bottom right,rgba(0,200,83,0.15),transparent 28%),linear-gradient(135deg,var(--bg-1),var(--bg-2));}
+header{position:sticky;top:0;z-index:1000;background:rgba(31,32,39,0.82);color:white;padding:16px 28px;display:flex;justify-content:space-between;align-items:center;backdrop-filter:blur(16px);box-shadow:0 8px 24px rgba(0,0,0,0.16);border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-mark{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--teal),var(--green));box-shadow:0 8px 16px rgba(0,0,0,0.18);font-size:20px;}
+.brand-text h1{font-size:18px;font-weight:700;}
+.brand-text p{font-size:12px;color:rgba(255,255,255,0.72);margin-top:2px;}
+.nav-btn{padding:10px 16px;background:linear-gradient(135deg,var(--green-dark),var(--green));color:white;border-radius:999px;text-decoration:none;font-size:14px;font-weight:600;transition:0.3s ease;}
+.nav-btn:hover{transform:translateY(-2px);}
+.main{flex:1;width:min(600px,calc(100% - 32px));margin:28px auto;}
+.panel{background:var(--white);border:1px solid var(--border);backdrop-filter:blur(16px);border-radius:24px;box-shadow:var(--shadow);overflow:hidden;}
+.panel-inner{padding:28px;}
+.panel-head{display:flex;align-items:flex-start;margin-bottom:22px;}
+.panel-head-left{display:flex;gap:14px;}
+.panel-icon{width:54px;height:54px;border-radius:18px;display:flex;align-items:center;justify-content:center;color:white;font-size:24px;background:linear-gradient(135deg,var(--teal),var(--green));box-shadow:0 14px 24px rgba(13,148,136,0.18);}
+.panel-head h2{font-size:24px;color:#111827;margin-bottom:4px;}
+.panel-head p{font-size:14px;color:var(--muted);line-height:1.6;}
+.flash-box{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.14);color:#12c01b;padding:12px 14px;border-radius:14px;font-size:14px;margin-bottom:14px;}
+.form-grid{display:grid;gap:16px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-group{display:grid;gap:8px;}
+.form-group label{font-size:14px;font-weight:600;color:#1f2937;}
+.input-field,.select-field{width:100%;border:1px solid rgba(17,24,39,0.12);border-radius:16px;background:rgba(255,255,255,0.88);padding:14px 16px;font-size:14px;color:var(--text);outline:none;transition:0.3s ease;}
+.input-field:focus,.select-field:focus{border-color:var(--teal);box-shadow:0 0 0 4px rgba(13,148,136,0.12);transform:translateY(-1px);}
+.form-actions{display:flex;flex-direction:column;gap:12px;margin-top:16px;}
+.submit-btn{border:none;border-radius:14px;padding:14px 22px;background:linear-gradient(135deg,var(--teal),var(--green));color:white;font-size:14px;font-weight:700;cursor:pointer;transition:0.3s ease;box-shadow:0 12px 24px rgba(13,148,136,0.2);}
+.submit-btn:hover{transform:translateY(-2px);}
+.submit-btn.secondary{background:linear-gradient(135deg,var(--blue),#00b4d8);}
+.submit-btn.cancel{background:rgba(17,24,39,0.06);color:#374151;box-shadow:none;}
+.alt-link{display:block;margin-top:18px;text-align:center;text-decoration:none;font-size:14px;font-weight:600;color:var(--teal);}
+.alt-link:hover{text-decoration:underline;}
+.otp-section{background:linear-gradient(135deg,#f0fdfa,#ecfdf5);border:1px solid rgba(13,148,136,0.15);border-radius:18px;padding:22px;margin-top:4px;}
+.otp-section h3{font-size:16px;color:var(--teal-dark);margin-bottom:12px;}
+footer.user-footer{margin-top:auto;width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 24px;background:rgba(31,32,39,0.88);color:white;backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,0.08);flex-shrink:0;}
+@media (max-width:640px){header{padding:14px 16px;flex-direction:column;gap:14px;}.main{width:min(100% - 20px,600px);margin:18px auto;}.panel-inner{padding:20px;}.form-row{grid-template-columns:1fr;}footer.user-footer{padding:12px 14px;flex-direction:column;align-items:flex-start;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="brand-mark">👷</div>
+    <div class="brand-text">
+      <h1>Worker Registration</h1>
+      <p>Create your worker account</p>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;">
+    <a href="/" class="nav-btn">Home</a>
+  </div>
+</header>
+
+<div class="main">
+  <section class="panel">
+    <div class="panel-inner">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-icon">📝</div>
+          <div>
+            <h2>Worker Signup</h2>
+            <p>Fill in your details to register as a field worker.</p>
+          </div>
+        </div>
+      </div>
+
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash-box">{{ messages[0] }}</div>
+      {% endif %}
+      {% endwith %}
+
+      {% if session.get('pending_worker_signup') %}
+      <div class="otp-section">
+        <h3>📱 Verify Your Mobile Number</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">A 6-digit code was sent to {{ session['pending_worker_signup']['mobile'] }}</p>
+        <form method="POST" action="{{ url_for('worker_signup') }}">
+          <input type="hidden" name="form_type" value="verify_otp">
+          <div class="form-group" style="margin-bottom:14px;">
+            <label for="otp">Verification Code</label>
+            <input type="text" id="otp" name="otp" class="input-field" placeholder="Enter 6-digit code" maxlength="6" required>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button type="submit" class="submit-btn">✅ Verify</button>
+          </div>
+        </form>
+        <div style="display:flex;gap:10px;margin-top:10px;">
+          <form method="POST" action="{{ url_for('worker_signup') }}" style="flex:1;">
+            <input type="hidden" name="form_type" value="resend_otp">
+            <button type="submit" class="submit-btn secondary" style="width:100%;">🔄 Resend Code</button>
+          </form>
+          <a href="{{ url_for('worker_signup_cancel_otp') }}" class="submit-btn cancel" style="text-decoration:none;text-align:center;flex:1;padding:14px;">❌ Cancel</a>
+        </div>
+      </div>
+      {% else %}
+      <form method="POST" action="{{ url_for('worker_signup') }}">
+        <input type="hidden" name="form_type" value="signup">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" class="input-field" placeholder="Enter your full name" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input type="email" id="email" name="email" class="input-field" placeholder="worker@email.com" required>
+            </div>
+            <div class="form-group">
+              <label for="mobile_number">Mobile Number</label>
+              <input type="text" id="mobile_number" name="mobile_number" class="input-field" placeholder="10-digit number" maxlength="10" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="department">Department</label>
+              <select id="department" name="department" class="select-field" required>
+                <option value="">Select Department</option>
+                <option value="Water">Water</option>
+                <option value="Electricity">Electricity</option>
+                <option value="Gas">Gas</option>
+                <option value="Waste">Waste Management</option>
+                <option value="Sewage">Sewage & Drainage</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="ward">Ward</label>
+              <select id="ward" name="ward" class="select-field" required>
+                <option value="">Select Ward</option>
+                {% for i in range(1, 11) %}
+                <option value="Ward {{ i }}">Ward {{ i }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" class="input-field" placeholder="Min 6 characters" required>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="submit-btn">Register as Worker</button>
+        </div>
+      </form>
+      {% endif %}
+
+      <a href="{{ url_for('worker_login') }}" class="alt-link">Already registered? Login as Worker</a>
+    </div>
+  </section>
+</div>
+
+<footer class="user-footer">
+  <div>© 2026 CDGI | Worker Registration</div>
+</footer>
+</body>
+</html>

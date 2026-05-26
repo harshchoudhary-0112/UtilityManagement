@@ -518,21 +518,39 @@ footer.user-footer{
       <form action="/register_complaint" method="POST">
         <div class="form-grid">
           <div class="form-group">
-            <label for="name">Full Name</label>
-            <input type="text" id="name" name="name" class="input-field" placeholder="Enter your full name" required>
-          </div>
-
-          <div class="form-group">
-            <label for="ward">Ward Number</label>
-            <input type="text" id="ward" name="ward" class="input-field" placeholder="Enter your ward number" required>
-          </div>
-
-          <div class="form-group">
             <label for="category">Complaint Category</label>
             <select id="category" name="category" class="select-field" required>
               <option value="">Select complaint category</option>
-              <option value="Water Supply">Water Supply</option>
-              <option value="Electricity Supply">Electricity Supply</option>
+              <optgroup label="Water Department">
+                <option value="Water Supply">Water Supply</option>
+                <option value="Water Leakage">Water Leakage</option>
+                <option value="Water Quality">Water Quality / Contamination</option>
+                <option value="Other - Water">Other</option>
+              </optgroup>
+              <optgroup label="Electricity Department">
+                <option value="Electricity Supply">Electricity Supply</option>
+                <option value="Power Outage">Power Outage</option>
+                <option value="Street Light Issue">Street Light Issue</option>
+                <option value="Other - Electricity">Other</option>
+              </optgroup>
+              <optgroup label="Gas Department">
+                <option value="Gas Supply Issue">Gas Supply Issue</option>
+                <option value="Gas Billing Problem">Gas Billing Problem</option>
+                <option value="Gas Leakage">Gas Leakage</option>
+                <option value="Other - Gas">Other</option>
+              </optgroup>
+              <optgroup label="Waste Management">
+                <option value="Garbage Not Collected">Garbage Not Collected</option>
+                <option value="Irregular Waste Collection">Irregular Waste Collection</option>
+                <option value="Waste Dumping / Littering">Waste Dumping / Littering</option>
+                <option value="Other - Waste">Other</option>
+              </optgroup>
+              <optgroup label="Sewage &amp; Drainage">
+                <option value="Drainage Blockage">Drainage Blockage</option>
+                <option value="Sewage Overflow">Sewage Overflow</option>
+                <option value="Manhole / Drainage Damage">Manhole / Drainage Damage</option>
+                <option value="Other - Sewage">Other</option>
+              </optgroup>
             </select>
           </div>
 
